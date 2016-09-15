@@ -18,6 +18,8 @@ eggs/
 lib/
 lib64/
 parts/
+sampledata/
+sample_data/
 sdist/
 var/
 *.egg-info/
