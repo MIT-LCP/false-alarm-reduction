@@ -147,7 +147,7 @@ def get_channel_type(channel_name):
     return "ECG"
 
 
-# In[15]:
+# In[36]:
 
 def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitude_cutoff, stats_cutoffs): 
     if channel_type == "RESP": 
@@ -162,7 +162,7 @@ def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitu
         return signal_amplitude_check and nan_check and stats_check and histogram_check
     return nan_check and stats_check and histogram_check
     
-def calculate_invalids(sig, channels, window_start, window_end, block_length, f_low, f_high, hist_cutoff, ampl_cutoff, stats_cutoffs): 
+def calculate_invalids(sig, channels, window_start, window_end, block_length, fs, f_low, f_high, hist_cutoff, ampl_cutoff, stats_cutoffs): 
     invalids = {}
     
     for channel in channels: 
@@ -173,10 +173,10 @@ def calculate_invalids(sig, channels, window_start, window_end, block_length, f_
         channel_name = channels[channel_num]
         channel_type = get_channel_type(channel_name)
         
-        while start * fs < window_end: 
-            signal = sig[int(start*fs):int((start + block_length)*fs),:]
+        while start < window_end: 
+            signal = sig[int(start):int(start + block_length*fs),:]
             channel_signal = signal[:,channel_num]
-            start += block_length
+            start += (block_length * fs)
 
             is_data_valid = is_valid(channel_signal, channel_type, f_low, f_high, hist_cutoff, ampl_cutoff, stats_cutoffs)
             if is_data_valid: 
@@ -197,15 +197,15 @@ def calculate_cval(invalids):
     return cvals
 
 
-# In[20]:
+# In[40]:
 
 def calculate_invalids_standard(sample, start, end):
     fs = parameters.FS
     block_length = parameters.BLOCK_LENGTH
     
     sig, fields = wfdb.rdsamp(sample)
-#     start = 0 # in sample number 
-#     end = len(sig) # in sample number
+    # start = 0 # in sample number
+    # end = len(sig) # in sample number
     channels = fields['signame']
     
     order = parameters.ORDER
@@ -215,20 +215,20 @@ def calculate_invalids_standard(sample, start, end):
     ampl_cutoff = parameters.AMPL_CUTOFF
     stats_cutoffs = parameters.STATS_CUTOFFS
     
-    invalids = calculate_invalids(sig, channels, start, end, block_length, f_low, f_high, hist_cutoff, ampl_cutoff, stats_cutoffs)    
+    invalids = calculate_invalids(sig, channels, start, end, block_length, fs, f_low, f_high, hist_cutoff, ampl_cutoff, stats_cutoffs)    
     return invalids    
 
 
-# In[21]:
+# In[41]:
 
 if __name__ == '__main__':
     # sample = 'sample_data/challenge_training_data/a170s'
     sample = 'sample_data/challenge_training_data/v131l'
-    start = 73750
-    end = start + 2500
+    
+    start = 73750 # in sample number
+    end = start + 2500 # in sample number
     
     invalids = calculate_invalids_standard(sample, start, end)
-    print "invalids: ", invalids
     print calculate_cval(invalids)
 
 

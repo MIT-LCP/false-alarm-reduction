@@ -23,7 +23,7 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 
 # ## RR intervals tests
 
-# In[9]:
+# In[3]:
 
 def check_rr_stdev(rr_intervals): 
     numpy_rr_intervals = np.array(rr_intervals)
@@ -60,18 +60,20 @@ def check_num_rr_intervals(rr_intervals):
 
 # ## Invalids tests
 
-# In[11]:
+# In[7]:
 
-def check_invalids(invalids, start, end): 
-    start_block = int(float(start) / parameters.FS * parameters.BLOCK_LENGTH)
-    end_block = int(math.ceil(float(end) / parameters.FS * parameters.BLOCK_LENGTH))
+def check_invalids(invalids): 
+    block_invalids_sum = sum(invalids)
     
-    block_invalids_sum = 0
-    for block_index in range(start_block, end_block + 1): 
-        if block_index >= len(invalids): 
-            raise Exception("Block_index " + str(block_index) + " and len(invalids) " + str(len(invalids)))
+#     start_block = int(float(start) / parameters.FS * parameters.BLOCK_LENGTH)
+#     end_block = int(math.ceil(float(end) / parameters.FS * parameters.BLOCK_LENGTH))
+    
+#     block_invalids_sum = 0
+#     for block_index in range(start_block, end_block + 1): 
+#         if block_index >= len(invalids): 
+#             raise Exception("Block_index " + str(block_index) + " and len(invalids) " + str(len(invalids)))
             
-        block_invalids_sum += invalids[block_index]
+#         block_invalids_sum += invalids[block_index]
     
     if block_invalids_sum > 0: 
         return False
@@ -80,14 +82,14 @@ def check_invalids(invalids, start, end):
 
 # ## Putting it all together
 
-# In[5]:
+# In[9]:
 
-def check_interval_regular_activity(rr_intervals, invalids, start, end): 
+def check_interval_regular_activity(rr_intervals, invalids, start, end, channel): 
     stdev_check = check_rr_stdev(rr_intervals)
     hr_check = check_heart_rate(rr_intervals, start, end)
     sum_check = check_sum_rr_intervals(rr_intervals, start, end)
     num_check = check_num_rr_intervals(rr_intervals)
-    invalids_check = check_invalids(invalids, start, end)
+    invalids_check = check_invalids(invalids)
     
     return stdev_check and hr_check and sum_check and num_check and invalids_check
 
@@ -100,14 +102,16 @@ def check_channel_regular_activity(data_path, ann_path, sample_name, ann_type, s
 
     regular_activity = False
     for channel_index in range(num_channels): 
-        if channels[channel_index] == "RESP": 
+        channel = channels[channel_index]
+        if channel == "RESP": 
             continue
+
         print "channel: ", channels[channel_index]
         
         rr_intervals = annotate.calculate_rr_intervals_standard(ann_path + sample_name, channel_index, ann_type, start, end)
         print "rr_intervals: ", rr_intervals
         
-        is_regular = check_interval_regular_activity(rr_intervals, invalids, start, end)
+        is_regular = check_interval_regular_activity(rr_intervals, invalids, start, end, channel_index)
         print "is_regular: ", is_regular
         
         if is_regular: 
@@ -115,7 +119,7 @@ def check_channel_regular_activity(data_path, ann_path, sample_name, ann_type, s
     return False
 
 
-# In[12]:
+# In[10]:
 
 if __name__ == '__main__': 
     data_path = 'sample_data/challenge_training_data/'
