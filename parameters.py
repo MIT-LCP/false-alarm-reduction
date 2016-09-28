@@ -14,7 +14,14 @@ COLORS = np.asarray(
     [247,129,191]])/256.0
 
 # Plot marker types
-MARKER_TYPES = ['o', '^']
+MARKER_TYPES = [
+    'o', 
+    '^',
+    's',
+    '*',
+    'x',
+    'd'
+]
 
 ##### Invalid sample detection constants #####
 
@@ -50,7 +57,9 @@ STATS_CUTOFFS = {
 
 ##### Regular activity constants #####
 
-RR_STDEV = 0.025
+TESTED_BLOCK_LENGTH = 10 # seconds
+RR_STDEV = 0.025 # seconds
 HR_MIN = 45
 HR_MAX = 135
 MIN_NUM_RR_INTERVALS = 3
+RR_MIN_SUM_DIFF = 2 # seconds

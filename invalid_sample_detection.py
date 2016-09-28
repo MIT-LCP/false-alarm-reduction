@@ -3,7 +3,7 @@
 
 # # Invalid Sample Detection
 
-# In[11]:
+# In[2]:
 
 from scipy import signal
 
@@ -27,7 +27,7 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 
 # We make a bandpass filter on the range 70-90 Hz and check the signal amplitude in this range. If the signal amplitude exceeds limits, the data is marked as invalid.
 
-# In[12]:
+# In[3]:
 
 order = 50
 f_low = 70
@@ -58,7 +58,7 @@ plt.xlabel('samples')
 plt.show()
 
 
-# In[13]:
+# In[4]:
 
 cutoff = 0.005
 
@@ -75,7 +75,7 @@ print is_amplitude_within_cutoff(a170s_signal[:,1], f_low, f_high, cutoff)
 
 # ## Statistical analysis
 
-# In[14]:
+# In[5]:
 
 def check_stats_within_cutoff(signal, channel_type, stats_cutoffs): 
     signal_min = min(signal)
@@ -96,7 +96,7 @@ def check_stats_within_cutoff(signal, channel_type, stats_cutoffs):
 
 # ### NaN test
 
-# In[15]:
+# In[6]:
 
 def contains_nan(signal): 
     for element in signal: 
@@ -107,7 +107,7 @@ def contains_nan(signal):
 
 # ### Histogram test
 
-# In[16]:
+# In[7]:
 
 def histogram_test(signal, histogram_cutoff): 
     num_buckets = 10.
@@ -139,7 +139,7 @@ def histogram_test(signal, histogram_cutoff):
 
 # ## Putting it all together
 
-# In[17]:
+# In[8]:
 
 def get_channel_type(channel_name): 
     if channel_name == "ABP" or channel_name == "PLETH" or channel_name == "RESP": 
@@ -147,9 +147,12 @@ def get_channel_type(channel_name):
     return "ECG"
 
 
-# In[21]:
+# In[15]:
 
 def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitude_cutoff, stats_cutoffs): 
+    if channel_type == "RESP": 
+        return True
+    
     nan_check = get_ipython().getoutput(u'contains_nan(signal) ')
     histogram_check = histogram_test(signal, histogram_cutoff)
     stats_check = check_stats_within_cutoff(signal, channel_type, stats_cutoffs)
@@ -194,16 +197,16 @@ def calculate_cval(invalids):
     return cvals
 
 
-# In[22]:
+# In[20]:
 
-def calculate_invalids_standard(sample):
+def calculate_invalids_standard(sample, start, end):
     fs = parameters.FS
     block_length = parameters.BLOCK_LENGTH
     
     sig, fields = wfdb.rdsamp(sample)
+#     start = 0 # in sample number 
+#     end = len(sig) # in sample number
     channels = fields['signame']
-    start = 0
-    end = len(sig)
     
     order = parameters.ORDER
     f_low = parameters.F_LOW
@@ -216,11 +219,16 @@ def calculate_invalids_standard(sample):
     return invalids    
 
 
-# In[23]:
+# In[21]:
 
 if __name__ == '__main__':
-    sample = 'sample_data/challenge_training_data/a170s'
-    invalids = calculate_invalids_standard(sample)
+    # sample = 'sample_data/challenge_training_data/a170s'
+    sample = 'sample_data/challenge_training_data/v131l'
+    start = 73750
+    end = start + 2500
+    
+    invalids = calculate_invalids_standard(sample, start, end)
+    print "invalids: ", invalids
     print calculate_cval(invalids)
 
 

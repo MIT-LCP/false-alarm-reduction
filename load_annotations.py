@@ -3,10 +3,10 @@
 
 # # QRS detection
 
-# In[3]:
+# In[2]:
 
-import matplotlib.pyplot as plt
-import numpy             as np
+import matplotlib.pyplot    as plt
+import numpy                as np
 import parameters
 import wfdb
 import socket
@@ -24,11 +24,13 @@ else:
     ann_path = 'sample_data/challenge_training_ann/'
 
 
-# In[4]:
+# In[14]:
 
 def plot_annotations(data_path, ann_path, sample_name, ann_types_list, channel, fs, start, end): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     time_vector = np.linspace(float(start)/fs, float(end)/fs, end-start)
+    
+    print "fields: ", fields['signame']
     
     # plot the time series
     plt.figure(figsize=[16, 10])
@@ -55,7 +57,7 @@ def plot_annotations(data_path, ann_path, sample_name, ann_types_list, channel, 
     plt.show()
 
 
-# In[5]:
+# In[24]:
 
 fs = parameters.FS
 sample_name = 'v532s'
@@ -65,11 +67,11 @@ end = 5000
 # choose the lead to plot (annotations are generated off the first lead)
 channel = 0
 
-plot_annotations(data_path, ann_path, sample_name, ['gqrs', 'gqrs_old'], channel, fs, start, end)
+# plot_annotations(data_path, ann_path, sample_name, ['gqrs', 'gqrs_old'], channel, fs, start, end)
 plot_annotations(data_path, ann_path, sample_name, ['jqrs', 'gqrs'], channel, fs, start, end)
 
 
-# In[7]:
+# In[25]:
 
 def calculate_rr_intervals(sample, channel, fs, ann_type, start, end): 
     annotation = wfdb.rdann(sample, ann_type, sampfrom = start, sampto = end)
@@ -92,8 +94,9 @@ def calculate_rr_intervals_standard(sample, channel, ann_type, start, end):
     return rr_intervals
         
 rr_intervals = calculate_rr_intervals(ann_path + sample_name, 0, fs, 'jqrs', start, end)
-print "average: ", sum(rr_intervals) / len(rr_intervals)
-print rr_intervals
+if len(rr_intervals) > 0: 
+    print "average: ", sum(rr_intervals) / len(rr_intervals)
+print "rr_intervals", rr_intervals
         
 
 
