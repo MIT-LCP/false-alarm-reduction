@@ -2,6 +2,9 @@ import numpy as np
 
 ##### Constants #####
 
+ALARM_TIME = 300 # in seconds
+NUM_SECS_IN_MIN = 60
+
 # Hard-coded colors 
 COLORS = np.asarray(
     [[55,126,184],
@@ -25,7 +28,6 @@ MARKER_TYPES = [
 
 ##### Invalid sample detection constants #####
 
-FS = 250
 BLOCK_LENGTH = 0.8
 
 ORDER = 50
@@ -57,7 +59,14 @@ STATS_CUTOFFS = {
 
 ##### Regular activity constants #####
 
-TESTED_BLOCK_LENGTH = 10 # seconds
+TESTED_BLOCK_LENGTHS = { # seconds
+    "Asystole": 14,
+    "Bradycardia": 16,
+    "Tachycardia": 14,
+    "Ventricular_Tachycardia": 10,
+    "Ventricular_Flutter_Fib": 13
+}
+
 RR_STDEV = 0.025 # seconds
 HR_MIN = 45
 HR_MAX = 135

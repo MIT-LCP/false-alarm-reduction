@@ -197,16 +197,14 @@ def calculate_cval(invalids):
     return cvals
 
 
-# In[40]:
+# In[1]:
 
 def calculate_invalids_standard(sample, start, end):
-    fs = parameters.FS
     block_length = parameters.BLOCK_LENGTH
     
     sig, fields = wfdb.rdsamp(sample)
-    # start = 0 # in sample number
-    # end = len(sig) # in sample number
     channels = fields['signame']
+    fs = fields['fs']
     
     order = parameters.ORDER
     f_low = parameters.F_LOW

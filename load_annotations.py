@@ -24,14 +24,12 @@ else:
     ann_path = 'sample_data/challenge_training_ann/'
 
 
-# In[14]:
+# In[27]:
 
 def plot_annotations(data_path, ann_path, sample_name, ann_types_list, channel, fs, start, end): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
-    time_vector = np.linspace(float(start)/fs, float(end)/fs, end-start)
-    
-    print "fields: ", fields['signame']
-    
+    time_vector = np.linspace(int(float(start)/fs), int(float(end)/fs), end-start)
+        
     # plot the time series
     plt.figure(figsize=[16, 10])
     plt.plot(time_vector, sig[start:end, channel], '-',
@@ -45,7 +43,7 @@ def plot_annotations(data_path, ann_path, sample_name, ann_types_list, channel, 
         ann_type = ann_types_list[index]
         annotation = wfdb.rdann(ann_path + sample_name, ann_type, sampfrom = start, sampto = end)
         
-        plt.plot(time_vector[annotation[0]], sig[annotation[0], channel],
+        plt.plot(annotation[0] / fs, sig[annotation[0], channel],
              color=parameters.COLORS[index + 1],
              linestyle='none', linewidth=3,
              marker=parameters.MARKER_TYPES[index], markersize=12,
@@ -57,12 +55,12 @@ def plot_annotations(data_path, ann_path, sample_name, ann_types_list, channel, 
     plt.show()
 
 
-# In[24]:
+# In[29]:
 
-fs = parameters.FS
-sample_name = 'v532s'
-start = 0
-end = 5000
+fs = 250.0
+sample_name = 'v131l'
+start = 72500
+end = 75000
 
 # choose the lead to plot (annotations are generated off the first lead)
 channel = 0
@@ -71,7 +69,7 @@ channel = 0
 plot_annotations(data_path, ann_path, sample_name, ['jqrs', 'gqrs'], channel, fs, start, end)
 
 
-# In[25]:
+# In[10]:
 
 def calculate_rr_intervals(sample, channel, fs, ann_type, start, end): 
     annotation = wfdb.rdann(sample, ann_type, sampfrom = start, sampto = end)
@@ -83,16 +81,7 @@ def calculate_rr_intervals(sample, channel, fs, ann_type, start, end):
         
     return rr_intervals
 
-def calculate_rr_intervals_standard(sample, channel, ann_type, start, end): 
-    annotation = wfdb.rdann(sample, ann_type, sampfrom = start, sampto = end)
-
-    rr_intervals = []
-    ann_duration = annotation[channel] / float(parameters.FS)
-    for index in range(2, len(ann_duration)):
-        rr_intervals.append(round(ann_duration[index] - ann_duration[index - 1], 4))
-        
-    return rr_intervals
-        
+sample_name = "v131l"
 rr_intervals = calculate_rr_intervals(ann_path + sample_name, 0, fs, 'jqrs', start, end)
 if len(rr_intervals) > 0: 
     print "average: ", sum(rr_intervals) / len(rr_intervals)
