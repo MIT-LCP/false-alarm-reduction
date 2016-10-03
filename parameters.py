@@ -2,6 +2,7 @@ import numpy as np
 
 ##### Filename extensions #####
 HEADER_EXTENSION = ".hea"
+JQRS_EXTENSION = ".jqrs"
 
 ##### Constants #####
 

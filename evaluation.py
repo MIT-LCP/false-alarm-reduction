@@ -30,6 +30,10 @@ def generate_confusion_matrix(data_path, ann_path, ann_type):
     for filename in os.listdir(data_path):
         if filename.endswith(parameters.HEADER_EXTENSION) and os.path.isfile(ann_path + filename):
             sample_name = filename.rstrip(parameters.HEADER_EXTENSION)            
+            
+            if not os.path.isfile(ann_path + sample_name + parameters.JQRS_EXTENSION): 
+                continue
+            
             sig, fields = wfdb.rdsamp(data_path + sample_name)
             alarm_type, is_true_alarm = regular.check_gold_standard_classification(fields)
             
@@ -77,7 +81,7 @@ def calc_f1(confusion_matrix):
     return 2 * sensitivity * ppv / (sensitivity + ppv)    
 
 
-# In[ ]:
+# In[5]:
 
 if __name__ == '__main__': 
     data_path = 'sample_data/challenge_training_data/'
