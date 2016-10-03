@@ -1,5 +1,8 @@
 import numpy as np
 
+##### Filename extensions #####
+HEADER_EXTENSION = ".hea"
+
 ##### Constants #####
 
 ALARM_TIME = 300 # in seconds
@@ -72,3 +75,4 @@ HR_MIN = 45
 HR_MAX = 135
 MIN_NUM_RR_INTERVALS = 3
 RR_MIN_SUM_DIFF = 2 # seconds
+INVALIDS_SUM = 0

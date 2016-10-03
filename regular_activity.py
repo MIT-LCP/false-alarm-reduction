@@ -19,8 +19,9 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 
 # ## RR intervals tests
 
-# In[14]:
+# In[3]:
 
+# Check if standard deviation of RR intervals of signal are within limits
 def check_rr_stdev(rr_intervals): 
     numpy_rr_intervals = np.array(rr_intervals)
     stdev = np.std(numpy_rr_intervals)
@@ -28,6 +29,7 @@ def check_rr_stdev(rr_intervals):
         return False
     return True
 
+# Check if heart rate, calculated by number of RR intervals in signal, are within limits
 def check_heart_rate(rr_intervals, alarm_duration): 
     hr = len(rr_intervals) / float(alarm_duration) * parameters.NUM_SECS_IN_MIN
         
@@ -35,6 +37,7 @@ def check_heart_rate(rr_intervals, alarm_duration):
         return False
     return True
 
+# Check if sum of RR intervals is within limit of total duration, to ensure beats are evenly spaced throughout
 def check_sum_rr_intervals(rr_intervals, alarm_duration): 
     min_sum = alarm_duration - parameters.RR_MIN_SUM_DIFF
         
@@ -43,75 +46,44 @@ def check_sum_rr_intervals(rr_intervals, alarm_duration):
         return False
     return True    
 
+# Check if total number of RR intervals is greater than a minimum 
 def check_num_rr_intervals(rr_intervals): 
     if len(rr_intervals) < parameters.MIN_NUM_RR_INTERVALS: 
         return False
-    return True    
+    return True
 
 
 # ## Invalids tests
 
 # In[4]:
 
+# Returns False if any block within signal is identified as invalid (invalid sample detection)
 def check_invalids(invalids, channel): 
     if channel not in invalids.keys(): 
         raise Exception("Unknown channel")
     
     block_invalids_sum = sum(invalids[channel])
-    if block_invalids_sum > 0: 
+    if block_invalids_sum > parameters.INVALIDS_SUM: 
         return False
     return True
 
 
 # ## Putting it all together
 
-# In[5]:
+# In[11]:
 
-def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, channel): 
-    stdev_check = check_rr_stdev(rr_intervals)
-    hr_check = check_heart_rate(rr_intervals, alarm_duration)
-    sum_check = check_sum_rr_intervals(rr_intervals, alarm_duration)
-    num_check = check_num_rr_intervals(rr_intervals)
-    invalids_check = check_invalids(invalids, channel)
+# Returns type of alarm and whether gold standard classified alarm as true or false
+def check_gold_standard_classification(fields): 
+    alarm_type, alarm_classification = fields['comments']
     
-    all_checks = [stdev_check, hr_check, sum_check, num_check, invalids_check]
-    if not all(all_checks): 
-        print "stdev_check: ", stdev_check
-        print "hr_check: ", hr_check
-        print "sum_check: ", sum_check
-        print "num_check: ", num_check
-        print "invalids_check: ", invalids_check
-    
-    return all(all_checks)
-
-def check_channel_regular_activity(data_path, ann_path, sample_name, ann_type, start, end, alarm_duration): 
-    sig, fields = wfdb.rdsamp(data_path + sample_name)
-    
-    channels = fields['signame']
-    num_channels = len(channels)
-    fs = fields['fs']
+    if "True" in alarm_classification: 
+        is_true_alarm = True
+    else:
+        is_true_alarm = False
         
-    invalids = invalid.calculate_invalids_standard(data_path + sample_name, start, end)
-    print "invalids: ", invalids
+    return alarm_type, is_true_alarm
 
-    # Eventually calculate RR intervals for all channels and move block into for loop
-    channel0_rr_intervals = annotate.calculate_rr_intervals(ann_path + sample_name, 0, fs, ann_type, start, end)
-    print "rr_intervals: ", channel0_rr_intervals
-    
-    for channel_index in range(num_channels): 
-        channel = channels[channel_index]
-        if channel == "RESP": 
-            continue
-        print "\nchannel: ", channel
-        is_regular = check_interval_regular_activity(channel0_rr_intervals, invalids, alarm_duration, channel)
-        
-        if is_regular: 
-            return True
-    return False
-
-
-# In[6]:
-
+# Get start and end points (in sample number) to check depending on type of alarm signaled
 def get_start_and_end(data_path, sample_name): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
 
@@ -126,6 +98,7 @@ def get_start_and_end(data_path, sample_name):
     
     return (start, end, tested_block_length)
 
+# Check if our classification matches with gold standard classification of true/false alarm nature
 def is_classified_correctly(is_true_alarm, alarm_classification, is_regular): 
     is_classified_true_alarm = not is_regular
     matches = is_true_alarm is is_classified_true_alarm
@@ -137,6 +110,62 @@ def is_classified_correctly(is_true_alarm, alarm_classification, is_regular):
 
 # In[15]:
 
+# Returns True for a given channel if all regular activity tests pass, prints out failing tests if any fail
+def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, channel): 
+    stdev_check = check_rr_stdev(rr_intervals)
+    hr_check = check_heart_rate(rr_intervals, alarm_duration)
+    sum_check = check_sum_rr_intervals(rr_intervals, alarm_duration)
+    num_check = check_num_rr_intervals(rr_intervals)
+    invalids_check = check_invalids(invalids, channel)
+    
+    all_checks = [stdev_check, hr_check, sum_check, num_check, invalids_check]
+#     if not all(all_checks): 
+#         print "stdev_check: ", stdev_check
+#         print "hr_check: ", hr_check
+#         print "sum_check: ", sum_check
+#         print "num_check: ", num_check
+#         print "invalids_check: ", invalids_check
+    
+    return all(all_checks)
+
+
+# Check each channel for regular activity. If any channel exhibits regular activity, alarm indicated as false alarm
+def check_channel_regular_activity(data_path, ann_path, sample_name, ann_type, start, end, alarm_duration): 
+    sig, fields = wfdb.rdsamp(data_path + sample_name)
+    
+    channels = fields['signame']
+    num_channels = len(channels)
+    fs = fields['fs']
+        
+    invalids = invalid.calculate_invalids(data_path + sample_name, start, end)
+
+    # TODO(liandrea): calculate RR intervals for all channels and move block into for-loop
+    channel0_rr_intervals = annotate.calculate_rr_intervals(ann_path + sample_name, 0, fs, ann_type, start, end)
+    
+    for channel_index in range(num_channels): 
+        channel = channels[channel_index]
+        
+        # Ignore respiratory channel
+        if channel == "RESP": 
+            continue
+            
+        is_regular = check_interval_regular_activity(channel0_rr_intervals, invalids, alarm_duration, channel)
+        
+        # If any channel exhibits regular activity, deem signal as regular activity
+        if is_regular: 
+            return True
+    return False
+
+# Check if overall sample exhibits regular activity or not
+def is_sample_regular(data_path, ann_path, sample_name, ann_type): 
+    start, end, alarm_duration = get_start_and_end(data_path, sample_name)    
+    is_regular = check_channel_regular_activity(data_path, ann_path, sample_name, ann_type, start, end, alarm_duration)
+    
+    return is_regular
+
+
+# In[16]:
+
 if __name__ == '__main__': 
     data_path = 'sample_data/challenge_training_data/'
     ann_path = 'sample_data/challenge_training_ann/'
@@ -144,14 +173,9 @@ if __name__ == '__main__':
     ann_type = 'jqrs'
     
     sig, fields = wfdb.rdsamp(data_path + sample_name)
-    alarm_type, alarm_classification = fields['comments']
-    if "True" in alarm_classification: 
-        is_true_alarm = True
-    else:
-        is_true_alarm = False
+    alarm_type, is_true_alarm = check_gold_standard_classification(fields)
             
-    start, end, alarm_duration = get_start_and_end(data_path, sample_name)    
-    is_regular = check_channel_regular_activity(data_path, ann_path, sample_name, ann_type, start, end, alarm_duration)
+    is_regular = is_sample_regular(data_path, ann_path, sample_name, ann_type)
     
     print is_classified_correctly(is_true_alarm, alarm_classification, is_regular)
     
