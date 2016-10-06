@@ -71,15 +71,15 @@ channel = 0
 plot_annotations(data_path, ann_path, sample_name, ['jqrs', 'gqrs'], channel, fs, start, end)
 
 
-# In[11]:
+# In[13]:
 
 # Calculate RR intervals in the sample, where 
-def calculate_rr_intervals(sample, channel, fs, ann_type, start, end): 
+def calculate_rr_intervals(sample, fs, ann_type, start, end): 
     annotation = wfdb.rdann(sample, ann_type, sampfrom = start, sampto = end)
 
     # Convert annotations sample numbers into seconds if annotations in signal
-    if len(annotation[channel]) > 0: 
-        ann_duration = annotation[channel] / float(fs)
+    if len(annotation[0]) > 0: 
+        ann_duration = annotation[0] / float(fs)
     else: 
         return [0.0]
     
@@ -89,8 +89,8 @@ def calculate_rr_intervals(sample, channel, fs, ann_type, start, end):
         
     return rr_intervals
 
-sample_name = "b695l"
-rr_intervals = calculate_rr_intervals(ann_path + sample_name, 0, fs, 'jqrs', start, end)
+sample_name = "v131l"
+rr_intervals = calculate_rr_intervals(ann_path + sample_name, fs, 'jqrs', start, end)
 if len(rr_intervals) > 0: 
     print "average: ", sum(rr_intervals) / len(rr_intervals)
 print "rr_intervals", rr_intervals
