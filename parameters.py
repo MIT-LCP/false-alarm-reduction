@@ -59,7 +59,8 @@ STATS_CUTOFFS = {
         "var_range_max" : 7
     }
 }
-
+BOTTOM_PERCENTILE = 1
+TOP_PERCENTILE = 99
 
 ##### Regular activity constants #####
 

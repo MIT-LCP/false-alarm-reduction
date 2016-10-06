@@ -27,7 +27,7 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 
 # We make a bandpass filter on the range 70-90 Hz and check the signal amplitude in this range. If the signal amplitude exceeds limits, the data is marked as invalid.
 
-# In[2]:
+# In[76]:
 
 order = 50
 f_low = 70
@@ -37,7 +37,7 @@ def band_pass_filter(signal, f_low, f_high, order):
     window = scipy.signal.firwin(order+1, [f_low, f_high], nyq=np.floor(fs/2), pass_zero=False,
                   window='hamming', scale=False)
 
-    if len(signal) < 153: 
+    if np.size(signal) < 153: 
         return
     return scipy.signal.filtfilt(window, 1, signal)
 
@@ -58,30 +58,30 @@ plt.xlabel('samples')
 plt.show()
 
 
-# In[3]:
+# In[97]:
 
-cutoff = 0.005
+cutoff = parameters.AMPL_CUTOFF
+order = parameters.ORDER
 
 # Check if amplitude within invalid range is above acceptable amplitudes
-def is_amplitude_within_cutoff(signal, f_low, f_high, cutoff):  
+def is_amplitude_within_cutoff(signal, f_low, f_high, cutoff, order):  
     filtered_signal = band_pass_filter(signal, f_low, f_high, order)
     if filtered_signal is not None: 
-        for signal_amplitude in filtered_signal: 
-            if signal_amplitude > cutoff: 
-                return False
+        # Return False if any value in the filtered_signal is greater than cutoff
+        return not (filtered_signal > cutoff).any()
     return True
 
-print is_amplitude_within_cutoff(a170s_signal[:,1], f_low, f_high, cutoff)
+print is_amplitude_within_cutoff(a170s_signal[:,1], f_low, f_high, cutoff, order)
 
 
 # ## Statistical analysis
 
-# In[4]:
+# In[75]:
 
 # Check signal statistics to be within minimum and maximum values
 def check_stats_within_cutoff(signal, channel_type, stats_cutoffs): 
-    signal_min = min(signal)
-    signal_max = max(signal)
+    signal_min = np.amin(signal)
+    signal_max = np.amax(signal)
     var_range = signal_max - signal_min
     channel_stats_cutoffs = stats_cutoffs[channel_type]
     
@@ -100,38 +100,31 @@ def check_stats_within_cutoff(signal, channel_type, stats_cutoffs):
 
 # ### NaN test
 
-# In[5]:
+# In[46]:
 
 # Check if signal contains NaN values
 def contains_nan(signal): 
-    for element in signal: 
-        if math.isnan(element): 
-            return True
-    return False
+    return np.isnan(signal).any()
 
 
 # ### Histogram test
 
-# In[32]:
+# In[72]:
 
 # Check borders between histogram buckets so the difference is within a cutoff value
 def histogram_test(signal, histogram_cutoff): 
-    signal_np = np.array(signal)    
-    top_99_percentile = np.percentile(signal_np, 99)
-    bottom_1_percentile = np.percentile(signal_np, 1)
+    top_percentile = np.percentile(signal, parameters.TOP_PERCENTILE)
+    bottom_percentile = np.percentile(signal, parameters.BOTTOM_PERCENTILE)
     
     # Filter out top and bottom 1% for data on which to generate histogram
-    adjusted_signal = [ data for data in signal if data > bottom_1_percentile and data < top_99_percentile ]
+    adjusted_signal = signal[(signal >= bottom_percentile) & (signal <= top_percentile)]
     
     # Generate histogram with 10 buckets by default
     histogram = np.histogram(adjusted_signal)[0]
-
-    for index in range(1, len(histogram)): 
-        difference = abs(histogram[index] - histogram[index-1])
-        if difference > histogram_cutoff: 
-            return False
-
-    return True
+    
+    # Calculate frequency diffs between neighboring buckets and return True if all diffs within cutoff
+    diffs = np.diff(histogram)
+    return not (diffs > histogram_cutoff).any()
 
 
 # ## Putting it all together
@@ -144,10 +137,10 @@ def get_channel_type(channel_name):
     return "ECG"
 
 
-# In[10]:
+# In[100]:
 
 # Returns whether signal is valid or not
-def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitude_cutoff, stats_cutoffs): 
+def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitude_cutoff, stats_cutoffs, order): 
     if channel_type == "RESP": 
         return True
     
@@ -158,7 +151,7 @@ def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitu
     
     # If ECG signal, also check signal amplitude in frequency range within limits
     if channel_type == "ECG": 
-        signal_amplitude_check = is_amplitude_within_cutoff(signal, f_low, f_high, freq_amplitude_cutoff)
+        signal_amplitude_check = is_amplitude_within_cutoff(signal, f_low, f_high, freq_amplitude_cutoff, order)
         return signal_amplitude_check and nan_check and stats_check and histogram_check
     
     # Otherwise, just check NaN, stats, and histogram
@@ -168,6 +161,7 @@ def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitu
 # Returns invalids dictionary mapping each channel to an invalids array representing validity of 0.8 second blocks
 def calculate_invalids(sample, window_start, window_end,
                        block_length=parameters.BLOCK_LENGTH, 
+                       order=parameters.ORDER,
                        f_low=parameters.F_LOW,
                        f_high=parameters.F_HIGH,
                        hist_cutoff=parameters.HIST_CUTOFF,
@@ -177,11 +171,11 @@ def calculate_invalids(sample, window_start, window_end,
     sig, fields = wfdb.rdsamp(sample)
     channels = fields['signame']
     fs = fields['fs']
-    
+        
     # Initialize invalids for each channel
     invalids = {}
     for channel in channels: 
-        invalids[channel] = []
+        invalids[channel] = np.array([])
     
     # Generate invalids array for each channel 
     for channel_num in range(len(channels)): 
@@ -195,15 +189,16 @@ def calculate_invalids(sample, window_start, window_end,
             channel_signal = signal[:,channel_num]
             start += (block_length * fs)
 
-            is_data_valid = is_valid(channel_signal, channel_type, f_low, f_high, hist_cutoff, ampl_cutoff, stats_cutoffs)
+            is_data_valid = is_valid(channel_signal, channel_type, f_low, f_high, hist_cutoff, ampl_cutoff,
+                                     stats_cutoffs, order)
             
             # If data is valid, invalids stores 0 (for not invalid) for this block entry
             if is_data_valid: 
-                invalids[channel_name].append(0)
+                invalids[channel_name] = np.append(invalids[channel_name], 0)
                 
             # If data is not valid, invalids stores 1 (for invalid) for this block entry
             else: 
-                invalids[channel_name].append(1)
+                invalids[channel_name] = np.append(invalids[channel_name], 1)
     
     return invalids
 
@@ -219,7 +214,7 @@ def calculate_cval(invalids):
     return cvals
 
 
-# In[29]:
+# In[101]:
 
 if __name__ == '__main__':
     # sample = 'sample_data/challenge_training_data/a170s'
