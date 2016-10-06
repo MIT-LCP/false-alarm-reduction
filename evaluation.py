@@ -3,11 +3,12 @@
 
 # # Evaluation 
 
-# In[3]:
+# In[11]:
 
 import numpy              as np
 import regular_activity   as regular
 import parameters
+import timeit
 import wfdb
 import os
 
@@ -17,7 +18,7 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 
 # ## Evaluation metrics
 
-# In[4]:
+# In[13]:
 
 def generate_confusion_matrix(data_path, ann_path, ecg_ann_type, should_check_invalids=True, should_check_rr=True): 
     confusion_matrix = {
