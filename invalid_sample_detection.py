@@ -137,7 +137,7 @@ def get_channel_type(channel_name):
     return "ECG"
 
 
-# In[100]:
+# In[105]:
 
 # Returns whether signal is valid or not
 def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitude_cutoff, stats_cutoffs, order): 
@@ -159,7 +159,7 @@ def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitu
     
     
 # Returns invalids dictionary mapping each channel to an invalids array representing validity of 0.8 second blocks
-def calculate_invalids(sample, window_start, window_end,
+def calculate_invalids(sample, start, end,
                        block_length=parameters.BLOCK_LENGTH, 
                        order=parameters.ORDER,
                        f_low=parameters.F_LOW,
@@ -171,7 +171,9 @@ def calculate_invalids(sample, window_start, window_end,
     sig, fields = wfdb.rdsamp(sample)
     channels = fields['signame']
     fs = fields['fs']
-        
+    
+    window_start, window_end = start * fs, end * fs # in sample number
+    
     # Initialize invalids for each channel
     invalids = {}
     for channel in channels: 
@@ -214,14 +216,14 @@ def calculate_cval(invalids):
     return cvals
 
 
-# In[101]:
+# In[108]:
 
 if __name__ == '__main__':
     # sample = 'sample_data/challenge_training_data/a170s'
     sample = 'sample_data/challenge_training_data/v131l'
     
-    start = 73750 # in sample number
-    end = start + 2500 # in sample number
+    start = 295 # in seconds
+    end = 305 # in seconds
     
     invalids = calculate_invalids(sample, start, end)
     print calculate_cval(invalids)

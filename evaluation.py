@@ -3,12 +3,12 @@
 
 # # Evaluation 
 
-# In[11]:
+# In[2]:
 
+from datetime             import datetime
 import numpy              as np
 import regular_activity   as regular
 import parameters
-import timeit
 import wfdb
 import os
 
@@ -18,7 +18,7 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 
 # ## Evaluation metrics
 
-# In[13]:
+# In[3]:
 
 def generate_confusion_matrix(data_path, ann_path, ecg_ann_type, should_check_invalids=True, should_check_rr=True): 
     confusion_matrix = {
@@ -29,11 +29,8 @@ def generate_confusion_matrix(data_path, ann_path, ecg_ann_type, should_check_in
     }
     
     for filename in os.listdir(data_path):
-        if filename.endswith(parameters.HEADER_EXTENSION) and os.path.isfile(ann_path + filename):
+        if filename.endswith(parameters.HEADER_EXTENSION):
             sample_name = filename.rstrip(parameters.HEADER_EXTENSION)            
-            
-            if not os.path.isfile(ann_path + sample_name + parameters.JQRS_EXTENSION): 
-                continue
             
             sig, fields = wfdb.rdsamp(data_path + sample_name)
             alarm_type, is_true_alarm = regular.check_gold_standard_classification(fields)
@@ -49,6 +46,7 @@ def generate_confusion_matrix(data_path, ann_path, ecg_ann_type, should_check_in
                 
             elif is_true_alarm and not classified_true_alarm: 
                 confusion_matrix["FN"] += 1
+                print "false negative: ", filename
                 
             elif not is_true_alarm and classified_true_alarm: 
                 confusion_matrix["FP"] += 1
@@ -59,7 +57,7 @@ def generate_confusion_matrix(data_path, ann_path, ecg_ann_type, should_check_in
     return confusion_matrix
 
 
-# In[5]:
+# In[4]:
 
 def calc_sensitivity(confusion_matrix): 
     tp = confusion_matrix["TP"]
@@ -83,7 +81,7 @@ def calc_f1(confusion_matrix):
     return 2 * sensitivity * ppv / (sensitivity + ppv)    
 
 
-# In[6]:
+# In[5]:
 
 def print_stats(confusion_matrix): 
     sensitivity = calc_sensitivity(confusion_matrix)
@@ -101,28 +99,36 @@ def print_stats(confusion_matrix):
     print "score: ", score
 
 
-# In[7]:
+# In[ ]:
 
 if __name__ == '__main__': 
     data_path = 'sample_data/challenge_training_data/'
-    ann_path = 'sample_data/challenge_training_ann/'
-    ecg_ann_type = 'jqrs'
+    ann_path = 'sample_data/challenge_training_multiann/'
+
+    start = datetime.now()
+    confusion_matrix_jqrs = generate_confusion_matrix(data_path, ann_path, 'jqrs')
+    print "time: ", datetime.now() - start
     
-    confusion_matrix = generate_confusion_matrix(data_path, ann_path, ecg_ann_type)
-    confusion_matrix_invalids = generate_confusion_matrix(data_path, ann_path, ecg_ann_type,
-                                                          True, # should_check_invalids 
-                                                          False # should_check_rr 
-                                                         )
-    confusion_matrix_rr = generate_confusion_matrix(data_path, ann_path, ecg_ann_type,
+    start = datetime.now()
+    confusion_matrix_gqrs = generate_confusion_matrix(data_path, ann_path, 'gqrs')
+    print "time: ", datetime.now() - start
+    
+    start = datetime.now()
+    confusion_matrix_rr = generate_confusion_matrix(data_path, ann_path, 'jqrs',
                                                     False, # should_check_invalids 
                                                     True # should_check_rr
                                                    )
-    print "invalids and rr"
-    print_stats(confusion_matrix)
-    print "invalids"
-    print_stats(confusion_matrix_invalids)
-    print "rr"
-    print_stats(confusion_matrix_rr)      
+    print "time: ", datetime.now() - start
+
+    
+    print "jqrs (both)"
+    print_stats(confusion_matrix_jqrs)
+    
+    print "gqrs (both)"
+    print_stats(confusion_matrix_gqrs)
+    
+    print "jqrs (only rr)"
+    print_stats(confusion_matrix_rr)
     
 
 

@@ -19,7 +19,7 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 
 # ## RR intervals tests
 
-# In[3]:
+# In[16]:
 
 # Check if standard deviation of RR intervals of signal are within limits
 def check_rr_stdev(rr_intervals): 
@@ -70,7 +70,7 @@ def check_invalids(invalids, channel):
 
 # ## Putting it all together
 
-# In[11]:
+# In[5]:
 
 # Returns type of alarm and whether gold standard classified alarm as true or false
 def check_gold_standard_classification(fields): 
@@ -87,16 +87,28 @@ def check_gold_standard_classification(fields):
 def get_start_and_end(data_path, sample_name): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
 
-    fs = fields['fs']
     alarm_type = fields['comments'][0]
     if alarm_type not in parameters.TESTED_BLOCK_LENGTHS: 
         raise Exception("Unrecognized alarm type")
     tested_block_length = parameters.TESTED_BLOCK_LENGTHS[alarm_type]
     
-    end = fs * parameters.ALARM_TIME # in sample number, alarm always sounded at 300th second
-    start = end - fs * tested_block_length # in sample number
+    end = parameters.ALARM_TIME # in seconds, alarm always sounded at 300th second
+    start = end - tested_block_length # in seconds
     
     return (start, end, tested_block_length)
+
+# Get annotation file type based on channel type and index
+def get_ann_type(channel, channel_index, ecg_ann_type): 
+    channel_type = invalid.get_channel_type(channel)
+
+    if channel_type == "ECG": 
+        ann_type = ecg_ann_type + str(channel_index)
+    elif channel_type == "ABP": 
+        ann_type = 'wabp'
+    else:  
+        ann_type = "wpleth"
+    
+    return ann_type
 
 # Check if our classification matches with gold standard classification of true/false alarm nature
 def is_classified_correctly(is_true_alarm, is_regular): 
@@ -108,11 +120,13 @@ def is_classified_correctly(is_true_alarm, is_regular):
         return "\n" + str(is_true_alarm) + " alarm classified as a " + str(is_classified_true_alarm).lower() + " alarm"
 
 
-# In[23]:
+# In[35]:
 
 # Returns True for a given channel if all regular activity tests to be checked pass
 def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, channel,
                                     should_check_invalids, should_check_rr): 
+    if len(rr_intervals) == 0: 
+        return False
     
     all_checks = np.array([])
     if should_check_invalids: 
@@ -131,6 +145,7 @@ def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, chan
 
 
 # Check each channel for regular activity. If any channel exhibits regular activity, alarm indicated as false alarm
+# Start and end given in seconds.
 def check_channel_regular_activity(data_path, ann_path, sample_name, ecg_ann_type, start, end, alarm_duration,
                                    should_check_invalids, should_check_rr): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
@@ -140,10 +155,6 @@ def check_channel_regular_activity(data_path, ann_path, sample_name, ecg_ann_typ
     fs = fields['fs']
         
     invalids = invalid.calculate_invalids(data_path + sample_name, start, end)
-    
-    channel_rr_intervals = annotate.calculate_rr_intervals('sample_data/challenge_training_ann/' + sample_name, fs, 'jqrs', start, end)
-    print "standard jqrs: ", channel_rr_intervals
-
 
     for channel_index in range(num_channels): 
         channel = channels[channel_index]
@@ -153,29 +164,19 @@ def check_channel_regular_activity(data_path, ann_path, sample_name, ecg_ann_typ
         # Ignore respiratory channel
         if channel == "RESP": 
             continue
-        
-        # Generate annotation file type 
-        if channel_type == "ECG": 
-            ann_type = ecg_ann_type + str(channel_index)
-        elif channel_type == "ABP": 
-            ann_type = 'wabp'
-        else:  
-            ann_type = "wpleth"
+        ann_type = get_ann_type(channel, channel_index, ecg_ann_type)
         
         try: 
-            channel_rr_intervals = annotate.calculate_rr_intervals(ann_path + sample_name, fs, ann_type, start, end)
+            channel_rr_intervals = annotate.calculate_rr_intervals(ann_path + sample_name, ann_type,
+                                                                   start, end, channel_type)
         except Exception as e: 
             channel_rr_intervals = []
             channel_should_check_rr = False
-            print "e: ", e
+            print e
             
         is_regular = check_interval_regular_activity(channel_rr_intervals, invalids, alarm_duration, channel,
                                                      should_check_invalids, channel_should_check_rr)
-        
-        print "channel: ", channel, "   channel_type: ", channel_type
-        print "rr_intervals: ", channel_rr_intervals
-        print "is_regular: ", is_regular
-        
+                
         # If any channel exhibits regular activity, deem signal as regular activity
         if is_regular: 
             return True
@@ -194,23 +195,23 @@ def is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type,
     return is_regular
 
 
-# In[24]:
+# In[36]:
 
 if __name__ == '__main__': 
     data_path = 'sample_data/challenge_training_data/'
     ann_path = 'sample_data/challenge_training_multiann/'
-    sample_name = 'v100s'
+    sample_name = 't208s'
     ecg_ann_type = 'jqrs'
-    
+        
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     alarm_type, is_true_alarm = check_gold_standard_classification(fields)
     start, end, alarm_duration = get_start_and_end(data_path, sample_name)    
-    
+        
     is_regular = is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type)
     
     print is_classified_correctly(is_true_alarm, is_regular)
     
-    annotate.plot_annotations(data_path, ann_path, sample_name, ['jqrs1', 'gqrs1'], 1, fields['fs'], start, end)
+    annotate.plot_annotations(data_path, ann_path, sample_name, ['jqrs0'], 0, fields['fs'], start, end)
 
 
 # In[ ]:

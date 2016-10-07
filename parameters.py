@@ -62,6 +62,10 @@ STATS_CUTOFFS = {
 BOTTOM_PERCENTILE = 1
 TOP_PERCENTILE = 99
 
+##### Annotation constants #####
+DEFAULT_ECG_FS = 250.0
+DEFAULT_OTHER_FS = 125.0
+
 ##### Regular activity constants #####
 
 TESTED_BLOCK_LENGTHS = { # seconds
