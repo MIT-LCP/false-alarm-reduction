@@ -46,7 +46,7 @@ def generate_confusion_matrix(data_path, ann_path, ecg_ann_type, should_check_in
                 
             elif is_true_alarm and not classified_true_alarm: 
                 confusion_matrix["FN"] += 1
-                print "false negative: ", filename
+                print "FALSE NEGATIVE: ", filename
                 
             elif not is_true_alarm and classified_true_alarm: 
                 confusion_matrix["FP"] += 1
@@ -99,7 +99,7 @@ def print_stats(confusion_matrix):
     print "score: ", score
 
 
-# In[ ]:
+# In[6]:
 
 if __name__ == '__main__': 
     data_path = 'sample_data/challenge_training_data/'
@@ -160,5 +160,6 @@ if __name__ == '__main__':
 
 # In[ ]:
 
-
+with open("rr_intervals.txt", "w") as f: 
+    
 

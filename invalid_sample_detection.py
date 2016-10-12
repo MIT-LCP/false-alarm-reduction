@@ -3,10 +3,11 @@
 
 # # Invalid Sample Detection
 
-# In[1]:
+# In[118]:
 
 from scipy import signal
 
+import regular_activity  as regular
 import matplotlib.pyplot as plt
 import numpy             as np
 import wfdb
@@ -137,7 +138,7 @@ def get_channel_type(channel_name):
     return "ECG"
 
 
-# In[105]:
+# In[119]:
 
 # Returns whether signal is valid or not
 def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitude_cutoff, stats_cutoffs, order): 
@@ -156,9 +157,9 @@ def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitu
     
     # Otherwise, just check NaN, stats, and histogram
     return nan_check and stats_check and histogram_check
-    
-    
-# Returns invalids dictionary mapping each channel to an invalids array representing validity of 0.8 second blocks
+
+
+# Returns invalids dictionary given a sample name, start, and end
 def calculate_invalids(sample, start, end,
                        block_length=parameters.BLOCK_LENGTH, 
                        order=parameters.ORDER,
@@ -166,11 +167,28 @@ def calculate_invalids(sample, start, end,
                        f_high=parameters.F_HIGH,
                        hist_cutoff=parameters.HIST_CUTOFF,
                        ampl_cutoff=parameters.AMPL_CUTOFF,
-                       stats_cutoffs=parameters.STATS_CUTOFFS): 
-    
+                       stats_cutoffs=parameters.STATS_CUTOFFS):
     sig, fields = wfdb.rdsamp(sample)
+    return calculate_invalids_sig(sig, fields, start, end)
+
+    
+# Returns invalids dictionary mapping each channel to an invalids array representing validity of 0.8 second blocks
+# Takes in sig and fields after already reading the sample file
+def calculate_invalids_sig(sig, fields,
+                           start=None,
+                           end=None,
+                           block_length=parameters.BLOCK_LENGTH, 
+                           order=parameters.ORDER,
+                           f_low=parameters.F_LOW,
+                           f_high=parameters.F_HIGH,
+                           hist_cutoff=parameters.HIST_CUTOFF,
+                           ampl_cutoff=parameters.AMPL_CUTOFF,
+                           stats_cutoffs=parameters.STATS_CUTOFFS): 
+    
     channels = fields['signame']
     fs = fields['fs']
+    if start is None or end is None: 
+        start, end, alarm_duration = regular.get_start_and_end(fields)
     
     window_start, window_end = start * fs, end * fs # in sample number
     
@@ -216,7 +234,7 @@ def calculate_cval(invalids):
     return cvals
 
 
-# In[108]:
+# In[120]:
 
 if __name__ == '__main__':
     # sample = 'sample_data/challenge_training_data/a170s'
