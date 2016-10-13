@@ -3,11 +3,10 @@
 
 # # Invalid Sample Detection
 
-# In[118]:
+# In[2]:
 
-from scipy import signal
+from scipy               import signal
 
-import regular_activity  as regular
 import matplotlib.pyplot as plt
 import numpy             as np
 import wfdb
@@ -130,12 +129,24 @@ def histogram_test(signal, histogram_cutoff):
 
 # ## Putting it all together
 
-# In[7]:
+# In[3]:
 
 def get_channel_type(channel_name): 
     if channel_name == "ABP" or channel_name == "PLETH" or channel_name == "RESP": 
         return channel_name
     return "ECG"
+
+# Get start and end points (in sample number) to check depending on type of alarm signaled
+def get_start_and_end(fields): 
+    alarm_type = fields['comments'][0]
+    if alarm_type not in parameters.TESTED_BLOCK_LENGTHS: 
+        raise Exception("Unrecognized alarm type")
+    tested_block_length = parameters.TESTED_BLOCK_LENGTHS[alarm_type]
+    
+    end = parameters.ALARM_TIME # in seconds, alarm always sounded at 300th second
+    start = end - tested_block_length # in seconds
+    
+    return (start, end, tested_block_length)
 
 
 # In[119]:
@@ -188,7 +199,7 @@ def calculate_invalids_sig(sig, fields,
     channels = fields['signame']
     fs = fields['fs']
     if start is None or end is None: 
-        start, end, alarm_duration = regular.get_start_and_end(fields)
+        start, end, alarm_duration = get_start_and_end(fields)
     
     window_start, window_end = start * fs, end * fs # in sample number
     

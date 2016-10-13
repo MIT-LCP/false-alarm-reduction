@@ -19,15 +19,13 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 
 # ## RR intervals tests
 
-# In[46]:
+# In[3]:
 
 # Check if standard deviation of RR intervals of signal are within limits
 def check_rr_stdev(rr_intervals): 
     numpy_rr_intervals = np.array(rr_intervals)
     stdev = np.std(numpy_rr_intervals)
-    
-    print "stdev: ", stdev 
-    
+        
     if stdev > parameters.RR_STDEV: 
         return False
     return True
@@ -35,9 +33,7 @@ def check_rr_stdev(rr_intervals):
 # Check if heart rate, calculated by number of RR intervals in signal, are within limits
 def check_heart_rate(rr_intervals, alarm_duration): 
     hr = len(rr_intervals) / float(alarm_duration) * parameters.NUM_SECS_IN_MIN
-    
-    print "hr: ", hr
-    
+        
     if hr > parameters.HR_MAX or hr < parameters.HR_MIN: 
         return False
     return True
@@ -47,9 +43,7 @@ def check_sum_rr_intervals(rr_intervals, alarm_duration):
     min_sum = alarm_duration - parameters.RR_MIN_SUM_DIFF
         
     rr_sum = sum(rr_intervals)
-    
-    print "rr_sum: ", rr_sum 
-    
+        
     if rr_sum < min_sum: 
         return False
     return True    
@@ -80,7 +74,7 @@ def check_invalids(invalids, channel):
 
 # Helper methods to check classification of alarms and whether the algorithm classified alarm correctly: 
 
-# In[58]:
+# In[5]:
 
 # Returns type of alarm and whether gold standard classified alarm as true or false
 def check_gold_standard_classification(fields): 
@@ -105,19 +99,7 @@ def is_classified_correctly(is_true_alarm, is_regular):
 
 # Helper methods to get information about sample for plotting, reading annotation, etc.: 
 
-# In[ ]:
-
-# Get start and end points (in sample number) to check depending on type of alarm signaled
-def get_start_and_end(fields): 
-    alarm_type = fields['comments'][0]
-    if alarm_type not in parameters.TESTED_BLOCK_LENGTHS: 
-        raise Exception("Unrecognized alarm type")
-    tested_block_length = parameters.TESTED_BLOCK_LENGTHS[alarm_type]
-    
-    end = parameters.ALARM_TIME # in seconds, alarm always sounded at 300th second
-    start = end - tested_block_length # in seconds
-    
-    return (start, end, tested_block_length)
+# In[6]:
 
 # Get annotation file type based on channel type and index
 def get_ann_type(channel, channel_index, ecg_ann_type): 
@@ -135,26 +117,28 @@ def get_ann_type(channel, channel_index, ecg_ann_type):
 
 # Some methods to check regular activity overall, and given a sample name/path to calculate the RR intervals and invalids array and determine if the sample exhibits regular activity in any of the channels or not: 
 
-# In[64]:
+# In[7]:
 
 # Returns True for a given channel if all regular activity tests checked pass
 def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, channel,
                                     should_check_invalids, should_check_rr): 
-    if len(rr_intervals) == 0: 
-        return False
-    
     all_checks = np.array([])
-    if should_check_invalids: 
-        invalids_check = check_invalids(invalids, channel)
-        all_checks = np.append(all_checks, invalids_check)
     
     if should_check_rr: 
+        # If the RR intervals should be checked but all annotations missing, auto fail
+        if len(rr_intervals) == 0: 
+            return False
+        
         stdev_check = check_rr_stdev(rr_intervals)
         hr_check = check_heart_rate(rr_intervals, alarm_duration)
         sum_check = check_sum_rr_intervals(rr_intervals, alarm_duration)
         num_check = check_num_rr_intervals(rr_intervals)
         
         all_checks = np.append(all_checks, [stdev_check, hr_check, sum_check, num_check])
+    
+    if should_check_invalids: 
+        invalids_check = check_invalids(invalids, channel)
+        all_checks = np.append(all_checks, invalids_check)
     
     return np.all(all_checks)
 
@@ -166,7 +150,7 @@ def is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type,
     sig, fields = wfdb.rdsamp(data_path + sample_name)
 
     # Start and end given in seconds
-    start, end, alarm_duration = get_start_and_end(fields)    
+    start, end, alarm_duration = invalid.get_start_and_end(fields)    
     channels = fields['signame']
     num_channels = len(channels)
     fs = fields['fs']
@@ -176,23 +160,22 @@ def is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type,
     for channel_index in range(num_channels): 
         channel = channels[channel_index]
         channel_type = invalid.get_channel_type(channel)
-        channel_should_check_rr = should_check_rr
+        channel_rr_intervals = np.array([])
         
         # Ignore respiratory channel
         if channel == "RESP": 
             continue
         ann_type = get_ann_type(channel, channel_index, ecg_ann_type)
         
-        try: 
-            channel_rr_intervals = annotate.calculate_rr_intervals(ann_path + sample_name, ann_type,
-                                                                   start, end, channel_type)
-        except Exception as e: 
-            channel_rr_intervals = []
-            channel_should_check_rr = False
-            print e
-            
+        if should_check_rr: 
+            try: 
+                channel_rr_intervals = annotate.calculate_rr_intervals(ann_path + sample_name, ann_type,
+                                                                       start, end, channel_type)
+            except Exception as e: 
+                print e
+
         is_regular = check_interval_regular_activity(channel_rr_intervals, invalids, alarm_duration, channel,
-                                                     should_check_invalids, channel_should_check_rr)
+                                                     should_check_invalids, should_check_rr)
                 
         # If any channel exhibits regular activity, deem signal as regular activity
         if is_regular: 
@@ -202,27 +185,30 @@ def is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type,
 
 # Some methods to check regular activity of a sample given its calculated RR intervals and invalids array:
 
-# In[66]:
+# In[8]:
 
 # Determines regular activity of sample based on RR intervals and invalids array: 
-# param: rr_invalids_dict as a dictionary of the form: 
-#         { channel0: [[rr_intervals], [invalids]], channel1: [[rr_intervals], [invalids]], ...}
+# param: rr_dict as a dictionary of the form: 
+#         { channel0: [rr_intervals], channel1: [rr_intervals], ...}
 # param: alarm_duration duration of alarm in seconds
-def check_rr_invalids_regular_activity(rr_invalids_dict, alarm_duration,
-                                       should_check_invalids=True, should_check_rr=True): 
+def is_rr_invalids_regular(rr_dict, invalids, alarm_duration,
+                           should_check_invalids=True, should_check_rr=True): 
 
-    for channel in rr_invalids_dict.keys(): 
-        rr_intervals, invalids = rr_invalids_dict[channel][0], rr_invalids_dict[channel][1]
-        
-        
-        
+    for channel in rr_dict.keys(): 
         channel_type = invalid.get_channel_type(channel)
-        channel_should_check_rr = should_check_rr
-
+        rr_intervals = rr_dict[channel]
+    
+        is_regular = check_interval_regular_activity(rr_intervals, invalids, alarm_duration, channel, 
+                                                     should_check_invalids, should_check_rr)
+        
+        # If any channel is regular, reject alarm as false alarm
+        if is_regular: 
+            return True
+    return False        
         
 
 
-# In[67]:
+# In[9]:
 
 if __name__ == '__main__': 
     data_path = 'sample_data/challenge_training_data/'
@@ -232,10 +218,22 @@ if __name__ == '__main__':
         
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     alarm_type, is_true_alarm = check_gold_standard_classification(fields)
-    start, end, alarm_duration = get_start_and_end(fields)    
+    start, end, alarm_duration = invalid.get_start_and_end(fields)    
         
-    is_regular = is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type)
+#     is_regular = is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type)
     
+    invalids = {
+        'II': [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.], 
+        'PLETH': [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.], 
+        'RESP': [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.], 
+        'V': [ 0.,  0.,  0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.]
+    }
+    rr_dict = {
+        'II': [ 0.528, 0.496, 0.5, 0.532, 0.5, 0.512, 0.508, 0.504, 0.512, 0.536, 0.5, 0.508, 
+                0.512, 0.524, 0.516, 0.512, 0.516, 0.508]
+    }
+    is_regular = is_rr_invalids_regular(rr_dict, invalids, alarm_duration, True, True)
+
     print is_classified_correctly(is_true_alarm, is_regular)
     
     annotate.plot_annotations(data_path, ann_path, sample_name, ['jqrs0'], 0, fields['fs'], start, end)
