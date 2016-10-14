@@ -57,10 +57,12 @@ for i = 1:numel(records)
             ann_jqrs = run_qrsdet_by_seg_ali(data(:,m),fs(m),opt);
             if isempty(ann_jqrs)
                 fprintf('%s - empty signal.\n',recordName);
-                system('rm tmp; touch tmp');
+                %system('rm tmp; touch tmp');
                 % make an empty annotation file for jqrs
-                system(['wrann -r ' recordName ' -a jqrs <tmp']);
-                system('rm tmp');
+                
+                %system(['wrann -r ' recordName ' -a jqrs <tmp']);
+                %system('rm tmp');
+                wrann(recordName,'jqrs',0)
             else
                 wrann(recordName,'jqrs',ann_jqrs)
                 fprintf('%s %5s - %d QRS peaks.\n',recordName,header{m},numel(ann_jqrs));
