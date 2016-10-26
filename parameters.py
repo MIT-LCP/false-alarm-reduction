@@ -82,3 +82,7 @@ HR_MAX = 135
 MIN_NUM_RR_INTERVALS = 3
 RR_MIN_SUM_DIFF = 2 # seconds
 INVALIDS_SUM = 0
+
+##### Specific arrhythmia tests #####
+ASYSTOLE_WINDOW_SIZE = 3.2 # in seconds
+ASYSTOLE_ROLLING_INCREMENT = 0.1 # in seconds

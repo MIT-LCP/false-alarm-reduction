@@ -129,14 +129,14 @@ def histogram_test(signal, histogram_cutoff):
 
 # ## Putting it all together
 
-# In[3]:
+# In[4]:
 
 def get_channel_type(channel_name): 
     if channel_name == "ABP" or channel_name == "PLETH" or channel_name == "RESP": 
         return channel_name
     return "ECG"
 
-# Get start and end points (in sample number) to check depending on type of alarm signaled
+# Get start and end points (in seconds) to check depending on type of alarm signaled
 def get_start_and_end(fields): 
     alarm_type = fields['comments'][0]
     if alarm_type not in parameters.TESTED_BLOCK_LENGTHS: 

@@ -25,9 +25,7 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 def check_rr_stdev(rr_intervals): 
     numpy_rr_intervals = np.array(rr_intervals)
     stdev = np.std(numpy_rr_intervals)
-    
-    print stdev
-        
+            
     if stdev > parameters.RR_STDEV: 
         return False
     return True
@@ -101,7 +99,7 @@ def is_classified_correctly(is_true_alarm, is_regular):
 
 # ### Check interval regular activity
 
-# In[33]:
+# In[42]:
 
 # Returns True for a given channel if all regular activity tests checked pass
 def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, channel,
@@ -123,17 +121,13 @@ def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, chan
     if should_check_invalids: 
         invalids_check = check_invalids(invalids, channel)
         all_checks = np.append(all_checks, invalids_check)
-        
-        print invalids_check, invalids
-        
-    print all_checks
-    
+            
     return np.all(all_checks)
 
 
 # ### Check regular activity for sample
 
-# In[22]:
+# In[41]:
 
 # Check overall sample for regular activity by iterating through each channel.
 # If any channel exhibits regular activity, alarm indicated as false alarm.
@@ -141,6 +135,7 @@ def is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type,
                       should_check_invalids=True, should_check_rr=True): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     num_channels = len(fields['signame'])
+    start, end, alarm_duration = invalid.get_start_and_end(fields)        
     invalids = {}    
     
     if should_check_invalids: 

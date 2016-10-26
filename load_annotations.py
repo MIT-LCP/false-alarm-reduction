@@ -100,11 +100,12 @@ print "rr_intervals", rr_intervals
         
 
 
-# In[12]:
+# In[13]:
 
-def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_ann_type):
-    # Start and end given in seconds
-    start, end, alarm_duration = invalid.get_start_and_end(fields)    
+def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_ann_type, start=None, end=None):
+    if start is None or end is None: 
+        # Start and end given in seconds
+        start, end, alarm_duration = invalid.get_start_and_end(fields)    
 
     channels = fields['signame']
     channel = channels[channel_index]
