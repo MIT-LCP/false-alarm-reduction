@@ -270,7 +270,7 @@ def print_stats(counts):
     print "score: ", score
 
 
-# In[ ]:
+# In[87]:
 
 if __name__ == '__main__': 
     reload(regular)

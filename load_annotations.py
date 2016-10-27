@@ -45,6 +45,7 @@ def get_ann_type(channel, channel_index, ecg_ann_type):
 
 # In[4]:
 
+# Start and end in seconds
 def get_annotation_annfs(sample, ann_type, start, end, channel_type): 
     # Check annotation fs with guess of smaller val (DEFAULT_OTHER_FS) to prevent checking out of range data
     ann_fs = parameters.DEFAULT_OTHER_FS

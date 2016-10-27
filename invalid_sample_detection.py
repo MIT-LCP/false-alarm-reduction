@@ -233,7 +233,7 @@ def calculate_invalids_sig(sig, fields,
     
     return invalids
 
-# Calculate overall c_val of invalids array
+# Calculate overall c_val of invalids array (0 = invalid, 1 = valid)
 def calculate_cval(invalids): 
     cvals = {}
     for channel_name in invalids.keys(): 
