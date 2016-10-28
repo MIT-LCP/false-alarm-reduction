@@ -74,7 +74,7 @@ def get_annotation_annfs(sample, ann_type, start, end, channel_type):
 
 # ## Calculating RR intervals
 
-# In[11]:
+# In[30]:
 
 # Calculate RR intervals in the sample, where 
 def calculate_rr_intervals(sample, ann_type, start, end, channel_type): 
@@ -92,9 +92,9 @@ def calculate_rr_intervals(sample, ann_type, start, end, channel_type):
 
     return rr_intervals
 
-sample_name = "v772s"
-start, end = 290, 300
-rr_intervals = calculate_rr_intervals(ann_path + sample_name, 'wabp', start, end, "ABP")
+sample_name = "b220s"
+start, end = 284, 300
+rr_intervals = calculate_rr_intervals(ann_path + sample_name, 'jqrs1', start, end, "V")
 if len(rr_intervals) > 0: 
     print "average: ", sum(rr_intervals) / len(rr_intervals)
 print "rr_intervals", rr_intervals
@@ -120,12 +120,12 @@ def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_a
     except Exception as e: 
         print e
     
-    return channel_rr_intervals, alarm_duration
+    return channel_rr_intervals
 
 
 # ## Plotting
 
-# In[7]:
+# In[25]:
 
 # Plot signal together with annotation types on the channel for data ranging from start to end
 def plot_annotations(data_path, ann_path, sample_name, ann_types_list, channel, data_fs, start, end): 
@@ -165,11 +165,11 @@ def plot_annotations(data_path, ann_path, sample_name, ann_types_list, channel, 
     plt.show()
 
 
-# In[8]:
+# In[39]:
 
 data_fs = 250
-sample_name = 'v131l'
-start = 290
+sample_name = 't384s'
+start = 286
 end = 300
 
 # choose the lead to plot (annotations are generated off the first lead)

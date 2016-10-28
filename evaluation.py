@@ -21,7 +21,7 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 
 # ## Evaluation for sample names
 
-# In[82]:
+# In[88]:
 
 # Generate confusion matrix for all samples given sample name/directory
 def generate_confusion_matrix_sample(data_path, ann_path, ecg_ann_type, should_check_invalids=True,
@@ -49,7 +49,7 @@ def generate_confusion_matrix_sample(data_path, ann_path, ecg_ann_type, should_c
             if is_true_alarm and classified_true_alarm: 
                 confusion_matrix["TP"].append(sample_name)
                 
-                if alarm_type == "Asystole": 
+                if alarm_type == "Bradycardia": 
                     print sample_name, alarm_type
                 
             elif is_true_alarm and not classified_true_alarm: 
@@ -270,11 +270,9 @@ def print_stats(counts):
     print "score: ", score
 
 
-# In[87]:
+# In[89]:
 
 if __name__ == '__main__': 
-    reload(regular)
-    
     data_path = 'sample_data/challenge_training_data/'
     ann_path = 'sample_data/challenge_training_multiann/'
 

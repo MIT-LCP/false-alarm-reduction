@@ -19,12 +19,11 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 
 # ## RR intervals tests
 
-# In[35]:
+# In[47]:
 
 # Check if standard deviation of RR intervals of signal are within limits
 def check_rr_stdev(rr_intervals): 
-    numpy_rr_intervals = np.array(rr_intervals)
-    stdev = np.std(numpy_rr_intervals)
+    stdev = np.std(rr_intervals)
             
     if stdev > parameters.RR_STDEV: 
         return False
@@ -32,8 +31,8 @@ def check_rr_stdev(rr_intervals):
 
 # Check if heart rate, calculated by number of RR intervals in signal, are within limits
 def check_heart_rate(rr_intervals, alarm_duration): 
-    hr = len(rr_intervals) / float(alarm_duration) * parameters.NUM_SECS_IN_MIN
-        
+    hr = (len(rr_intervals) + 1.) / alarm_duration * parameters.NUM_SECS_IN_MIN
+            
     if hr > parameters.HR_MAX or hr < parameters.HR_MIN: 
         return False
     return True
