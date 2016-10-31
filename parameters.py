@@ -91,3 +91,12 @@ BRADYCARDIA_NUM_BEATS = 4
 
 TACHYCARDIA_NUM_BEATS = 12
 TACHYCARDIA_HR_MAX = 130
+
+
+##### Ventricular beat detection #####
+LF_LOW = 1
+LF_HIGH = 10
+MF_LOW = 5
+MF_HIGH = 25
+HF_LOW = 50 
+HF_HIGH = 70

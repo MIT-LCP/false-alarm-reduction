@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[29]:
+# In[2]:
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,17 +12,17 @@ from scipy import signal
 get_ipython().magic(u'matplotlib inline')
 
 
-# In[56]:
+# In[17]:
 
 # SQI algorithm
 
 # load data
 # Read the wfdb file, plot the last part of the signals
-sig, fields=wfdb.rdsamp('sampledata/a103l')
-wfdb.plotwfdb(sig[80000:,:], fields, title='Record a103l from Physionet Challenge 2015') 
+sig, fields=wfdb.rdsamp('sample_data/challenge_training_data/v532s')
+wfdb.plotwfdb(sig[292*250:,:], fields, title='Record a103l from Physionet Challenge 2015') 
 
 
-# In[53]:
+# In[18]:
 
 # find ECGs
 ecg_names = ['ECG','EKG',
@@ -36,7 +36,7 @@ idxECG = np.where([x.lower() in ecg_names for x in signame])[0]
 idxECG
 
 
-# In[57]:
+# In[19]:
 
 # peak detect ECGs
 peaks = [list() for m in range(sig.shape[1])]
@@ -93,7 +93,7 @@ for m in idxECG:
 # peak detect PPG
 
 
-# In[76]:
+# In[20]:
 
 m=1
 
@@ -101,10 +101,16 @@ t_end=10
 t=np.asarray(range(sig.shape[0])).astype(float)/fs
 idxPeak = np.where(peaks[m][0:fs*t_end])
 
+print t[idxPeak]
 
 plt.figure(figsize=[16,10])
 plt.plot(t[0:fs*t_end],sig[0:fs*t_end,m],'b-')
 plt.plot(t[idxPeak],np.squeeze(sig[idxPeak,m]),'rx',markersize=8)
 plt.plot([0,t_end],[th*thresh,th*thresh],'k--',linewidth=2)
 plt.show()
+
+
+# In[ ]:
+
+
 
