@@ -21,7 +21,7 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 
 # ## Evaluation for sample names
 
-# In[88]:
+# In[91]:
 
 # Generate confusion matrix for all samples given sample name/directory
 def generate_confusion_matrix_sample(data_path, ann_path, ecg_ann_type, should_check_invalids=True,
@@ -49,9 +49,6 @@ def generate_confusion_matrix_sample(data_path, ann_path, ecg_ann_type, should_c
             if is_true_alarm and classified_true_alarm: 
                 confusion_matrix["TP"].append(sample_name)
                 
-                if alarm_type == "Bradycardia": 
-                    print sample_name, alarm_type
-                
             elif is_true_alarm and not classified_true_alarm: 
                 confusion_matrix["FN"].append(sample_name)
                 print "FALSE NEGATIVE: ", filename
@@ -69,7 +66,7 @@ def generate_confusion_matrix_sample(data_path, ann_path, ecg_ann_type, should_c
 
 # ## Evaluation with saving intermediate data
 
-# In[86]:
+# In[93]:
 
 def write_rr_file(data_path, ann_path, ecg_ann_type): 
     for filename in os.listdir(data_path):
@@ -92,7 +89,8 @@ def write_rr_file(data_path, ann_path, ecg_ann_type):
                 rr_intervals, duration = annotate.get_channel_rr_intervals(ann_path, sample_name, channel_index, 
                                                                            fields, ecg_ann_type)
                 rr_dict[channel] = rr_intervals.tolist()
-                def split_data(data1, data2): 
+
+def split_data(data1, data2): 
     only_in_data1 = set([])
     only_in_data2 = set([])
     
@@ -152,7 +150,7 @@ def read_invalids_file(data_path):
     return all_invalids_dict
 
 
-# In[44]:
+# In[99]:
 
 # Generate confusion matrix for all samples given intermediate data
 def generate_confusion_matrix_intermediate(data_path, ann_path, ecg_ann_type, 
@@ -180,13 +178,15 @@ def generate_confusion_matrix_intermediate(data_path, ann_path, ecg_ann_type,
 
         is_regular = regular.is_rr_invalids_regular(rr_intervals_dict, invalids_dict, alarm_duration,
                                                     should_check_invalids, should_check_rr)
-        print is_regular
             
         # Classified as a true alarm if no regular activity 
         classified_true_alarm = not is_regular
 
         if is_true_alarm and classified_true_alarm: 
             confusion_matrix["TP"].append(sample_name)
+            
+            if alarm_type == "Ventricular_Tachycardia": 
+                print sample_name, alarm_type
 
         elif is_true_alarm and not classified_true_alarm: 
             confusion_matrix["FN"].append(sample_name)
@@ -255,7 +255,7 @@ def calc_f1(counts):
 
 # In[55]:
 
-def print_stats(counts): 
+Ventricular Tachycardiadef print_stats(counts): 
     sensitivity = calc_sensitivity(counts)
     specificity = calc_specificity(counts)
     ppv = calc_ppv(counts)
@@ -270,15 +270,15 @@ def print_stats(counts):
     print "score: ", score
 
 
-# In[89]:
+# In[100]:
 
 if __name__ == '__main__': 
     data_path = 'sample_data/challenge_training_data/'
     ann_path = 'sample_data/challenge_training_multiann/'
 
-    generate_confusion_matrix_sample(data_path, ann_path, 'jqrs')
+#     generate_confusion_matrix_sample(data_path, ann_path, 'jqrs')
     
-#     counts_jqrs, confusion_matrix_jqrs = generate_confusion_matrix_intermediate(data_path, ann_path, 'jqrs')
+    counts_jqrs, confusion_matrix_jqrs = generate_confusion_matrix_intermediate(data_path, ann_path, 'jqrs')
 #     counts_rr, confusion_matrix_rr = generate_confusion_matrix_intermediate(data_path, ann_path, 'jqrs', 
 #                                                                                 False, # should_check_invalids
 #                                                                                 True # should_check_rr

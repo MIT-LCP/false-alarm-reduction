@@ -150,14 +150,12 @@ def get_average_hr_blocks(rr_intervals, num_beats_per_block):
     return hr_sum / hr_num    
 
 
-# In[102]:
+# In[208]:
 
 def test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     channels = fields['signame']
-    
-    reload(parameters)
-        
+            
     # Start and end given in seconds
     start, end, alarm_duration = invalid.get_start_and_end(fields)
     
@@ -216,8 +214,9 @@ print test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type)
 
 # ## Ventricular tachycardia
 
-# In[203]:
+# In[302]:
 
+# Returns index of peak (max value) in the signal out of the indices provided
 def get_peak_index(signal, peak_indices): 
     max_peak_value = 0
     max_peak_index = 0
@@ -229,7 +228,9 @@ def get_peak_index(signal, peak_indices):
     
     return max_peak_index
 
-def get_single_peak_indices(signal, peak_indices, index_threshold=10): 
+# Groups together indices for a single peak and outputs a list of peaks (one sample per peak)
+# param index_threshold: minimum difference in sample number to be classified as a different peak
+def get_single_peak_indices(signal, peak_indices, index_threshold=50): 
     single_peak_indices = np.array([])
     current_peak_indices = []
     prev_index = peak_indices[0]
@@ -238,61 +239,119 @@ def get_single_peak_indices(signal, peak_indices, index_threshold=10):
         if abs(prev_index - index) > index_threshold: 
             peak_index = get_peak_index(signal, current_peak_indices)
             single_peak_indices = np.append(single_peak_indices, peak_index)
-            current_peak_indices = []
+            current_peak_indices = [index]
         else: 
             current_peak_indices.append(index)
         
         prev_index = index
 
+    # Handle the last peak
+    peak_index = get_peak_index(signal, current_peak_indices)
+    single_peak_indices = np.append(single_peak_indices, peak_index)
+    
     return single_peak_indices
 
-def ventricular_beat_annotations(channel_sig, order=parameters.ORDER):
+
+# In[304]:
+
+def ventricular_beat_annotations(channel_sig, 
+                                 order=parameters.ORDER, 
+                                 threshold_ratio=parameters.VENTRICULAR_BEAT_THRESHOLD_RATIO,
+                                 ventricular_beat_percentile=parameters.VENTRICULAR_BEAT_PERCENTILE):
     lf = abs(invalid.band_pass_filter(channel_sig, parameters.LF_LOW, parameters.LF_HIGH, order))
     mf = abs(invalid.band_pass_filter(channel_sig, parameters.MF_LOW, parameters.MF_HIGH, order))
     hf = abs(invalid.band_pass_filter(channel_sig, parameters.HF_LOW, parameters.HF_HIGH, order))
-    
     sub = mf - hf
     
-    threshold_ratio = 0.5
-    base_threshold = np.percentile(channel_sig, 98)
+    base_threshold = np.percentile(channel_sig, ventricular_beat_percentile)
     threshold = threshold_ratio * base_threshold
-        
-    sub_peak_indices = np.array([ index for index in range(len(sub)) if sub[index] > threshold ])
-    single_peak_indices = get_single_peak_indices(sub, sub_peak_indices)   
-    sub_peaks = [ sub[index] for index in single_peak_indices ]
+
+    sig_peak_indices = np.array([ index for index in range(len(channel_sig)) if channel_sig[index] > threshold ])
+    single_peak_indices = get_single_peak_indices(channel_sig, sig_peak_indices)
+    sig_peaks = [ channel_sig[index] for index in single_peak_indices ]
     
     ventricular_beat_indices = np.array([])
+    nonventricular_beat_indices = np.array([])
     for index in single_peak_indices: 
         if lf[index] > sub[index]: 
             ventricular_beat_indices = np.append(ventricular_beat_indices, index)
+        else: 
+            nonventricular_beat_indices = np.append(nonventricular_beat_indices, index)
        
     plt.figure(figsize=[15,8])
-    plt.plot(sub,'b--')
     plt.plot(channel_sig, 'g-')
-
-    plt.plot(lf,'r--')
-    plt.plot(single_peak_indices, np.squeeze(sub_peaks),'bo',markersize=8)
+    plt.plot(sub,'b-')
+    plt.plot(lf,'r-')
+    
+    plt.plot(nonventricular_beat_indices, [sub[index] for index in nonventricular_beat_indices], 'bo', markersize=8)
     plt.plot(ventricular_beat_indices, [ lf[index] for index in ventricular_beat_indices ], 'ro', markersize=8)
     plt.show()
     
-start_time = 292
-end_time = 297 
+    return ventricular_beat_indices
+    
+start_time = 290
+end_time = 300
 start = start_time * parameters.DEFAULT_ECG_FS
 end = end_time * parameters.DEFAULT_ECG_FS
-sig, fields = wfdb.rdsamp(data_path + "v532s")
-ventricular_beat_annotations(sig[start:end,1])
+sig, fields = wfdb.rdsamp(data_path + "v797l")
+print ventricular_beat_annotations(sig[start:end,0])
+
+
+# In[298]:
+
+def max_ventricular_hr(ventricular_beats, num_beats, fs): 
+    max_hr = 0
+            
+    for index in range(num_beats, len(ventricular_beats)): 
+        sublist = ventricular_beats[index-num_beats:index]
+        start_time = sublist[0] / fs
+        end_time = sublist[-1] / fs
+                
+        hr = num_beats / (end_time - start_time) * parameters.NUM_SECS_IN_MIN         
+        max_hr = max(hr, max_hr)    
+        
+    return max_hr
+
+
+# In[305]:
+
+def test_ventricular_tachycardia(data_path, 
+                                 sample_name, 
+                                 fs=parameters.DEFAULT_ECG_FS,
+                                 num_beats=parameters.VTACH_NUM_BEATS,
+                                 max_hr=parameters.VTACH_MAX_HR): 
+    sig, fields = wfdb.rdsamp(data_path + sample_name)
+    channels = fields['signame']
+        
+    # Start and end given in seconds
+    start, end, alarm_duration = invalid.get_start_and_end(fields)
+    
+    alarm_sig = sig[start*fs:end*fs,:]
+    
+    for channel_index in range(len(channels)): 
+        channel_name = channels[channel_index]
+        channel_type = invalid.get_channel_type(channel_name)
+        channel_sig = alarm_sig[:,channel_index]
+        
+        print "channel_name: ", channel_name
+        
+        if channel_type == "ECG": 
+            ventricular_beats = ventricular_beat_annotations(channel_sig)
+            
+            if len(ventricular_beats) < num_beats: 
+                continue            
+            if max_ventricular_hr(ventricular_beats, num_beats, fs) > max_hr: 
+                return True
+            
+        elif channel_type == "ABP": 
+            print np.std(channel_sig)
+        
+    return False
+        
+print test_ventricular_tachycardia(data_path, "v797l")
 
 
 # In[ ]:
 
-def test_ventricular_tachycardia(data_path, sample_name): 
-    sig, fields = wfdb.rdsamp(data_path + sample_name)
-    channels = fields['signame']
-    
-    
-    for channel_name in channels: 
-        channel_type = invalid.get_channel_type(channel_name)
-        if channel_type == "ECG": 
-            
-        elif channel_type == "ABP": 
+
 
