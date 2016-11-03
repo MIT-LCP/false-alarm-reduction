@@ -3,9 +3,8 @@
 
 # # Specific arrhythmia tests
 
-# In[149]:
+# In[315]:
 
-from scipy.signal import argrelextrema
 import invalid_sample_detection    as invalid
 import load_annotations            as annotate
 import regular_activity            as regular
@@ -252,16 +251,21 @@ def get_single_peak_indices(signal, peak_indices, index_threshold=50):
     return single_peak_indices
 
 
-# In[304]:
+# In[327]:
+
+def get_lf_sub(channel_sig, order): 
+    lf = abs(invalid.band_pass_filter(channel_sig, parameters.LF_LOW, parameters.LF_HIGH, order))
+    mf = abs(invalid.band_pass_filter(channel_sig, parameters.MF_LOW, parameters.MF_HIGH, order))
+    hf = abs(invalid.band_pass_filter(channel_sig, parameters.HF_LOW, parameters.HF_HIGH, order))
+    sub = mf - hf
+    
+    return lf, sub
 
 def ventricular_beat_annotations(channel_sig, 
                                  order=parameters.ORDER, 
                                  threshold_ratio=parameters.VENTRICULAR_BEAT_THRESHOLD_RATIO,
                                  ventricular_beat_percentile=parameters.VENTRICULAR_BEAT_PERCENTILE):
-    lf = abs(invalid.band_pass_filter(channel_sig, parameters.LF_LOW, parameters.LF_HIGH, order))
-    mf = abs(invalid.band_pass_filter(channel_sig, parameters.MF_LOW, parameters.MF_HIGH, order))
-    hf = abs(invalid.band_pass_filter(channel_sig, parameters.HF_LOW, parameters.HF_HIGH, order))
-    sub = mf - hf
+    lf, sub = get_lf_sub(channel_sig, order)
     
     base_threshold = np.percentile(channel_sig, ventricular_beat_percentile)
     threshold = threshold_ratio * base_threshold
@@ -279,7 +283,7 @@ def ventricular_beat_annotations(channel_sig,
             nonventricular_beat_indices = np.append(nonventricular_beat_indices, index)
        
     plt.figure(figsize=[15,8])
-    plt.plot(channel_sig, 'g-')
+#     plt.plot(channel_sig, 'g-')
     plt.plot(sub,'b-')
     plt.plot(lf,'r-')
     
@@ -288,13 +292,13 @@ def ventricular_beat_annotations(channel_sig,
     plt.show()
     
     return ventricular_beat_indices
-    
-start_time = 290
-end_time = 300
+
+start_time = 294
+end_time = 297
 start = start_time * parameters.DEFAULT_ECG_FS
 end = end_time * parameters.DEFAULT_ECG_FS
-sig, fields = wfdb.rdsamp(data_path + "v797l")
-print ventricular_beat_annotations(sig[start:end,0])
+sig, fields = wfdb.rdsamp(data_path + "f544s")
+print ventricular_beat_annotations(sig[start:end,1])
 
 
 # In[298]:
@@ -313,7 +317,7 @@ def max_ventricular_hr(ventricular_beats, num_beats, fs):
     return max_hr
 
 
-# In[305]:
+# In[317]:
 
 def test_ventricular_tachycardia(data_path, 
                                  sample_name, 
@@ -333,8 +337,6 @@ def test_ventricular_tachycardia(data_path,
         channel_type = invalid.get_channel_type(channel_name)
         channel_sig = alarm_sig[:,channel_index]
         
-        print "channel_name: ", channel_name
-        
         if channel_type == "ECG": 
             ventricular_beats = ventricular_beat_annotations(channel_sig)
             
@@ -347,11 +349,130 @@ def test_ventricular_tachycardia(data_path,
             print np.std(channel_sig)
         
     return False
+
+print test_ventricular_tachycardia(data_path, "v532s")
+
+
+# ## Ventricular flutter/fibrillation
+
+# In[339]:
+
+def calculate_dlfmax(channel_sig, 
+                     order=parameters.ORDER): 
+    lf, sub = get_lf_sub(channel_sig, order)
+    
+    current_dlfmax_start = None
+    dlfmax_duration = 0
+    prev_low_dominance = 0
+    
+    for index in range(len(lf)): 
+        lf_sample = lf[index]
+        sub_sample = sub[index]
         
-print test_ventricular_tachycardia(data_path, "v797l")
+        if lf_sample > sub_sample: 
+            # If not yet started a low dominance area, set the start index
+            if current_dlfmax_start is None: 
+                current_dlfmax_start = index
+            
+            # If a separate low dominance area, reset
+            elif index - prev_low_dominance > parameters.VFIB_LOW_DOMINANCE_INDEX_THRESHOLD: 
+                # Calculate duration of previous low dominance area and update max dlfmax
+                duration = prev_low_dominance - current_dlfmax_start
+                dlfmax_duration = max(dlfmax_duration, duration)
+                
+                # Start new area of low dominance
+                current_dlfmax_start = index
+            
+            # Update previous index seen with low frequency dominance
+            prev_low_dominance = index
+            
+    return dlfmax_duration
+            
+            
+def get_abp_std_scores(channel_sig, 
+                       channel_type,
+                       alarm_duration, 
+                       fs=parameters.DEFAULT_ECG_FS,
+                       abp_threshold=parameters.VFIB_ABP_THRESHOLD,
+                       window_size=parameters.VFIB_WINDOW_SIZE,
+                       rolling_increment=parameters.VFIB_ROLLING_INCREMENT):
+    r_delta = np.array([])
+    
+    while start < channel_sig.size: 
+        end = start + window_size * fs
+        channel_subsig = channel_sig[start:end]
+        start += (rolling_increment * fs)
+
+        invalids = invalid.calculate_channel_invalids(channel_subsig, channel_type)
+        cval = invalid.calculate_cval_channel(invalids)
+        
+        std = np.std(channel_subsig)        
+        if std > abp_threshold: 
+            r_delta = np.append(r_delta, -cval)
+        else: 
+            r_delta = np.append(r_delta, cval)
+            
+    return r_delta
+
+# Get dominant freq in signal in rolling window
+def get_dominant_freq_array(channel_sig, 
+                            fs=parameters.DEFAULT_ECG_FS,
+                            window_size=parameters.VFIB_WINDOW_SIZE,
+                            rolling_increment=parameters.VFIB_ROLLING_INCREMENT): 
+    
+    start = 0
+    dominant_freqs = np.array([])
+    
+    while start < channel_sig.size: 
+        end = start + window_size * fs
+        channel_subsig = channel_sig[start:end]
+        start += (rolling_increment * fs)
+        
+        xf, fft = invalid.get_signal_fft(channel_subsig, window_size, fs)
+        
+        # Index of the fft is 2 * the actual frequency 
+        dominant_freq = np.argmax(fft) / 2
+        
+        dominant_freqs = np.append(dominant_freqs, dominant_freq)
+    return dominant_freqs
+
+
+def get_regular_activity_array(channel_sig,
+                               annotation,
+                               fs=parameters.DEFAULT_ECG_FS,
+                               window_size=parameters.VFIB_WINDOW_SIZE,
+                               rolling_increment=parameters.VFIB_ROLLING_INCREMENT): 
+    regular_activity_array = np.array([])
+    
+        
+        
+sample_name = "f544s"
+sig, fields = wfdb.rdsamp(data_path + sample_name)
+channels = fields['signame']
+fs = 250
+
+# Start and end given in seconds
+start, end, alarm_duration = invalid.get_start_and_end(fields)
+alarm_sig = sig[start*fs:end*fs,:]
+
+get_dominant_freq_array(alarm_sig[:,0])
+    
 
 
 # In[ ]:
 
+def test_ventricular_flutter_fibrillation(data_path, 
+                                          sample_name,
+                                          fs=parameters.DEFAULT_ECG_FS,
+                                          ann_fs=parameters.DEFAULT_ECG_FS):
+    sig, fields = wfdb.rdsamp(data_path + sample_name)
+    channels = fields['signame']
+        
+    # Start and end given in seconds
+    start, end, alarm_duration = invalid.get_start_and_end(fields)
+    alarm_sig = sig[start*fs:end*fs,:]
+    
+    annotation = wfdb.rdann(data_path + sample_name, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
 
+    
 

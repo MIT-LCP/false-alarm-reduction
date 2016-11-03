@@ -3,7 +3,7 @@
 
 # # Invalid Sample Detection
 
-# In[2]:
+# In[10]:
 
 from scipy               import signal
 
@@ -27,7 +27,7 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 
 # We make a bandpass filter on the range 70-90 Hz and check the signal amplitude in this range. If the signal amplitude exceeds limits, the data is marked as invalid.
 
-# In[76]:
+# In[11]:
 
 order = 50
 f_low = 70
@@ -58,7 +58,7 @@ plt.xlabel('samples')
 plt.show()
 
 
-# In[97]:
+# In[12]:
 
 cutoff = parameters.AMPL_CUTOFF
 order = parameters.ORDER
@@ -76,7 +76,7 @@ print is_amplitude_within_cutoff(a170s_signal[:,1], f_low, f_high, cutoff, order
 
 # ## Statistical analysis
 
-# In[75]:
+# In[13]:
 
 # Check signal statistics to be within minimum and maximum values
 def check_stats_within_cutoff(signal, channel_type, stats_cutoffs): 
@@ -100,7 +100,7 @@ def check_stats_within_cutoff(signal, channel_type, stats_cutoffs):
 
 # ### NaN test
 
-# In[46]:
+# In[14]:
 
 # Check if signal contains NaN values
 def contains_nan(signal): 
@@ -109,7 +109,7 @@ def contains_nan(signal):
 
 # ### Histogram test
 
-# In[72]:
+# In[15]:
 
 # Check borders between histogram buckets so the difference is within a cutoff value
 def histogram_test(signal, histogram_cutoff): 
@@ -129,7 +129,7 @@ def histogram_test(signal, histogram_cutoff):
 
 # ## Putting it all together
 
-# In[4]:
+# In[16]:
 
 def get_channel_type(channel_name): 
     if channel_name == "ABP" or channel_name == "PLETH" or channel_name == "RESP": 
@@ -149,7 +149,7 @@ def get_start_and_end(fields):
     return (start, end, tested_block_length)
 
 
-# In[119]:
+# In[17]:
 
 # Returns whether signal is valid or not
 def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitude_cutoff, stats_cutoffs, order): 
@@ -169,6 +169,34 @@ def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitu
     # Otherwise, just check NaN, stats, and histogram
     return nan_check and stats_check and histogram_check
 
+
+# Return invalids list given sig for a single channel
+def calculate_channel_invalids(channel_sig,
+                               channel_type,
+                               fs=parameters.DEFAULT_ECG_FS,
+                               block_length=parameters.BLOCK_LENGTH, 
+                               order=parameters.ORDER,
+                               f_low=parameters.F_LOW,
+                               f_high=parameters.F_HIGH,
+                               hist_cutoff=parameters.HIST_CUTOFF,
+                               ampl_cutoff=parameters.AMPL_CUTOFF,
+                               stats_cutoffs=parameters.STATS_CUTOFFS): 
+    invalids = np.array([])
+    start = 0 # in sample number
+    
+    # Check validity of signal for each block_length-long block
+    while start < len(channel_sig): 
+        signal = channel_sig[int(start):int(start + block_length*fs)]
+        start += (block_length * fs)
+
+        is_data_valid = is_valid(signal, channel_type, f_low, f_high, hist_cutoff, ampl_cutoff, stats_cutoffs, order)
+        
+        if is_data_valid: 
+            invalids = np.append(invalids, 0)
+        else: 
+            invalids = np.append(invalids, 1)
+    
+    return invalids
 
 # Returns invalids dictionary given a sample name, start, and end
 def calculate_invalids(sample, start, end,
@@ -200,52 +228,40 @@ def calculate_invalids_sig(sig, fields,
     fs = fields['fs']
     if start is None or end is None: 
         start, end, alarm_duration = get_start_and_end(fields)
-    
     window_start, window_end = start * fs, end * fs # in sample number
     
-    # Initialize invalids for each channel
     invalids = {}
-    for channel in channels: 
-        invalids[channel] = np.array([])
     
     # Generate invalids array for each channel 
     for channel_num in range(len(channels)): 
         start = window_start
         channel_name = channels[channel_num]
         channel_type = get_channel_type(channel_name)
+        channel_sig = sig[:,channel_num]
         
-        # Check validity of signal for each block_length-long block
-        while start < window_end: 
-            signal = sig[int(start):int(start + block_length*fs),:]
-            channel_signal = signal[:,channel_num]
-            start += (block_length * fs)
-
-            is_data_valid = is_valid(channel_signal, channel_type, f_low, f_high, hist_cutoff, ampl_cutoff,
-                                     stats_cutoffs, order)
+        invalids_array = calculate_channel_invalids(channel_sig, channel_type)
+        invalids[channel_name] = invalids_array
             
-            # If data is valid, invalids stores 0 (for not invalid) for this block entry
-            if is_data_valid: 
-                invalids[channel_name] = np.append(invalids[channel_name], 0)
-                
-            # If data is not valid, invalids stores 1 (for invalid) for this block entry
-            else: 
-                invalids[channel_name] = np.append(invalids[channel_name], 1)
-    
     return invalids
 
-# Calculate overall c_val of invalids array (0 = invalid, 1 = valid)
+
+# Calculate overall c_val of invalids list for a single channel (0 = invalid, 1 = valid)
+def calculate_cval_channel(channel_invalids): 
+    if len(channel_invalids) > 0: 
+        return 1 - float(sum(channel_invalids)) / len(channel_invalids)
+    return None
+    
+
+# Calculate overall c_val of invalids dictionary with all channels (0 = invalid, 1 = valid)
 def calculate_cval(invalids): 
     cvals = {}
     for channel_name in invalids.keys(): 
         channel_invalids = invalids[channel_name]
-        if len(channel_invalids) > 0: 
-            cvals[channel_name] = 1 - float(sum(channel_invalids)) / len(channel_invalids)
-        else: 
-            cvals[channel_name] = None
+        cvals[channel_name] = calculate_cval_channel(channel_invalids)
     return cvals
 
 
-# In[120]:
+# In[18]:
 
 if __name__ == '__main__':
     # sample = 'sample_data/challenge_training_data/a170s'
@@ -262,7 +278,7 @@ if __name__ == '__main__':
 
 # ### FFT analysis
 
-# In[3]:
+# In[20]:
 
 # There is a noisy section of this signal - between 4:20 and 4:25 (260 and 265 seconds)
 sig, fields=wfdb.rdsamp('sample_data/challenge_training_data/a103l')
@@ -291,16 +307,16 @@ plt.show()
 
 # To check if the signal amplitude in the range 70-90 Hz is outsize the limits (> 0.005 mV), we look at the fft of the signal:  
 
-# In[4]:
+# In[25]:
 
-def get_signal_fft(signal, signal_duration, channel): 
+def get_signal_fft(signal, signal_duration, fs): 
     # Number of samplepoints
     N = signal_duration * fs
     # sample spacing
     T = 1.0 / fs
     
     xf = np.linspace(0.0, 1.0/(2.0*T), N/2)
-    signal_fft = scipy.fftpack.fft(signal[:,channel])
+    signal_fft = scipy.fftpack.fft(signal)
     
     return (xf, 2.0/N * np.abs(signal_fft[:N/2]))
     
@@ -311,8 +327,9 @@ def plot_signal_fft(signal_xf, signal_fft, title=""):
     plt.xlabel("Frequency (Hz)")
     plt.show()
 
-clean_xf, clean_signal_fft = get_signal_fft(clean_signal, clean_duration, 0)
-noisy_xf, noisy_signal_fft = get_signal_fft(noisy_signal, noisy_duration, 0)
+fs = 250
+clean_xf, clean_signal_fft = get_signal_fft(clean_signal[:,0], clean_duration, fs)
+noisy_xf, noisy_signal_fft = get_signal_fft(noisy_signal[:,0], noisy_duration, fs)
 plot_signal_fft(clean_xf, clean_signal_fft, "FFT of clean signal")
 plot_signal_fft(noisy_xf, noisy_signal_fft, "FFT of noisy signal")
 

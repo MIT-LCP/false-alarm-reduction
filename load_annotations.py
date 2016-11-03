@@ -61,7 +61,6 @@ def get_annotation_annfs(sample, ann_type, start, end, channel_type):
     elif len(annotation[0]) > 0: 
         if channel_type == "ECG": 
             ann_fs = parameters.DEFAULT_ECG_FS
-#             print "Annotation fs defaulted to ", parameters.DEFAULT_ECG_FS, " for ", sample, ann_type
         else: 
             print "Annotation fs defaulted to ", parameters.DEFAULT_OTHER_FS, " for ", sample, ann_type
 
@@ -76,7 +75,7 @@ def get_annotation_annfs(sample, ann_type, start, end, channel_type):
 
 # In[30]:
 
-# Calculate RR intervals in the sample, where 
+# Calculate RR intervals in the sample, where start and end in seconds
 def calculate_rr_intervals(sample, ann_type, start, end, channel_type): 
     annotation, ann_fs = get_annotation_annfs(sample, ann_type, start, end, channel_type)
     
@@ -115,8 +114,7 @@ def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_a
 
     ann_type = get_ann_type(channel, channel_index, ecg_ann_type)
     try: 
-        channel_rr_intervals = calculate_rr_intervals(ann_path + sample_name, ann_type,
-                                                               start, end, channel_type)
+        channel_rr_intervals = calculate_rr_intervals(ann_path + sample_name, ann_type, start, end, channel_type)
     except Exception as e: 
         print e
     

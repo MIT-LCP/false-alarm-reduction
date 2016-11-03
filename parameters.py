@@ -95,6 +95,11 @@ TACHYCARDIA_HR_MAX = 130
 VTACH_NUM_BEATS = 4
 VTACH_MAX_HR = 95
 
+VFIB_DLFMAX_LIMIT = 3 # in seconds
+VFIB_LOW_DOMINANCE_INDEX_THRESHOLD = 100 # in sample number
+VFIB_WINDOW_SIZE = 2 # in seconds
+VFIB_ROLLING_INCREMENT = 1 # in seconds
+VFIB_ABP_THRESHOLD = 6 # in mmHg
 
 ##### Ventricular beat detection #####
 LF_LOW = 1
