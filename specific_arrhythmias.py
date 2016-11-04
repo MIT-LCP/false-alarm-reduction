@@ -3,7 +3,10 @@
 
 # # Specific arrhythmia tests
 
-# In[315]:
+# In[2]:
+
+import sys
+sys.path.append('C:/Python27/Lib/site-packages')
 
 import invalid_sample_detection    as invalid
 import load_annotations            as annotate
@@ -355,7 +358,7 @@ print test_ventricular_tachycardia(data_path, "v532s")
 
 # ## Ventricular flutter/fibrillation
 
-# In[339]:
+# In[16]:
 
 def calculate_dlfmax(channel_sig, 
                      order=parameters.ORDER): 
@@ -437,14 +440,34 @@ def get_dominant_freq_array(channel_sig,
     return dominant_freqs
 
 
-def get_regular_activity_array(channel_sig,
-                               annotation,
+def get_regular_activity_array(sig,
+                               fields,
+                               ann_path, 
+                               sample_name,
+                               ecg_ann_type,
                                fs=parameters.DEFAULT_ECG_FS,
                                window_size=parameters.VFIB_WINDOW_SIZE,
                                rolling_increment=parameters.VFIB_ROLLING_INCREMENT): 
     regular_activity_array = np.array([])
+    start = 0
     
+    while start < sig[:,0].size: 
+        end = start + window_size * fs
+        subsig = sig[start:end]
         
+        invalids_dict = invalid.calculate_invalids_sig(subsig, fields)
+        rr_dict = annotate.get_rr_dict(ann_path, sample_name, fields, ecg_ann_type, start, end)
+        print "rr: ", rr_dict
+                
+        is_regular = regular.is_rr_invalids_regular(rr_dict, invalids_dict, window_size)
+        if is_regular: 
+            regular_activity_array = np.append(regular_activity_array, 1)
+        else: 
+            regular_activity_array = np.append(regular_activity_array, 0)
+            
+        start += (rolling_increment * fs)
+    
+    return regular_activity_array
         
 sample_name = "f544s"
 sig, fields = wfdb.rdsamp(data_path + sample_name)
@@ -455,8 +478,7 @@ fs = 250
 start, end, alarm_duration = invalid.get_start_and_end(fields)
 alarm_sig = sig[start*fs:end*fs,:]
 
-get_dominant_freq_array(alarm_sig[:,0])
-    
+print get_regular_activity_array(alarm_sig, fields, ann_path, sample_name, ecg_ann_type)
 
 
 # In[ ]:

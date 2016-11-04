@@ -73,39 +73,38 @@ def get_annotation_annfs(sample, ann_type, start, end, channel_type):
 
 # ## Calculating RR intervals
 
-# In[30]:
+# In[1]:
 
-# Calculate RR intervals in the sample, where start and end in seconds
-def calculate_rr_intervals(sample, ann_type, start, end, channel_type): 
-    annotation, ann_fs = get_annotation_annfs(sample, ann_type, start, end, channel_type)
+# # Calculate RR intervals in the sample, where start and end in seconds
+# def calculate_rr_intervals(sample, ann_type, start, end, channel_type): 
+#     annotation, ann_fs = get_annotation_annfs(sample, ann_type, start, end, channel_type)
     
-    # Convert annotations sample numbers into seconds if >0 annotations in signal
-    if len(annotation[0]) > 0: 
-        ann_seconds = annotation[0] / float(ann_fs)
-    else: 
-        return np.array([0.0])
+#     # Convert annotations sample numbers into seconds if >0 annotations in signal
+#     if len(annotation[0]) > 0: 
+#         ann_seconds = annotation[0] / float(ann_fs)
+#     else: 
+#         return np.array([0.0])
     
-    rr_intervals = np.array([])
-    for index in range(1, np.size(ann_seconds)):
-        rr_intervals = np.append(rr_intervals, round(ann_seconds[index] - ann_seconds[index - 1], 4))
+#     rr_intervals = np.array([])
+#     for index in range(1, np.size(ann_seconds)):
+#         rr_intervals = np.append(rr_intervals, round(ann_seconds[index] - ann_seconds[index - 1], 4))
 
-    return rr_intervals
+#     return rr_intervals
 
-sample_name = "b220s"
-start, end = 284, 300
-rr_intervals = calculate_rr_intervals(ann_path + sample_name, 'jqrs1', start, end, "V")
-if len(rr_intervals) > 0: 
-    print "average: ", sum(rr_intervals) / len(rr_intervals)
-print "rr_intervals", rr_intervals
-        
+# sample_name = "b220s"
+# start, end = 284, 300
+# rr_intervals = calculate_rr_intervals(ann_path + sample_name, 'jqrs1', start, end, "V")
+# if len(rr_intervals) > 0: 
+#     print "average: ", sum(rr_intervals) / len(rr_intervals)
+# print "rr_intervals", rr_intervals
 
 
-# In[13]:
+# In[4]:
 
 def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_ann_type, start=None, end=None):
     if start is None or end is None: 
         # Start and end given in seconds
-        start, end, alarm_duration = invalid.get_start_and_end(fields)    
+        start, end, alarm_duration = invalid.get_start_and_end(fields)
 
     channels = fields['signame']
     channel = channels[channel_index]
@@ -114,11 +113,39 @@ def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_a
 
     ann_type = get_ann_type(channel, channel_index, ecg_ann_type)
     try: 
-        channel_rr_intervals = calculate_rr_intervals(ann_path + sample_name, ann_type, start, end, channel_type)
+        annotation, ann_fs = get_annotation_annfs(ann_path + sample_name, ann_type, start, end, channel_type)
+
+        # Convert annotations sample numbers into seconds if >0 annotations in signal
+        if len(annotation[0]) == 0: 
+            ann_seconds = annotation[0] / float(ann_fs)
+        else: 
+            return np.array([0.0])
+
+        for index in range(1, np.size(ann_seconds)):
+            channel_rr_intervals = np.append(channel_rr_intervals, round(ann_seconds[index] - ann_seconds[index - 1], 4))
+
     except Exception as e: 
         print e
-    
+
     return channel_rr_intervals
+
+
+# In[5]:
+
+def get_rr_dict(ann_path, sample_name, fields, ecg_ann_type, start=None, end=None): 
+    rr_dict = {}
+    if start is None or end is None: 
+        # Start and end given in seconds
+        start, end, alarm_duration = invalid.get_start_and_end(fields)    
+    
+    channels = fields['signame']
+    for channel_index in range(len(channels)): 
+        channel_name = channels[channel_index]
+        rr_intervals = get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_ann_type, start, end)
+        
+        rr_dict[channel_name] = rr_intervals
+    
+    return rr_dict
 
 
 # ## Plotting

@@ -3,10 +3,12 @@
 
 # # Invalid Sample Detection
 
-# In[10]:
+# In[4]:
+
+import sys
+sys.path.append('C:/Python27/Lib/site-packages')
 
 from scipy               import signal
-
 import matplotlib.pyplot as plt
 import numpy             as np
 import wfdb
@@ -149,7 +151,7 @@ def get_start_and_end(fields):
     return (start, end, tested_block_length)
 
 
-# In[17]:
+# In[1]:
 
 # Returns whether signal is valid or not
 def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitude_cutoff, stats_cutoffs, order): 
@@ -268,7 +270,7 @@ if __name__ == '__main__':
     sample = 'sample_data/challenge_training_data/v131l'
     
     start = 295 # in seconds
-    end = 305 # in seconds
+    end = 300 # in seconds
     
     invalids = calculate_invalids(sample, start, end)
     print calculate_cval(invalids)
@@ -278,7 +280,7 @@ if __name__ == '__main__':
 
 # ### FFT analysis
 
-# In[20]:
+# In[19]:
 
 # There is a noisy section of this signal - between 4:20 and 4:25 (260 and 265 seconds)
 sig, fields=wfdb.rdsamp('sample_data/challenge_training_data/a103l')
@@ -307,7 +309,7 @@ plt.show()
 
 # To check if the signal amplitude in the range 70-90 Hz is outsize the limits (> 0.005 mV), we look at the fft of the signal:  
 
-# In[25]:
+# In[20]:
 
 def get_signal_fft(signal, signal_duration, fs): 
     # Number of samplepoints
@@ -334,7 +336,7 @@ plot_signal_fft(clean_xf, clean_signal_fft, "FFT of clean signal")
 plot_signal_fft(noisy_xf, noisy_signal_fft, "FFT of noisy signal")
 
 
-# In[5]:
+# In[26]:
 
 noisy_amplitude_limit = 0.005
 
@@ -347,11 +349,11 @@ def check_frequency_amplitude_limits(signal_fft, signal_duration):
             return "Invalid data"
     return "Valid data"
     
-print check_frequency_amplitude_limits(clean_signal_fft, clean_duration)
-print check_frequency_amplitude_limits(noisy_signal_fft, noisy_duration)
+# print check_frequency_amplitude_limits(clean_signal_fft, clean_duration)
+# print check_frequency_amplitude_limits(noisy_signal_fft, noisy_duration)
 
 
-# In[6]:
+# In[27]:
 
 sig, fields=wfdb.rdsamp('sample_data/challenge_training_data/a170s')
 fs = 250
@@ -367,37 +369,37 @@ plt.xlabel('samples (250 per second)')
 plt.show()
 
 xf, signal_fft = get_signal_fft(a170s_signal, duration, 1)
-plot_signal_fft(xf, signal_fft)
-print check_frequency_amplitude_limits(signal_fft, duration)
+# plot_signal_fft(xf, signal_fft)
+# print check_frequency_amplitude_limits(signal_fft, duration)
 
 
 # Putting this all together to visualize the raw signal, the filtered signal, and the FFT of the signal: 
 
-# In[7]:
+# In[28]:
 
-sig, fields=wfdb.rdsamp('sample_data/challenge_training_data/a170s')
-print fields['signame']
-fs = 250
-clean_start = 260
-clean_end = 263
-channel = 3
-clean_duration = clean_end - clean_start
+# sig, fields=wfdb.rdsamp('sample_data/challenge_training_data/a170s')
+# print fields['signame']
+# fs = 250
+# clean_start = 260
+# clean_end = 263
+# channel = 3
+# clean_duration = clean_end - clean_start
 
-clean_signal = sig[clean_start*fs:clean_end*fs,:]
+# clean_signal = sig[clean_start*fs:clean_end*fs,:]
 
-plt.plot(clean_signal[:,channel],'b-')
-plt.xlabel('samples (250 per second)')
-plt.show()
+# plt.plot(clean_signal[:,channel],'b-')
+# plt.xlabel('samples (250 per second)')
+# plt.show()
 
-filtered_clean_signal = band_pass_filter(clean_signal[:,channel], 70, 90, 50)
+# filtered_clean_signal = band_pass_filter(clean_signal[:,channel], 70, 90, 50)
 
-# plt.plot(clean_signal[:,channel],'r-')
-plt.plot(filtered_clean_signal,'b-')
-plt.xlabel('samples')
-plt.show()
+# # plt.plot(clean_signal[:,channel],'r-')
+# plt.plot(filtered_clean_signal,'b-')
+# plt.xlabel('samples')
+# plt.show()
 
-xf, signal_fft = get_signal_fft(clean_signal, clean_duration, channel)
-plot_signal_fft(xf, signal_fft, "FFT of clean signal")
+# xf, signal_fft = get_signal_fft(clean_signal, clean_duration, channel)
+# plot_signal_fft(xf, signal_fft, "FFT of clean signal")
 
 
 # In[ ]:
