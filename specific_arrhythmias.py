@@ -50,7 +50,7 @@ def calc_channel_asystole_score(ann_path, sample_name, sig, fields, ann_type, ch
     return cumulative_score   
 
 
-# In[21]:
+# In[64]:
 
 def test_asystole(data_path, ann_path, sample_name, ecg_ann_type): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
@@ -70,10 +70,10 @@ def test_asystole(data_path, ann_path, sample_name, ecg_ann_type):
     return overall_score > 0
     
     
-sample_name = "a203l" # true alarm
-# sample_name = "a152s" # false alarm
+# sample_name = "a203l" # true alarm
+# # sample_name = "a152s" # false alarm
 
-print test_asystole(data_path, ann_path, sample_name, ecg_ann_type)
+# print test_asystole(data_path, ann_path, sample_name, ecg_ann_type)
 
 
 # ## Bradycardia
@@ -154,7 +154,7 @@ def get_average_hr_blocks(rr_intervals, num_beats_per_block):
     return hr_sum / hr_num    
 
 
-# In[52]:
+# In[63]:
 
 def test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
@@ -171,10 +171,10 @@ def test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type):
     return average_hr_blocks < parameters.HR_MIN
 
 
-sample_name = "f572s" # "b183l" # true alarm
-# sample_name = "b216s" #"b184s" # false alarm
+# sample_name = "f572s" # "b183l" # true alarm
+# # sample_name = "b216s" #"b184s" # false alarm
 
-print test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type)
+# print test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type)
 
 
 # ## Tachycardia
@@ -192,7 +192,7 @@ def check_tachycardia_channel(rr_intervals_list, alarm_duration):
     return False
 
 
-# In[55]:
+# In[62]:
 
 def test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
@@ -211,9 +211,9 @@ def test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type):
     return get_average_hr_blocks(best_channel_rr, parameters.BRADYCARDIA_NUM_BEATS) > parameters.TACHYCARDIA_HR_MAX
 
 
-# sample_name = "t209l" # true alarm
-sample_name = "t384s" # false alarm
-print test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type)
+# # sample_name = "t209l" # true alarm
+# sample_name = "t384s" # false alarm
+# print test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type)
 
 
 # ## Ventricular tachycardia
@@ -256,7 +256,7 @@ def get_single_peak_indices(signal, peak_indices, index_threshold=50):
     return single_peak_indices
 
 
-# In[42]:
+# In[65]:
 
 def get_lf_sub(channel_sig, order): 
     lf = abs(invalid.band_pass_filter(channel_sig, parameters.LF_LOW, parameters.LF_HIGH, order))
@@ -298,12 +298,12 @@ def ventricular_beat_annotations(channel_sig,
     
     return ventricular_beat_indices
 
-start_time = 294
-end_time = 297
-start = start_time * parameters.DEFAULT_ECG_FS
-end = end_time * parameters.DEFAULT_ECG_FS
-sig, fields = wfdb.rdsamp(data_path + "f530s")
-print ventricular_beat_annotations(sig[start:end,0])
+# start_time = 294
+# end_time = 297
+# start = start_time * parameters.DEFAULT_ECG_FS
+# end = end_time * parameters.DEFAULT_ECG_FS
+# sig, fields = wfdb.rdsamp(data_path + "f530s")
+# print ventricular_beat_annotations(sig[start:end,0])
 
 
 # In[6]:
@@ -322,7 +322,7 @@ def max_ventricular_hr(ventricular_beats, num_beats, fs):
     return max_hr
 
 
-# In[7]:
+# In[66]:
 
 def test_ventricular_tachycardia(data_path, 
                                  sample_name, 
@@ -355,7 +355,7 @@ def test_ventricular_tachycardia(data_path,
         
     return False
 
-print test_ventricular_tachycardia(data_path, "v532s")
+# print test_ventricular_tachycardia(data_path, "v532s")
 
 
 # ## Ventricular flutter/fibrillation
@@ -485,7 +485,7 @@ def adjust_dominant_freqs(dominant_freqs, regular_activity):
     return adjusted_dominant_freqs
 
 
-# In[61]:
+# In[67]:
 
 def test_ventricular_flutter_fibrillation(data_path, 
                                           sample_name,
@@ -533,8 +533,8 @@ def test_ventricular_flutter_fibrillation(data_path,
     return any([ r_value > 0 for r_value in r_vector ])
     
 
-sample_name = "f572s"
-print test_ventricular_flutter_fibrillation(data_path, sample_name)    
+# sample_name = "f572s"
+# print test_ventricular_flutter_fibrillation(data_path, sample_name)    
 
 
 # In[ ]:
