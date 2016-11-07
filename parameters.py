@@ -100,6 +100,7 @@ VFIB_LOW_DOMINANCE_INDEX_THRESHOLD = 100 # in sample number
 VFIB_WINDOW_SIZE = 2 # in seconds
 VFIB_ROLLING_INCREMENT = 1 # in seconds
 VFIB_ABP_THRESHOLD = 6 # in mmHg
+VFIB_DOMINANT_FREQ_THRESHOLD = 2 # in Hz 
 
 ##### Ventricular beat detection #####
 LF_LOW = 1

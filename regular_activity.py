@@ -98,11 +98,11 @@ def is_classified_correctly(is_true_alarm, is_regular):
 
 # ### Check interval regular activity
 
-# In[7]:
+# In[6]:
 
 # Returns True for a given channel if all regular activity tests checked pass
 def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, channel,
-                                    should_check_invalids, should_check_rr): 
+                                    should_check_invalids, should_check_rr, should_num_check): 
     all_checks = np.array([])
     
     if should_check_rr: 
@@ -113,25 +113,28 @@ def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, chan
         stdev_check = check_rr_stdev(rr_intervals)
         hr_check = check_heart_rate(rr_intervals, alarm_duration)
         sum_check = check_sum_rr_intervals(rr_intervals, alarm_duration)
-        num_check = check_num_rr_intervals(rr_intervals)
         
-        all_checks = np.append(all_checks, [stdev_check, hr_check, sum_check, num_check])
+        all_checks = np.append(all_checks, [stdev_check, hr_check, sum_check])
+    
+    if should_num_check:
+        num_check = check_num_rr_intervals(rr_intervals)
+        all_checks = np.append(all_checks, [num_check])
     
     if should_check_invalids: 
         invalids_check = check_invalids(invalids, channel)
         all_checks = np.append(all_checks, invalids_check)
-            
+                
     return np.all(all_checks)
 
 
 # ### Check regular activity for sample
 
-# In[8]:
+# In[2]:
 
 # Check overall sample for regular activity by iterating through each channel.
 # If any channel exhibits regular activity, alarm indicated as false alarm.
 def is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type, start=None, end=None, 
-                      should_check_invalids=True, should_check_rr=True): 
+                      should_check_invalids=True, should_check_rr=True, should_num_check=True): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     num_channels = len(fields['signame'])
     if start is None or end is None: 
@@ -152,7 +155,7 @@ def is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type, start=None
             rr, duration = annotate.get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, 
                                                              ecg_ann_type)
         is_regular = check_interval_regular_activity(rr, invalids, duration, channel, should_check_invalids,
-                                                     should_check_rr)
+                                                     should_check_rr, should_num_check)
                 
         # If any channel exhibits regular activity, deem signal as regular activity
         if is_regular: 
@@ -162,21 +165,21 @@ def is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type, start=None
 
 # ### Check regular activity of intermediate data
 
-# In[9]:
+# In[5]:
 
 # Determines regular activity of sample based on RR intervals and invalids array: 
 # param: rr_dict as a dictionary of the form: 
 #         { channel0: [rr_intervals], channel1: [rr_intervals], ...}
 # param: alarm_duration duration of alarm in seconds
 def is_rr_invalids_regular(rr_dict, invalids, alarm_duration,
-                           should_check_invalids=True, should_check_rr=True): 
+                           should_check_invalids=True, should_check_rr=True, should_num_check=True): 
 
     for channel in rr_dict.keys(): 
         channel_type = invalid.get_channel_type(channel)
         rr_intervals = rr_dict[channel]
         
         is_regular = check_interval_regular_activity(rr_intervals, invalids, alarm_duration, channel, 
-                                                     should_check_invalids, should_check_rr)
+                                                     should_check_invalids, should_check_rr, should_num_check)
         
         # If any channel is regular, reject alarm as false alarm
         if is_regular: 

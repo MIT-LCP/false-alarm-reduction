@@ -3,10 +3,7 @@
 
 # # Invalid Sample Detection
 
-# In[4]:
-
-import sys
-sys.path.append('C:/Python27/Lib/site-packages')
+# In[1]:
 
 from scipy               import signal
 import matplotlib.pyplot as plt
@@ -131,12 +128,23 @@ def histogram_test(signal, histogram_cutoff):
 
 # ## Putting it all together
 
-# In[16]:
+# In[2]:
 
 def get_channel_type(channel_name): 
     if channel_name == "ABP" or channel_name == "PLETH" or channel_name == "RESP": 
         return channel_name
     return "ECG"
+
+# Return list of channel indices for channels of type channel_type
+def get_channels_of_type(channels, channel_type): 
+    channel_indices = np.array([])
+    
+    for channel_index in range(len(channels)): 
+        channel_name = channels[channel_index]
+        if channel_type == get_channel_type(channel_name): 
+            channel_indices = np.append(channel_indices, channel_index)
+    
+    return channel_indices
 
 # Get start and end points (in seconds) to check depending on type of alarm signaled
 def get_start_and_end(fields): 

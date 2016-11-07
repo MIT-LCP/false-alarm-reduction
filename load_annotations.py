@@ -43,7 +43,7 @@ def get_ann_type(channel, channel_index, ecg_ann_type):
     return ann_type
 
 
-# In[4]:
+# In[10]:
 
 # Start and end in seconds
 def get_annotation_annfs(sample, ann_type, start, end, channel_type): 
@@ -67,7 +67,7 @@ def get_annotation_annfs(sample, ann_type, start, end, channel_type):
     # Get proper range of annotation based on annotation fs, only run if different ann_fs from before 
     if ann_fs != parameters.DEFAULT_OTHER_FS: 
         annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
-        
+                        
     return annotation, ann_fs
 
 
@@ -99,7 +99,7 @@ def get_annotation_annfs(sample, ann_type, start, end, channel_type):
 # print "rr_intervals", rr_intervals
 
 
-# In[4]:
+# In[13]:
 
 def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_ann_type, start=None, end=None):
     if start is None or end is None: 
@@ -116,8 +116,8 @@ def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_a
         annotation, ann_fs = get_annotation_annfs(ann_path + sample_name, ann_type, start, end, channel_type)
 
         # Convert annotations sample numbers into seconds if >0 annotations in signal
-        if len(annotation[0]) == 0: 
-            ann_seconds = annotation[0] / float(ann_fs)
+        if len(annotation[0]) > 0: 
+            ann_seconds = np.array(annotation[0]) / float(ann_fs)
         else: 
             return np.array([0.0])
 
@@ -130,8 +130,9 @@ def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_a
     return channel_rr_intervals
 
 
-# In[5]:
+# In[14]:
 
+# Start and end given in seconds
 def get_rr_dict(ann_path, sample_name, fields, ecg_ann_type, start=None, end=None): 
     rr_dict = {}
     if start is None or end is None: 
@@ -141,6 +142,10 @@ def get_rr_dict(ann_path, sample_name, fields, ecg_ann_type, start=None, end=Non
     channels = fields['signame']
     for channel_index in range(len(channels)): 
         channel_name = channels[channel_index]
+        channel_type = invalid.get_channel_type(channel_name)
+        if channel_type == "RESP": 
+            continue
+        
         rr_intervals = get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_ann_type, start, end)
         
         rr_dict[channel_name] = rr_intervals
@@ -190,17 +195,17 @@ def plot_annotations(data_path, ann_path, sample_name, ann_types_list, channel, 
     plt.show()
 
 
-# In[39]:
+# In[15]:
 
-data_fs = 250
-sample_name = 't384s'
-start = 286
-end = 300
+# data_fs = 250
+# sample_name = 't384s'
+# start = 286
+# end = 300
 
-# choose the lead to plot (annotations are generated off the first lead)
-channel = 2
+# # choose the lead to plot (annotations are generated off the first lead)
+# channel = 2
 
-plot_annotations(data_path, ann_path, sample_name, ['wabp'], channel, data_fs, start, end)
+# plot_annotations(data_path, ann_path, sample_name, ['wabp'], channel, data_fs, start, end)
 
 
 # In[ ]:

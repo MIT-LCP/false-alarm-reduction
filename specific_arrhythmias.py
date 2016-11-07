@@ -5,9 +5,6 @@
 
 # In[2]:
 
-import sys
-sys.path.append('C:/Python27/Lib/site-packages')
-
 import invalid_sample_detection    as invalid
 import load_annotations            as annotate
 import regular_activity            as regular
@@ -81,13 +78,18 @@ print test_asystole(data_path, ann_path, sample_name, ecg_ann_type)
 
 # ## Bradycardia
 
-# In[56]:
+# In[49]:
 
 def get_rr_intervals_list(ann_path, sample_name, ecg_ann_type, fields, start, end): 
     channels = fields['signame']
     rr_intervals_list = []
     
     for channel_index in range(len(channels)): 
+        channel_name = channels[channel_index]
+        channel_type = invalid.get_channel_type(channel_name)
+        if channel_type == "RESP": 
+            continue
+            
         rr_intervals = annotate.get_channel_rr_intervals(ann_path, sample_name, channel_index, fields,
                                                          ecg_ann_type, start, end)
         rr_intervals_list.append(rr_intervals)
@@ -110,7 +112,7 @@ def min_stdev_rr_intervals(rr_intervals_list):
     return opt_rr_intervals
 
 
-# In[57]:
+# In[50]:
 
 # Best channel: minimum stdev with acceptable RR intervals sum and count
 # If none with acceptable RR interval sum and count --> select minimum stdev out of all RR intervals
@@ -136,7 +138,7 @@ def find_best_channel(rr_intervals_list, alarm_duration):
     return min_stdev_rr_intervals(rr_intervals_list)            
 
 
-# In[114]:
+# In[51]:
 
 def get_average_hr_blocks(rr_intervals, num_beats_per_block): 
     hr_sum = 0.
@@ -152,7 +154,7 @@ def get_average_hr_blocks(rr_intervals, num_beats_per_block):
     return hr_sum / hr_num    
 
 
-# In[208]:
+# In[52]:
 
 def test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
@@ -169,7 +171,7 @@ def test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type):
     return average_hr_blocks < parameters.HR_MIN
 
 
-sample_name = "b227l" # "b183l" # true alarm
+sample_name = "f572s" # "b183l" # true alarm
 # sample_name = "b216s" #"b184s" # false alarm
 
 print test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type)
@@ -177,7 +179,7 @@ print test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type)
 
 # ## Tachycardia
 
-# In[106]:
+# In[54]:
 
 def check_tachycardia_channel(rr_intervals_list, alarm_duration): 
     for rr_intervals in rr_intervals_list: 
@@ -190,7 +192,7 @@ def check_tachycardia_channel(rr_intervals_list, alarm_duration):
     return False
 
 
-# In[116]:
+# In[55]:
 
 def test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
@@ -216,7 +218,7 @@ print test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type)
 
 # ## Ventricular tachycardia
 
-# In[302]:
+# In[4]:
 
 # Returns index of peak (max value) in the signal out of the indices provided
 def get_peak_index(signal, peak_indices): 
@@ -254,7 +256,7 @@ def get_single_peak_indices(signal, peak_indices, index_threshold=50):
     return single_peak_indices
 
 
-# In[327]:
+# In[42]:
 
 def get_lf_sub(channel_sig, order): 
     lf = abs(invalid.band_pass_filter(channel_sig, parameters.LF_LOW, parameters.LF_HIGH, order))
@@ -300,11 +302,11 @@ start_time = 294
 end_time = 297
 start = start_time * parameters.DEFAULT_ECG_FS
 end = end_time * parameters.DEFAULT_ECG_FS
-sig, fields = wfdb.rdsamp(data_path + "f544s")
-print ventricular_beat_annotations(sig[start:end,1])
+sig, fields = wfdb.rdsamp(data_path + "f530s")
+print ventricular_beat_annotations(sig[start:end,0])
 
 
-# In[298]:
+# In[6]:
 
 def max_ventricular_hr(ventricular_beats, num_beats, fs): 
     max_hr = 0
@@ -320,7 +322,7 @@ def max_ventricular_hr(ventricular_beats, num_beats, fs):
     return max_hr
 
 
-# In[317]:
+# In[7]:
 
 def test_ventricular_tachycardia(data_path, 
                                  sample_name, 
@@ -358,7 +360,7 @@ print test_ventricular_tachycardia(data_path, "v532s")
 
 # ## Ventricular flutter/fibrillation
 
-# In[16]:
+# In[56]:
 
 def calculate_dlfmax(channel_sig, 
                      order=parameters.ORDER): 
@@ -393,20 +395,20 @@ def calculate_dlfmax(channel_sig,
             
             
 def get_abp_std_scores(channel_sig, 
-                       channel_type,
                        alarm_duration, 
                        fs=parameters.DEFAULT_ECG_FS,
                        abp_threshold=parameters.VFIB_ABP_THRESHOLD,
                        window_size=parameters.VFIB_WINDOW_SIZE,
                        rolling_increment=parameters.VFIB_ROLLING_INCREMENT):
     r_delta = np.array([])
+    start = 0
     
     while start < channel_sig.size: 
         end = start + window_size * fs
         channel_subsig = channel_sig[start:end]
         start += (rolling_increment * fs)
 
-        invalids = invalid.calculate_channel_invalids(channel_subsig, channel_type)
+        invalids = invalid.calculate_channel_invalids(channel_subsig, "ABP")
         cval = invalid.calculate_cval_channel(invalids)
         
         std = np.std(channel_subsig)        
@@ -453,13 +455,14 @@ def get_regular_activity_array(sig,
     
     while start < sig[:,0].size: 
         end = start + window_size * fs
+        start_time = start / float(fs)
+        end_time = end / float(fs)
         subsig = sig[start:end]
         
         invalids_dict = invalid.calculate_invalids_sig(subsig, fields)
-        rr_dict = annotate.get_rr_dict(ann_path, sample_name, fields, ecg_ann_type, start, end)
-        print "rr: ", rr_dict
+        rr_dict = annotate.get_rr_dict(ann_path, sample_name, fields, ecg_ann_type, start_time, end_time)
                 
-        is_regular = regular.is_rr_invalids_regular(rr_dict, invalids_dict, window_size)
+        is_regular = regular.is_rr_invalids_regular(rr_dict, invalids_dict, window_size, True, True, False)
         if is_regular: 
             regular_activity_array = np.append(regular_activity_array, 1)
         else: 
@@ -468,20 +471,21 @@ def get_regular_activity_array(sig,
         start += (rolling_increment * fs)
     
     return regular_activity_array
-        
-sample_name = "f544s"
-sig, fields = wfdb.rdsamp(data_path + sample_name)
-channels = fields['signame']
-fs = 250
-
-# Start and end given in seconds
-start, end, alarm_duration = invalid.get_start_and_end(fields)
-alarm_sig = sig[start*fs:end*fs,:]
-
-print get_regular_activity_array(alarm_sig, fields, ann_path, sample_name, ecg_ann_type)
 
 
-# In[ ]:
+def adjust_dominant_freqs(dominant_freqs, regular_activity): 
+    adjusted_dominant_freqs = np.array([])
+    
+    for freq, is_regular in zip(dominant_freqs, regular_activity): 
+        if is_regular: 
+            adjusted_dominant_freqs = np.append(adjusted_dominant_freqs, 0)
+        else: 
+            adjusted_dominant_freqs = np.append(adjusted_dominant_freqs, freq)
+    
+    return adjusted_dominant_freqs
+
+
+# In[61]:
 
 def test_ventricular_flutter_fibrillation(data_path, 
                                           sample_name,
@@ -493,8 +497,47 @@ def test_ventricular_flutter_fibrillation(data_path,
     # Start and end given in seconds
     start, end, alarm_duration = invalid.get_start_and_end(fields)
     alarm_sig = sig[start*fs:end*fs,:]
-    
-    annotation = wfdb.rdann(data_path + sample_name, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
 
+    ecg_channels = invalid.get_channels_of_type(channels, "ECG")
+    abp_channels = invalid.get_channels_of_type(channels, "ABP")
     
+    dlfmax = 0
+    for channel_index in ecg_channels: 
+        channel_dlfmax = calculate_dlfmax(alarm_sig[:,channel_index])
+        dlfmax = max(dlfmax, channel_dlfmax)
+        
+    if dlfmax > parameters.VFIB_DLFMAX_LIMIT: 
+        r_vector_value = 1.
+    else: 
+        r_vector_value = 0.
+    r_vector = [r_vector_value] * (alarm_duration / parameters.VFIB_ROLLING_INCREMENT)     
+    
+    for channel_index in abp_channels: 
+        r_delta = get_abp_std_scores(alarm_sig[:,channel_index], alarm_duration)
+        r_vector = r_vector + r_delta
+    
+    for channel_index in ecg_channels: 
+        dominant_freqs = get_dominant_freq_array(alarm_sig[:,channel_index])
+        regular_activity = get_regular_activity_array(alarm_sig, fields, ann_path, sample_name, ecg_ann_type)
+        adjusted_dominant_freqs = adjust_dominant_freqs(dominant_freqs, regular_activity)
+        
+        new_r_vector = np.array([])
+        for dominant_freq, r_value in zip(adjusted_dominant_freqs, r_vector): 
+            if dominant_freq < parameters.VFIB_DOMINANT_FREQ_THRESHOLD: 
+                new_r_vector = np.append(new_r_vector, 0.)
+            else: 
+                new_r_vector = np.append(new_r_vector, r_value)
+        
+        r_vector = new_r_vector
+        
+    return any([ r_value > 0 for r_value in r_vector ])
+    
+
+sample_name = "f572s"
+print test_ventricular_flutter_fibrillation(data_path, sample_name)    
+
+
+# In[ ]:
+
+
 
