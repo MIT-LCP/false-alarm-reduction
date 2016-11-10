@@ -3,9 +3,10 @@
 
 # # Invalid Sample Detection
 
-# In[1]:
+# In[23]:
 
 from scipy               import signal
+from datetime            import datetime, timedelta
 import matplotlib.pyplot as plt
 import numpy             as np
 import wfdb
@@ -26,7 +27,7 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 
 # We make a bandpass filter on the range 70-90 Hz and check the signal amplitude in this range. If the signal amplitude exceeds limits, the data is marked as invalid.
 
-# In[11]:
+# In[10]:
 
 order = 50
 f_low = 70
@@ -57,7 +58,7 @@ plt.xlabel('samples')
 plt.show()
 
 
-# In[12]:
+# In[11]:
 
 cutoff = parameters.AMPL_CUTOFF
 order = parameters.ORDER
@@ -75,7 +76,7 @@ print is_amplitude_within_cutoff(a170s_signal[:,1], f_low, f_high, cutoff, order
 
 # ## Statistical analysis
 
-# In[13]:
+# In[12]:
 
 # Check signal statistics to be within minimum and maximum values
 def check_stats_within_cutoff(signal, channel_type, stats_cutoffs): 
@@ -99,7 +100,7 @@ def check_stats_within_cutoff(signal, channel_type, stats_cutoffs):
 
 # ### NaN test
 
-# In[14]:
+# In[13]:
 
 # Check if signal contains NaN values
 def contains_nan(signal): 
@@ -108,7 +109,7 @@ def contains_nan(signal):
 
 # ### Histogram test
 
-# In[15]:
+# In[14]:
 
 # Check borders between histogram buckets so the difference is within a cutoff value
 def histogram_test(signal, histogram_cutoff): 
@@ -128,7 +129,7 @@ def histogram_test(signal, histogram_cutoff):
 
 # ## Putting it all together
 
-# In[2]:
+# In[15]:
 
 def get_channel_type(channel_name): 
     if channel_name == "ABP" or channel_name == "PLETH" or channel_name == "RESP": 
@@ -159,30 +160,34 @@ def get_start_and_end(fields):
     return (start, end, tested_block_length)
 
 
-# In[1]:
+# In[36]:
 
 # Returns whether signal is valid or not
-def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitude_cutoff, stats_cutoffs, order): 
+def is_valid(signal, channel_type, should_check_nan, f_low, f_high, histogram_cutoff, freq_amplitude_cutoff, stats_cutoffs, order): 
     if channel_type == "RESP": 
         return True
     
     # Checks which return True if passing the test, False if not
-    nan_check = get_ipython().getoutput(u'contains_nan(signal) ')
     histogram_check = histogram_test(signal, histogram_cutoff)
     stats_check = check_stats_within_cutoff(signal, channel_type, stats_cutoffs)
+    checks = np.array([histogram_check, stats_check])
+    
+    if should_check_nan: 
+        nan_check = get_ipython().getoutput(u'contains_nan(signal)')
+        checks = np.append(checks, nan_check)
     
     # If ECG signal, also check signal amplitude in frequency range within limits
     if channel_type == "ECG": 
         signal_amplitude_check = is_amplitude_within_cutoff(signal, f_low, f_high, freq_amplitude_cutoff, order)
-        return signal_amplitude_check and nan_check and stats_check and histogram_check
+        checks = np.append(checks, signal_amplitude_check)
     
-    # Otherwise, just check NaN, stats, and histogram
-    return nan_check and stats_check and histogram_check
+    return all(checks)
 
 
 # Return invalids list given sig for a single channel
 def calculate_channel_invalids(channel_sig,
                                channel_type,
+                               should_check_nan=True,
                                fs=parameters.DEFAULT_ECG_FS,
                                block_length=parameters.BLOCK_LENGTH, 
                                order=parameters.ORDER,
@@ -199,7 +204,7 @@ def calculate_channel_invalids(channel_sig,
         signal = channel_sig[int(start):int(start + block_length*fs)]
         start += (block_length * fs)
 
-        is_data_valid = is_valid(signal, channel_type, f_low, f_high, hist_cutoff, ampl_cutoff, stats_cutoffs, order)
+        is_data_valid = is_valid(signal, channel_type, should_check_nan, f_low, f_high, hist_cutoff, ampl_cutoff, stats_cutoffs, order)
         
         if is_data_valid: 
             invalids = np.append(invalids, 0)
@@ -208,24 +213,13 @@ def calculate_channel_invalids(channel_sig,
     
     return invalids
 
-# Returns invalids dictionary given a sample name, start, and end
-def calculate_invalids(sample, start, end,
-                       block_length=parameters.BLOCK_LENGTH, 
-                       order=parameters.ORDER,
-                       f_low=parameters.F_LOW,
-                       f_high=parameters.F_HIGH,
-                       hist_cutoff=parameters.HIST_CUTOFF,
-                       ampl_cutoff=parameters.AMPL_CUTOFF,
-                       stats_cutoffs=parameters.STATS_CUTOFFS):
-    sig, fields = wfdb.rdsamp(sample)
-    return calculate_invalids_sig(sig, fields, start, end)
-
     
 # Returns invalids dictionary mapping each channel to an invalids array representing validity of 0.8 second blocks
 # Takes in sig and fields after already reading the sample file
 def calculate_invalids_sig(sig, fields,
                            start=None,
                            end=None,
+                           should_check_nan=True,
                            block_length=parameters.BLOCK_LENGTH, 
                            order=parameters.ORDER,
                            f_low=parameters.F_LOW,
@@ -249,10 +243,24 @@ def calculate_invalids_sig(sig, fields,
         channel_type = get_channel_type(channel_name)
         channel_sig = sig[:,channel_num]
         
-        invalids_array = calculate_channel_invalids(channel_sig, channel_type)
+        invalids_array = calculate_channel_invalids(channel_sig, channel_type, should_check_nan)
         invalids[channel_name] = invalids_array
-            
+                 
     return invalids
+
+
+# Returns invalids dictionary given a sample name, start, and end
+def calculate_invalids(sample, start, end,
+                       should_check_nan=True,
+                       block_length=parameters.BLOCK_LENGTH, 
+                       order=parameters.ORDER,
+                       f_low=parameters.F_LOW,
+                       f_high=parameters.F_HIGH,
+                       hist_cutoff=parameters.HIST_CUTOFF,
+                       ampl_cutoff=parameters.AMPL_CUTOFF,
+                       stats_cutoffs=parameters.STATS_CUTOFFS):
+    sig, fields = wfdb.rdsamp(sample)
+    return calculate_invalids_sig(sig, fields, start, end, should_check_nan)
 
 
 # Calculate overall c_val of invalids list for a single channel (0 = invalid, 1 = valid)
@@ -271,16 +279,17 @@ def calculate_cval(invalids):
     return cvals
 
 
-# In[18]:
+# In[34]:
 
 if __name__ == '__main__':
     # sample = 'sample_data/challenge_training_data/a170s'
-    sample = 'sample_data/challenge_training_data/v131l'
+    sample = 'sample_data/challenge_training_data/t209l'
+    sig, fields = wfdb.rdsamp(sample)
     
     start = 295 # in seconds
     end = 300 # in seconds
     
-    invalids = calculate_invalids(sample, start, end)
+    invalids = calculate_invalids_sig(sig, fields, start, end)
     print calculate_cval(invalids)
 
 

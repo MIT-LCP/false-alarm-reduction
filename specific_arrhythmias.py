@@ -3,7 +3,7 @@
 
 # # Specific arrhythmia tests
 
-# In[2]:
+# In[3]:
 
 import invalid_sample_detection    as invalid
 import load_annotations            as annotate
@@ -20,7 +20,7 @@ ecg_ann_type = 'gqrs'
 
 # ## Asystole
 
-# In[18]:
+# In[71]:
 
 def calc_channel_asystole_score(ann_path, sample_name, sig, fields, ann_type, channel_start, channel_end,
                                 channel): 
@@ -50,7 +50,7 @@ def calc_channel_asystole_score(ann_path, sample_name, sig, fields, ann_type, ch
     return cumulative_score   
 
 
-# In[64]:
+# In[ ]:
 
 def test_asystole(data_path, ann_path, sample_name, ecg_ann_type): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
@@ -78,7 +78,7 @@ def test_asystole(data_path, ann_path, sample_name, ecg_ann_type):
 
 # ## Bradycardia
 
-# In[49]:
+# In[4]:
 
 def get_rr_intervals_list(ann_path, sample_name, ecg_ann_type, fields, start, end): 
     channels = fields['signame']
@@ -112,7 +112,7 @@ def min_stdev_rr_intervals(rr_intervals_list):
     return opt_rr_intervals
 
 
-# In[50]:
+# In[5]:
 
 # Best channel: minimum stdev with acceptable RR intervals sum and count
 # If none with acceptable RR interval sum and count --> select minimum stdev out of all RR intervals
@@ -138,7 +138,7 @@ def find_best_channel(rr_intervals_list, alarm_duration):
     return min_stdev_rr_intervals(rr_intervals_list)            
 
 
-# In[51]:
+# In[6]:
 
 def get_average_hr_blocks(rr_intervals, num_beats_per_block): 
     hr_sum = 0.
@@ -154,7 +154,7 @@ def get_average_hr_blocks(rr_intervals, num_beats_per_block):
     return hr_sum / hr_num    
 
 
-# In[63]:
+# In[9]:
 
 def test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
@@ -166,20 +166,18 @@ def test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type):
     rr_intervals_list = get_rr_intervals_list(ann_path, sample_name, ecg_ann_type, fields, start, end)    
     best_channel_rr = find_best_channel(rr_intervals_list, alarm_duration)
     average_hr_blocks = get_average_hr_blocks(best_channel_rr, parameters.BRADYCARDIA_NUM_BEATS)
-    print average_hr_blocks
     
     return average_hr_blocks < parameters.HR_MIN
 
 
-# sample_name = "f572s" # "b183l" # true alarm
+# sample_name = "b183l" # true alarm
 # # sample_name = "b216s" #"b184s" # false alarm
-
 # print test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type)
 
 
 # ## Tachycardia
 
-# In[54]:
+# In[10]:
 
 def check_tachycardia_channel(rr_intervals_list, alarm_duration): 
     for rr_intervals in rr_intervals_list: 
@@ -192,7 +190,7 @@ def check_tachycardia_channel(rr_intervals_list, alarm_duration):
     return False
 
 
-# In[62]:
+# In[11]:
 
 def test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
@@ -208,12 +206,12 @@ def test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type):
     best_channel_rr = find_best_channel(rr_intervals_list, alarm_duration)
         
     average_hr_blocks = get_average_hr_blocks(best_channel_rr, parameters.TACHYCARDIA_NUM_BEATS)
-    return get_average_hr_blocks(best_channel_rr, parameters.BRADYCARDIA_NUM_BEATS) > parameters.TACHYCARDIA_HR_MAX
+    return average_hr_blocks > parameters.TACHYCARDIA_HR_MAX
 
 
-# # sample_name = "t209l" # true alarm
+sample_name = "t209l" # true alarm
 # sample_name = "t384s" # false alarm
-# print test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type)
+print test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type)
 
 
 # ## Ventricular tachycardia
@@ -322,10 +320,12 @@ def max_ventricular_hr(ventricular_beats, num_beats, fs):
     return max_hr
 
 
-# In[66]:
+# In[68]:
 
 def test_ventricular_tachycardia(data_path, 
+                                 ann_path, 
                                  sample_name, 
+                                 ecg_ann_type, 
                                  fs=parameters.DEFAULT_ECG_FS,
                                  num_beats=parameters.VTACH_NUM_BEATS,
                                  max_hr=parameters.VTACH_MAX_HR): 
@@ -355,7 +355,7 @@ def test_ventricular_tachycardia(data_path,
         
     return False
 
-# print test_ventricular_tachycardia(data_path, "v532s")
+# print test_ventricular_tachycardia(data_path, None, "v532s", None)
 
 
 # ## Ventricular flutter/fibrillation
@@ -485,10 +485,12 @@ def adjust_dominant_freqs(dominant_freqs, regular_activity):
     return adjusted_dominant_freqs
 
 
-# In[67]:
+# In[69]:
 
 def test_ventricular_flutter_fibrillation(data_path, 
-                                          sample_name,
+                                          ann_path, 
+                                          sample_name, 
+                                          ecg_ann_type,
                                           fs=parameters.DEFAULT_ECG_FS,
                                           ann_fs=parameters.DEFAULT_ECG_FS):
     sig, fields = wfdb.rdsamp(data_path + sample_name)
@@ -534,7 +536,7 @@ def test_ventricular_flutter_fibrillation(data_path,
     
 
 # sample_name = "f572s"
-# print test_ventricular_flutter_fibrillation(data_path, sample_name)    
+# print test_ventricular_flutter_fibrillation(data_path, None, sample_name, None)    
 
 
 # In[ ]:

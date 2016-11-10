@@ -3,7 +3,7 @@
 
 # # Evaluation 
 
-# In[78]:
+# In[2]:
 
 from datetime                     import datetime
 import numpy                      as np
@@ -18,10 +18,14 @@ import json
 get_ipython().magic(u'matplotlib inline')
 get_ipython().magic(u'config IPCompleter.greedy=True')
 
+data_path = 'sample_data/challenge_training_data/'
+ann_path = 'sample_data/challenge_training_multiann/'
+ecg_ann_type = 'gqrs'
+
 
 # ## Evaluation for sample names
 
-# In[91]:
+# In[ ]:
 
 # Generate confusion matrix for all samples given sample name/directory
 def generate_confusion_matrix_sample(data_path, ann_path, ecg_ann_type, should_check_invalids=True,
@@ -40,8 +44,11 @@ def generate_confusion_matrix_sample(data_path, ann_path, ecg_ann_type, should_c
             sig, fields = wfdb.rdsamp(data_path + sample_name)
             alarm_type, is_true_alarm = regular.check_gold_standard_classification(fields)
             
+            if invalid.contains_nan(sig): 
+                print sample_name
+            
             is_regular = regular.is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type,
-                                                   should_check_invalids, should_check_rr)
+                                                   start=None, end=None, should_check_invalids=should_check_invalids, should_check_rr=should_check_rr)
             
             # Classified as a true alarm if no regular activity 
             classified_true_alarm = not is_regular
@@ -63,10 +70,12 @@ def generate_confusion_matrix_sample(data_path, ann_path, ecg_ann_type, should_c
                 
     return counts, confusion_matrix
 
+generate_confusion_matrix_sample(data_path, ann_path, 'jqrs')
+
 
 # ## Evaluation with saving intermediate data
 
-# In[93]:
+# In[4]:
 
 def write_rr_file(data_path, ann_path, ecg_ann_type): 
     for filename in os.listdir(data_path):
@@ -150,7 +159,7 @@ def read_invalids_file(data_path):
     return all_invalids_dict
 
 
-# In[99]:
+# In[10]:
 
 # Generate confusion matrix for all samples given intermediate data
 def generate_confusion_matrix_intermediate(data_path, ann_path, ecg_ann_type, 
@@ -184,9 +193,6 @@ def generate_confusion_matrix_intermediate(data_path, ann_path, ecg_ann_type,
 
         if is_true_alarm and classified_true_alarm: 
             confusion_matrix["TP"].append(sample_name)
-            
-            if alarm_type == "Ventricular_Tachycardia": 
-                print sample_name, alarm_type
 
         elif is_true_alarm and not classified_true_alarm: 
             confusion_matrix["FN"].append(sample_name)
@@ -228,7 +234,7 @@ write_invalids_file(data_path)
 
 # ## Evaluation stats
 
-# In[53]:
+# In[6]:
 
 def calc_sensitivity(counts): 
     tp = counts["TP"]
@@ -253,9 +259,9 @@ def calc_f1(counts):
     return 2 * sensitivity * ppv / float(sensitivity + ppv)    
 
 
-# In[55]:
+# In[8]:
 
-Ventricular Tachycardiadef print_stats(counts): 
+def print_stats(counts): 
     sensitivity = calc_sensitivity(counts)
     specificity = calc_specificity(counts)
     ppv = calc_ppv(counts)
@@ -270,7 +276,7 @@ Ventricular Tachycardiadef print_stats(counts):
     print "score: ", score
 
 
-# In[100]:
+# In[12]:
 
 if __name__ == '__main__': 
     data_path = 'sample_data/challenge_training_data/'
@@ -284,7 +290,7 @@ if __name__ == '__main__':
 #                                                                                 True # should_check_rr
 #                                                                                 )
 
-#     print_stats(counts_jqrs)
+    print_stats(counts_jqrs)
 #     print_stats(counts_rr)   
 
 
