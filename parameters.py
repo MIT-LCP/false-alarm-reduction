@@ -8,6 +8,7 @@ JQRS_EXTENSION = ".jqrs"
 
 ALARM_TIME = 300 # in seconds
 NUM_SECS_IN_MIN = 60
+DEFAULT_FS = 250.0
 
 # Hard-coded colors 
 COLORS = np.asarray(

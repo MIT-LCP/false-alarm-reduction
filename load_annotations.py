@@ -3,7 +3,7 @@
 
 # # QRS detection
 
-# In[2]:
+# In[22]:
 
 import invalid_sample_detection   as invalid
 import matplotlib.pyplot          as plt
@@ -69,6 +69,23 @@ def get_annotation_annfs(sample, ann_type, start, end, channel_type):
         annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
                         
     return annotation, ann_fs
+
+
+# In[25]:
+
+def get_annotation(sample, ann_type, start, end, channel_type): 
+    if channel_type == "ECG": 
+        ann_fs = parameters.DEFAULT_ECG_FS
+    else: 
+        ann_fs = parameters.DEFAULT_OTHER_FS
+    
+    try: 
+        annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
+    except Exception as e: 
+        annotation = []
+        print e
+    
+    return annotation
 
 
 # ## Calculating RR intervals
