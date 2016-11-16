@@ -47,9 +47,6 @@ def is_classified_true_alarm(data_path, ann_path, sample_name, ecg_ann_type):
     classified_true_alarm = arrhythmia_test(data_path, ann_path, sample_name, ecg_ann_type)
     return is_true_alarm, classified_true_alarm
 
-# sample_name = "f637l"
-# print is_classified_true_alarm(data_path, ann_path, sample_name, ecg_ann_type)
-
 
 # In[4]:
 
@@ -64,7 +61,7 @@ def generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type):
     
     for filename in os.listdir(data_path):
         if filename.endswith(parameters.HEADER_EXTENSION):
-            sample_name = filename.rstrip(parameters.HEADER_EXTENSION)            
+            sample_name = filename.rstrip(parameters.HEADER_EXTENSION)
             
             is_true_alarm, classified_true_alarm = is_classified_true_alarm(data_path, ann_path,
                                                                             sample_name, ecg_ann_type)
@@ -90,8 +87,6 @@ def generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type):
 # In[ ]:
 
 if __name__ == '__main__': 
-    reload(arrhythmia)
-    reload(annotate)
     counts, confusion_matrix = generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type)
     
     start = datetime.now() 

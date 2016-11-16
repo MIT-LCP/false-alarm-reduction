@@ -27,7 +27,7 @@ else:
 
 # ## Helper methods
 
-# In[3]:
+# In[1]:
 
 # Get annotation file type based on channel type and index
 def get_ann_type(channel, channel_index, ecg_ann_type): 
@@ -37,8 +37,12 @@ def get_ann_type(channel, channel_index, ecg_ann_type):
         ann_type = ecg_ann_type + str(channel_index)
     elif channel_type == "ABP": 
         ann_type = 'wabp'
-    else:  
+    elif channel_type == "PLETH": 
         ann_type = "wpleth"
+    elif channel_type == "RESP": 
+        ann_type = ""
+    else: 
+        raise Exception("Unrecognized ann type")
     
     return ann_type
 

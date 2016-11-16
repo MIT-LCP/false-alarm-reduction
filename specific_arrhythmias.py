@@ -3,7 +3,7 @@
 
 # # Specific arrhythmia tests
 
-# In[15]:
+# In[1]:
 
 import invalid_sample_detection    as invalid
 import load_annotations            as annotate
@@ -12,6 +12,7 @@ import numpy                       as np
 import matplotlib.pyplot           as plt
 import parameters
 import wfdb
+from datetime import datetime
 
 data_path = 'sample_data/challenge_training_data/'
 ann_path = 'sample_data/challenge_training_multiann/'
@@ -20,58 +21,61 @@ ecg_ann_type = 'gqrs'
 
 # ## Asystole
 
-# In[48]:
+# In[2]:
 
-def calc_channel_asystole_score(ann_path, sample_name, channel_sig, ann_type, channel_start, channel_end, channel,
-                                fs=parameters.DEFAULT_FS): 
-    current_start = channel_start
-    channel_type = invalid.get_channel_type(channel)
-    current_end = current_start + parameters.ASYSTOLE_WINDOW_SIZE
-    cumulative_score = 0
+def calc_summed_asystole_score(ann_path, sample_name, subsig, channels, ecg_ann_type, current_start, current_end): 
+    summed_score = 0
     
-    while current_end < channel_end: 
-        annotation = annotate.get_annotation(ann_path + sample_name, ann_type, current_start, current_end, channel_type)
+    for channel_index, channel in zip(range(len(channels)), channels): 
+        channel_type = invalid.get_channel_type(channel)
+        if channel_type == "RESP": 
+            continue
+        
+        invalids = invalid.calculate_channel_invalids(subsig[:,channel_index], channel_type)
+        cval = invalid.calculate_cval_channel(invalids)
+        
+        ann_type = annotate.get_ann_type(channel, channel_index, ecg_ann_type)
+        annotation = annotate.get_annotation(ann_path + sample_name, ann_type, current_start, current_end,
+                                             channel_type)
         
         if len(annotation) == 0: 
             continue
         elif len(annotation[0]) > 0: 
-            current_score = -1
+            current_score = -cval
         else: 
-            current_score = 1
+            current_score = cval
             
-            
-        invalids = invalid.calculate_channel_invalids(channel_sig[current_start*fs:current_end*fs], channel_type)
-        cval = invalid.calculate_cval_channel(invalids)        
-        current_score *= cval
+        summed_score += current_score        
         
-        cumulative_score += current_score
-        
-        current_start += parameters.ASYSTOLE_ROLLING_INCREMENT
-        current_end = current_start + parameters.ASYSTOLE_WINDOW_SIZE
-    
-    return cumulative_score   
+    return summed_score   
 
 
-# In[17]:
+# In[3]:
 
 def test_asystole(data_path, ann_path, sample_name, ecg_ann_type): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     channels = fields['signame']
+    fs = fields['fs']
         
     # Start and end given in seconds
     start, end, alarm_duration = invalid.get_start_and_end(fields)
+    current_start = start
+    current_end = current_start + parameters.ASYSTOLE_WINDOW_SIZE
     
-    overall_score = 0    
-    for channel_index, channel in zip(range(len(channels)), channels): 
-        ann_type = annotate.get_ann_type(channel, channel_index, ecg_ann_type)
-        channel_score = calc_channel_asystole_score(ann_path, sample_name, sig[:,channel_index], ann_type,
-                                                    start, end, channel)
+    max_score = 0
+    
+    while current_end < end: 
+        subsig = sig[current_start*fs:current_end*fs,:]
+        summed_asystole_score = calc_summed_asystole_score(ann_path, sample_name, subsig, channels, ecg_ann_type,
+                                                           current_start, current_end)
+        max_score = max(max_score, summed_asystole_score)
         
-        overall_score += channel_score
+        current_start += parameters.ASYSTOLE_ROLLING_INCREMENT
+        current_end = current_start + parameters.ASYSTOLE_WINDOW_SIZE
         
-    return overall_score > 0
+    return max_score > 0
     
-    
+# sample_name = "a653l"
 # sample_name = "a203l" # true alarm
 # # sample_name = "a152s" # false alarm
 # print test_asystole(data_path, ann_path, sample_name, ecg_ann_type)
@@ -79,7 +83,7 @@ def test_asystole(data_path, ann_path, sample_name, ecg_ann_type):
 
 # ## Bradycardia
 
-# In[18]:
+# In[4]:
 
 def get_rr_intervals_list(ann_path, sample_name, ecg_ann_type, fields, start, end): 
     channels = fields['signame']
@@ -113,7 +117,7 @@ def min_stdev_rr_intervals(rr_intervals_list):
     return opt_rr_intervals
 
 
-# In[19]:
+# In[5]:
 
 # Best channel: minimum stdev with acceptable RR intervals sum and count
 # If none with acceptable RR interval sum and count --> select minimum stdev out of all RR intervals
@@ -139,7 +143,7 @@ def find_best_channel(rr_intervals_list, alarm_duration):
     return min_stdev_rr_intervals(rr_intervals_list)            
 
 
-# In[20]:
+# In[6]:
 
 def get_average_hr_blocks(rr_intervals, num_beats_per_block): 
     hr_sum = 0.
@@ -155,7 +159,7 @@ def get_average_hr_blocks(rr_intervals, num_beats_per_block):
     return hr_sum / hr_num    
 
 
-# In[21]:
+# In[7]:
 
 def test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
@@ -178,7 +182,7 @@ def test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type):
 
 # ## Tachycardia
 
-# In[22]:
+# In[8]:
 
 def check_tachycardia_channel(rr_intervals_list, alarm_duration): 
     for rr_intervals in rr_intervals_list: 
@@ -191,7 +195,7 @@ def check_tachycardia_channel(rr_intervals_list, alarm_duration):
     return False
 
 
-# In[23]:
+# In[9]:
 
 def test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
@@ -217,7 +221,7 @@ print test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type)
 
 # ## Ventricular tachycardia
 
-# In[24]:
+# In[10]:
 
 # Returns index of peak (max value) in the signal out of the indices provided
 def get_peak_index(signal, peak_indices): 
@@ -255,7 +259,7 @@ def get_single_peak_indices(signal, peak_indices, index_threshold=50):
     return single_peak_indices
 
 
-# In[49]:
+# In[11]:
 
 def get_lf_sub(channel_sig, order): 
     lf = abs(invalid.band_pass_filter(channel_sig, parameters.LF_LOW, parameters.LF_HIGH, order))
@@ -309,7 +313,7 @@ sig, fields = wfdb.rdsamp(data_path + "v758s")
 print ventricular_beat_annotations(sig[start:end,0])
 
 
-# In[6]:
+# In[12]:
 
 def max_ventricular_hr(ventricular_beats, num_beats, fs): 
     max_hr = 0
@@ -325,7 +329,7 @@ def max_ventricular_hr(ventricular_beats, num_beats, fs):
     return max_hr
 
 
-# In[ ]:
+# In[13]:
 
 def ventricular_beat_r_delta(ventricular_beats, num_beats, fs): 
     r_delta = 0
@@ -335,21 +339,23 @@ def ventricular_beat_r_delta(ventricular_beats, num_beats, fs):
         start_time = sublist[0] / fs
         end_time = sublist[-1] / fs
                 
-        hr = num_beats / (end_time - start_time) * parameters.NUM_SECS_IN_MIN         
-        max_hr = max(hr, max_hr)    
+        hr = num_beats / (end_time - start_time) * parameters.NUM_SECS_IN_MIN
+        invalids = invalid.calculate_channel_invalids(channel_subsig, "ECG")
+        cval = invalid.calculate_cval_channel(invalids)
+        if hr > max_hr: 
+            return cval
         
-    return max_hr
+    return -cval 
 
 
-# In[44]:
+# In[14]:
 
 def test_ventricular_tachycardia(data_path, 
                                  ann_path, 
                                  sample_name, 
                                  ecg_ann_type, 
                                  fs=parameters.DEFAULT_ECG_FS,
-                                 num_beats=parameters.VTACH_NUM_BEATS,
-                                 max_hr=parameters.VTACH_MAX_HR): 
+                                 num_beats=parameters.VTACH_NUM_BEATS): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     channels = fields['signame']
         
@@ -357,6 +363,29 @@ def test_ventricular_tachycardia(data_path,
     start, end, alarm_duration = invalid.get_start_and_end(fields)
     
     alarm_sig = sig[start*fs:end*fs,:]
+    
+    for channel_index, channel in zip(range(len(channels)), channels): 
+        channel_type = invalid.get_channel_type(channel)
+        if channel_type == "RESP": 
+            continue
+        
+        invalids = invalid.calculate_channel_invalids(subsig[:,channel_index], channel_type)
+        cval = invalid.calculate_cval_channel(invalids)
+        
+        ann_type = annotate.get_ann_type(channel, channel_index, ecg_ann_type)
+        annotation = annotate.get_annotation(ann_path + sample_name, ann_type, current_start, current_end,
+                                             channel_type)
+        
+        if len(annotation) == 0: 
+            continue
+        elif len(annotation[0]) > 0: 
+            current_score = -cval
+        else: 
+            current_score = cval
+            
+        summed_score += current_score        
+        
+    
     
     for channel_index in range(len(channels)): 
         channel_name = channels[channel_index]
@@ -368,11 +397,15 @@ def test_ventricular_tachycardia(data_path,
             
             if len(ventricular_beats) < num_beats: 
                 continue            
-            if max_ventricular_hr(ventricular_beats, num_beats, fs) > max_hr: 
+            if max_ventricular_hr(ventricular_beats, num_beats, fs) > parameters.VTACH_MAX_HR: 
                 return True
             
         elif channel_type == "ABP": 
-            print np.std(channel_sig)
+            pass
+#             abp_std_score = get_abp_std_scores(channel_sig, alarm_duration, 
+#                                                abp_threshold=parameters.VTACH_ABP_THRESHOLD,
+#                                                window_size=parameters.VTACH_WINDOW_SIZE,
+#                                                rolling_increment=parameters.VTACH_ROLLING_INCREMENT)
         
     return False
 
@@ -381,7 +414,7 @@ print test_ventricular_tachycardia(data_path, None, "v758s", None)
 
 # ## Ventricular flutter/fibrillation
 
-# In[56]:
+# In[15]:
 
 def calculate_dlfmax(channel_sig, 
                      order=parameters.ORDER): 
@@ -417,7 +450,7 @@ def calculate_dlfmax(channel_sig,
             
 def get_abp_std_scores(channel_sig, 
                        alarm_duration, 
-                       fs=parameters.DEFAULT_ECG_FS,
+                       fs=parameters.DEFAULT_FS,
                        abp_threshold=parameters.VFIB_ABP_THRESHOLD,
                        window_size=parameters.VFIB_WINDOW_SIZE,
                        rolling_increment=parameters.VFIB_ROLLING_INCREMENT):
@@ -506,7 +539,7 @@ def adjust_dominant_freqs(dominant_freqs, regular_activity):
     return adjusted_dominant_freqs
 
 
-# In[69]:
+# In[21]:
 
 def test_ventricular_flutter_fibrillation(data_path, 
                                           ann_path, 
@@ -533,7 +566,7 @@ def test_ventricular_flutter_fibrillation(data_path,
         r_vector_value = 1.
     else: 
         r_vector_value = 0.
-    r_vector = [r_vector_value] * (alarm_duration / parameters.VFIB_ROLLING_INCREMENT)     
+    r_vector = [r_vector_value] * int(alarm_duration / parameters.VFIB_ROLLING_INCREMENT)     
     
     for channel_index in abp_channels: 
         r_delta = get_abp_std_scores(alarm_sig[:,channel_index], alarm_duration)
@@ -555,9 +588,8 @@ def test_ventricular_flutter_fibrillation(data_path,
         
     return any([ r_value > 0 for r_value in r_vector ])
     
-
-# sample_name = "f572s"
-# print test_ventricular_flutter_fibrillation(data_path, None, sample_name, None)    
+# sample_name = "f593l"
+# print test_ventricular_flutter_fibrillation(data_path, ann_path, sample_name, ecg_ann_type)
 
 
 # In[ ]:
