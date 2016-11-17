@@ -129,13 +129,23 @@ def histogram_test(signal, histogram_cutoff):
 
 # ## Putting it all together
 
-# In[15]:
+# In[13]:
 
 def get_channel_type(channel_name): 
-    if channel_name == "ABP" or channel_name == "PLETH" or channel_name == "RESP": 
-        return channel_name
-    return "ECG"
-
+    channel_types_dict = {}
+    with open("sample_data/sigtypes", "r") as f: 
+        for line in f: 
+            splitted_line = line.split("\t")
+            channel = splitted_line[-1].rstrip()
+            channel_type = splitted_line[0]
+            channel_types_dict[channel] = channel_type
+            
+    if channel_name in channel_types_dict.keys(): 
+        return channel_types_dict[channel_name]
+    
+    raise Exception("Unknown channel name")
+    
+    
 # Return list of channel indices for channels of type channel_type
 def get_channels_of_type(channels, channel_type): 
     channel_indices = np.array([])
@@ -146,6 +156,7 @@ def get_channels_of_type(channels, channel_type):
             channel_indices = np.append(channel_indices, channel_index)
     
     return channel_indices
+
 
 # Get start and end points (in seconds) to check depending on type of alarm signaled
 def get_start_and_end(fields): 
@@ -163,8 +174,9 @@ def get_start_and_end(fields):
 # In[36]:
 
 # Returns whether signal is valid or not
-def is_valid(signal, channel_type, should_check_nan, f_low, f_high, histogram_cutoff, freq_amplitude_cutoff, stats_cutoffs, order): 
-    if channel_type == "RESP": 
+def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitude_cutoff, stats_cutoffs, order,
+            should_check_nan=True): 
+    if channel_type == "Resp": 
         return True
     
     # Checks which return True if passing the test, False if not
@@ -204,7 +216,7 @@ def calculate_channel_invalids(channel_sig,
         signal = channel_sig[int(start):int(start + block_length*fs)]
         start += (block_length * fs)
 
-        is_data_valid = is_valid(signal, channel_type, should_check_nan, f_low, f_high, hist_cutoff, ampl_cutoff, stats_cutoffs, order)
+        is_data_valid = is_valid(signal, channel_type, f_low, f_high, hist_cutoff, ampl_cutoff, stats_cutoffs, order, should_check_nan)
         
         if is_data_valid: 
             invalids = np.append(invalids, 0)

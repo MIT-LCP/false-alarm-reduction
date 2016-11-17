@@ -27,7 +27,7 @@ else:
 
 # ## Helper methods
 
-# In[1]:
+# In[2]:
 
 # Get annotation file type based on channel type and index
 def get_ann_type(channel, channel_index, ecg_ann_type): 
@@ -35,11 +35,11 @@ def get_ann_type(channel, channel_index, ecg_ann_type):
 
     if channel_type == "ECG": 
         ann_type = ecg_ann_type + str(channel_index)
-    elif channel_type == "ABP": 
+    elif channel_type == "BP": 
         ann_type = 'wabp'
     elif channel_type == "PLETH": 
         ann_type = "wpleth"
-    elif channel_type == "RESP": 
+    elif channel_type == "Resp": 
         ann_type = ""
     else: 
         raise Exception("Unrecognized ann type")
@@ -164,7 +164,7 @@ def get_rr_dict(ann_path, sample_name, fields, ecg_ann_type, start=None, end=Non
     for channel_index in range(len(channels)): 
         channel_name = channels[channel_index]
         channel_type = invalid.get_channel_type(channel_name)
-        if channel_type == "RESP": 
+        if channel_type == "Resp": 
             continue
         
         rr_intervals = get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_ann_type, start, end)

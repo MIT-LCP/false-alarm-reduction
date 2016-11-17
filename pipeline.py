@@ -7,6 +7,7 @@
 
 from datetime                      import datetime
 import invalid_sample_detection    as invalid
+import evaluation                  as evaluate
 import load_annotations            as annotate
 import regular_activity            as regular
 import specific_arrhythmias        as arrhythmia
@@ -87,14 +88,10 @@ def generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type):
 # In[ ]:
 
 if __name__ == '__main__': 
-    counts, confusion_matrix = generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type)
-    
     start = datetime.now() 
-    print "counts: ", counts
+    counts, confusion_matrix = generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type)
     print "total time: ", datetime.now() - start
-
-
-# In[ ]:
-
-
+    
+    print "counts: ", counts
+    evaluate.print_stats(counts)    
 

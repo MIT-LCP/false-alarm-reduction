@@ -135,7 +135,7 @@ def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, chan
 
 # ### Check regular activity for sample
 
-# In[13]:
+# In[1]:
 
 # Check overall sample for regular activity by iterating through each channel.
 # If any channel exhibits regular activity, alarm indicated as false alarm.
@@ -149,8 +149,8 @@ def is_sample_regular(data_path,
                       should_check_rr=True,
                       should_num_check=True,
                       should_check_nan=True): 
-    sig, fields = wfdb.rdsamp(data_path + sample_name)    
-    num_channels = len(fields['signame'])
+    sig, fields = wfdb.rdsamp(data_path + sample_name)
+    channels = fields['signame']
     
     if start is None or end is None: 
         start, end, alarm_duration = invalid.get_start_and_end(fields)
@@ -161,10 +161,12 @@ def is_sample_regular(data_path,
     if should_check_invalids: 
         invalids = invalid.calculate_invalids_sig(sig, fields, start, end, should_check_nan)
 
-    for channel_index in range(num_channels): 
-        channel = fields['signame'][channel_index]
+    for channel_index in range(len(channels)): 
+        channel = channels[channel_index]
+        channel_type = invalid.get_channel_type(channel)
+        
         # Ignore respiratory channel
-        if channel == "RESP": 
+        if channel_type == "Resp": 
             continue
             
         rr = np.array([])

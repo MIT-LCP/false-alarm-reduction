@@ -70,7 +70,7 @@ def generate_confusion_matrix_sample(data_path, ann_path, ecg_ann_type, should_c
                 
     return counts, confusion_matrix
 
-generate_confusion_matrix_sample(data_path, ann_path, 'jqrs')
+# generate_confusion_matrix_sample(data_path, ann_path, 'jqrs')
 
 
 # ## Evaluation with saving intermediate data
@@ -92,7 +92,7 @@ def write_rr_file(data_path, ann_path, ecg_ann_type):
             for channel_index in range(num_channels): 
                 channel = fields['signame'][channel_index]
                 # Ignore respiratory channel
-                if channel == "RESP": 
+                if channel == "Resp": 
                     continue
 
                 rr_intervals, duration = annotate.get_channel_rr_intervals(ann_path, sample_name, channel_index, 
@@ -211,25 +211,25 @@ def generate_confusion_matrix_intermediate(data_path, ann_path, ecg_ann_type,
 
 # ### Generate invalids, jqrs, and gqrs files
 
-# In[21]:
+# In[1]:
 
-data_path = "sample_data/challenge_training_data/"
-ann_path = "sample_data/challenge_training_multiann/"
+# data_path = "sample_data/challenge_training_data/"
+# ann_path = "sample_data/challenge_training_multiann/"
 
-with open(os.path.join(data_path, "invalids.json"), 'w'): 
-    pass
-with open(os.path.join(ann_path, "rr_jqrs.json"), 'w'): 
-    pass
-with open(os.path.join(ann_path, "rr_gqrs.json"), 'w'): 
-    pass
+# with open(os.path.join(data_path, "invalids.json"), 'w'): 
+#     pass
+# with open(os.path.join(ann_path, "rr_jqrs.json"), 'w'): 
+#     pass
+# with open(os.path.join(ann_path, "rr_gqrs.json"), 'w'): 
+#     pass
 
 
-print "Writing jqrs file..."
-write_rr_file(data_path, ann_path, 'jqrs')
-print "Writing gqrs file..."
-write_rr_file(data_path, ann_path, 'gqrs')
-print "Writing invalids file..."
-write_invalids_file(data_path)
+# print "Writing jqrs file..."
+# write_rr_file(data_path, ann_path, 'jqrs')
+# print "Writing gqrs file..."
+# write_rr_file(data_path, ann_path, 'gqrs')
+# print "Writing invalids file..."
+# write_invalids_file(data_path)
 
 
 # ## Evaluation stats
@@ -276,7 +276,7 @@ def print_stats(counts):
     print "score: ", score
 
 
-# In[12]:
+# In[2]:
 
 if __name__ == '__main__': 
     data_path = 'sample_data/challenge_training_data/'
