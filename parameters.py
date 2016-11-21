@@ -47,7 +47,7 @@ STATS_CUTOFFS = {
         "var_range_min" : 0.005,
         "var_range_max" : 8
     }, 
-    "ABP" : {
+    "BP" : {
         "val_min" : 0,
         "val_max" : 300, 
         "var_range_min" : 0.0001,
@@ -71,8 +71,8 @@ DEFAULT_OTHER_FS = 125.0
 
 TESTED_BLOCK_LENGTHS = { # seconds
     "Asystole": 14,
-    "Bradycardia": 16,
-    "Tachycardia": 14,
+    "Bradycardia": 10, # 16,
+    "Tachycardia": 10, # 14,
     "Ventricular_Tachycardia": 10,
     "Ventricular_Flutter_Fib": 13
 }
@@ -89,6 +89,7 @@ ASYSTOLE_WINDOW_SIZE = 3.2 # in seconds
 ASYSTOLE_ROLLING_INCREMENT = 0.5 # in seconds
 
 BRADYCARDIA_NUM_BEATS = 4
+BRADYCARDIA_HR_MIN = 45
 
 TACHYCARDIA_NUM_BEATS = 12
 TACHYCARDIA_HR_MAX = 130

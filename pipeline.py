@@ -14,12 +14,15 @@ import specific_arrhythmias        as arrhythmia
 import numpy                       as np
 import parameters
 import os
+import csv
 import wfdb
 
 data_path = 'sample_data/challenge_training_data/'
 ann_path = 'sample_data/challenge_training_multiann/'
-ecg_ann_type = 'gqrs'
+ecg_ann_type = 'jqrs'
 
+
+# ## Classifying arrhythmia alarms
 
 # In[3]:
 
@@ -28,7 +31,7 @@ def is_classified_true_alarm(data_path, ann_path, sample_name, ecg_ann_type):
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     alarm_type, is_true_alarm = regular.check_gold_standard_classification(fields)
 
-    is_regular = regular.is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type, should_check_nan=False)    
+    is_regular = regular.is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type, alarm_type, should_check_nan=False)    
     if is_regular: 
         return is_true_alarm, False
     
@@ -85,13 +88,65 @@ def generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type):
     return counts, confusion_matrix
 
 
+# In[5]:
+
+def print_by_type(false_negatives): 
+    counts_by_type = {}
+    for false_negative in false_negatives: 
+        first = false_negative[0] 
+        if first not in counts_by_type.keys(): 
+            counts_by_type[first] = 0
+        counts_by_type[first] += 1
+
+    print counts_by_type
+
+
 # In[ ]:
 
 if __name__ == '__main__': 
-    start = datetime.now() 
-    counts, confusion_matrix = generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type)
-    print "total time: ", datetime.now() - start
+#     start = datetime.now() 
+#     counts_jqrs, confusion_matrix_jqrs = generate_confusion_matrix_dir(data_path, ann_path, 'jqrs')
+#     print "total time: ", datetime.now() - start
     
-    print "counts: ", counts
-    evaluate.print_stats(counts)    
+#     evaluate.print_stats(counts_jqrs)
+#     print_by_type(confusion_matrix_jqrs['FN'])
+
+    start = datetime.now() 
+    counts_gqrs, confusion_matrix_gqrs = generate_confusion_matrix_dir(data_path, ann_path, 'gqrs')
+    print "total time: ", datetime.now() - start
+
+    evaluate.print_stats(counts_gqrs)
+    print_by_type(confusion_matrix_gqrs['FN'])
+
+
+# ## Comparing classification with other algorithms
+
+# In[9]:
+
+def compare_algorithms(filename):
+    with open(filename, "r") as f: 
+        reader = csv.DictReader(f)
+        authors = reader.fieldnames[1:]
+        for row in reader: 
+            sample_name = row["record name"]
+            is_true_alarm, classified_true_alarm = is_classified_true_alarm(data_path, ann_path,
+                                                                            sample_name, ecg_ann_type)
+            
+
+compare_algorithms("sample_data/answers.csv")
+
+
+# In[ ]:
+
+def generate_others_confusion_matrix(filename): 
+    others_confusion_matrix = {}
+    
+    with open(filename, "r") as f: 
+        reader = csv.DictReader(f)
+        authors = reader.fieldnames[1:]
+        for author in authors: 
+            others_confusion_matrix[author] = { "TP": [], "FP": [], "FN": [], "TN": [] }
+            
+        for line in reader: 
+            sample_name = line['record name']
 

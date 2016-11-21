@@ -3,7 +3,7 @@
 
 # # Regular activity test
 
-# In[2]:
+# In[5]:
 
 from datetime                      import datetime
 import invalid_sample_detection    as invalid
@@ -25,7 +25,7 @@ ecg_ann_type = 'gqrs'
 
 # ## RR intervals tests
 
-# In[3]:
+# In[6]:
 
 # Check if standard deviation of RR intervals of signal are within limits
 def check_rr_stdev(rr_intervals): 
@@ -62,7 +62,7 @@ def check_num_rr_intervals(rr_intervals):
 
 # ## Invalids tests
 
-# In[4]:
+# In[7]:
 
 # Returns False if any block within signal is identified as invalid (invalid sample detection)
 def check_invalids(invalids, channel): 
@@ -79,7 +79,7 @@ def check_invalids(invalids, channel):
 
 # Helper methods to check classification of alarms and whether the algorithm classified alarm correctly: 
 
-# In[5]:
+# In[8]:
 
 # Returns type of alarm and whether gold standard classified alarm as true or false
 def check_gold_standard_classification(fields): 
@@ -104,7 +104,7 @@ def is_classified_correctly(is_true_alarm, is_regular):
 
 # ### Check interval regular activity
 
-# In[6]:
+# In[9]:
 
 # Returns True for a given channel if all regular activity tests checked pass
 def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, channel,
@@ -135,14 +135,15 @@ def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, chan
 
 # ### Check regular activity for sample
 
-# In[1]:
+# In[12]:
 
 # Check overall sample for regular activity by iterating through each channel.
 # If any channel exhibits regular activity, alarm indicated as false alarm.
 def is_sample_regular(data_path, 
                       ann_path, 
                       sample_name, 
-                      ecg_ann_type, 
+                      ecg_ann_type,
+                      alarm_type,
                       start=None, 
                       end=None, 
                       should_check_invalids=True,
@@ -168,6 +169,11 @@ def is_sample_regular(data_path,
         # Ignore respiratory channel
         if channel_type == "Resp": 
             continue
+            
+        # Only use ECG channels for ventricular fib
+        if alarm_type == "Ventricular_Flutter_Fib": 
+            if channel_type != "ECG": 
+                continue
             
         rr = np.array([])
         if should_check_rr: 
@@ -210,7 +216,7 @@ def is_rr_invalids_regular(rr_dict, invalids, alarm_duration,
         
 
 
-# In[40]:
+# In[11]:
 
 if __name__ == '__main__': 
     data_path = 'sample_data/challenge_training_data/'
@@ -222,7 +228,7 @@ if __name__ == '__main__':
     alarm_type, is_true_alarm = check_gold_standard_classification(fields)
     start, end, alarm_duration = invalid.get_start_and_end(fields)    
     
-    is_regular = is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type)
+    is_regular = is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type, alarm_type)
 
     print is_classified_correctly(is_true_alarm, is_regular)
     
