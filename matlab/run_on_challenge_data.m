@@ -8,7 +8,6 @@ records=alarms{1};
 targets=alarms{3};
 alarms=alarms{2};
 
-
 % define input options for the peak detector
 % all of the options listed here are the default values, and are optionally omitted
 opt = struct(...
@@ -19,7 +18,7 @@ opt = struct(...
     'SQI_THR',0.8,... % the SQI threshold - we switch signals if SQI < this value
     'USE_PACING',1,... % flag turning on/off the pacing detection/correction
     'ABPMethod','wabp',... % ABP peak detection method (wabp, delineator)
-    'SIMPLEMODE', 1,... % simple mode only uses the first ABP and ECG signal, and ignores all others
+    'SIMPLEMODE', 0,... % simple mode only uses the first ABP and ECG signal, and ignores all others
     'DELAYALG', 'map',... % algorithm used to determine the delay between the ABP and the ECG signal
     'SAVE_STUFF', 0,... % leave temporary files in working directory
     ... % jqrs parameters - the custom peak detector implemented herein
@@ -36,7 +35,7 @@ for i = 1:numel(records)
     system(['ln -frs ' data_path recordName '.mat ' recordName '.mat']);
     system(['ln -frs ' data_path recordName '.hea ' recordName '.hea']);
     
-    % run peak detector
+    % load data
     [t,data] = rdsamp(recordName);
     [siginfo,fs] = wfdbdesc(recordName);
     
@@ -44,9 +43,13 @@ for i = 1:numel(records)
     header = arrayfun(@(x) x.Description, siginfo, 'UniformOutput', false);
     
     % run SQI based switching
-    %[ qrs, sqi, qrs_comp, qrs_header ] = detect_sqi(data, header, fs, opt);
-    
-    
+    [ qrs, sqi, qrs_comp, qrs_header ] = detect_sqi_nowriteout(recordName, data, header, fs, opt);
+    if isempty(qrs)
+        wrann(recordName,'aqrs',0);
+    else
+        wrann(recordName,'aqrs',floor(qrs*fs(1)));
+    end
+    system(['mv ' recordName '.aqrs /data/challenge-2015/ann/' recordName '.aqrs']);
     
     [ idxECG, idxABP, idxPPG, idxSV ] = getSignalIndices(header);
     idxECG = idxECG(:)';
