@@ -3,7 +3,7 @@
 
 # # Invalid Sample Detection
 
-# In[23]:
+# In[17]:
 
 from scipy               import signal
 from datetime            import datetime, timedelta
@@ -27,15 +27,26 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 
 # We make a bandpass filter on the range 70-90 Hz and check the signal amplitude in this range. If the signal amplitude exceeds limits, the data is marked as invalid.
 
-# In[10]:
+# In[37]:
 
 order = 50
-f_low = 70
-f_high = 90
+f_low = 5
+f_high = 25
 
 def band_pass_filter(signal, f_low, f_high, order): 
     window = scipy.signal.firwin(order+1, [f_low, f_high], nyq=np.floor(fs/2), pass_zero=False,
                   window='hamming', scale=False)
+    A = scipy.fftpack.fft(window, 2048) / (len(window)/2.0)
+    freq = np.linspace(-0.5, 0.5, len(A))
+    response = 20 * np.log10(np.abs(scipy.fftpack.fftshift(A / abs(A).max())))
+    
+#     plt.figure(figsize=[15,8])
+#     plt.plot(fs*freq, response)
+#     plt.axis([-fs*0.5, fs*0.5, -120, 0])
+#     plt.title("Frequency response of the Hamming window")
+#     plt.ylabel("Normalized magnitude [dB]")
+#     plt.xlabel("frequency [Hz]")
+#     plt.show()
 
     if np.size(signal) < 153: 
         return
@@ -58,7 +69,7 @@ plt.xlabel('samples')
 plt.show()
 
 
-# In[11]:
+# In[20]:
 
 cutoff = parameters.AMPL_CUTOFF
 order = parameters.ORDER
@@ -76,7 +87,7 @@ print is_amplitude_within_cutoff(a170s_signal[:,1], f_low, f_high, cutoff, order
 
 # ## Statistical analysis
 
-# In[12]:
+# In[21]:
 
 # Check signal statistics to be within minimum and maximum values
 def check_stats_within_cutoff(signal, channel_type, stats_cutoffs): 
@@ -100,7 +111,7 @@ def check_stats_within_cutoff(signal, channel_type, stats_cutoffs):
 
 # ### NaN test
 
-# In[13]:
+# In[22]:
 
 # Check if signal contains NaN values
 def contains_nan(signal): 
@@ -109,7 +120,7 @@ def contains_nan(signal):
 
 # ### Histogram test
 
-# In[14]:
+# In[23]:
 
 # Check borders between histogram buckets so the difference is within a cutoff value
 def histogram_test(signal, histogram_cutoff): 
@@ -129,7 +140,7 @@ def histogram_test(signal, histogram_cutoff):
 
 # ## Putting it all together
 
-# In[13]:
+# In[24]:
 
 def get_channel_type(channel_name): 
     channel_types_dict = {}
@@ -139,7 +150,7 @@ def get_channel_type(channel_name):
             channel = splitted_line[-1].rstrip()
             channel_type = splitted_line[0]
             channel_types_dict[channel] = channel_type
-            
+    
     if channel_name in channel_types_dict.keys(): 
         return channel_types_dict[channel_name]
     
@@ -171,7 +182,7 @@ def get_start_and_end(fields):
     return (start, end, tested_block_length)
 
 
-# In[36]:
+# In[25]:
 
 # Returns whether signal is valid or not
 def is_valid(signal, channel_type, f_low, f_high, histogram_cutoff, freq_amplitude_cutoff, stats_cutoffs, order,
@@ -291,7 +302,7 @@ def calculate_cval(invalids):
     return cvals
 
 
-# In[34]:
+# In[26]:
 
 if __name__ == '__main__':
     # sample = 'sample_data/challenge_training_data/a170s'

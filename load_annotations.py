@@ -27,7 +27,7 @@ else:
 
 # ## Helper methods
 
-# In[2]:
+# In[8]:
 
 # Get annotation file type based on channel type and index
 def get_ann_type(channel, channel_index, ecg_ann_type): 
@@ -75,14 +75,18 @@ def get_annotation_annfs(sample, ann_type, start, end, channel_type):
     return annotation, ann_fs
 
 
-# In[25]:
+# In[4]:
 
-def get_annotation(sample, ann_type, start, end, channel_type): 
+def get_ann_fs(channel_type): 
     if channel_type == "ECG": 
-        ann_fs = parameters.DEFAULT_ECG_FS
-    else: 
-        ann_fs = parameters.DEFAULT_OTHER_FS
-    
+        return parameters.DEFAULT_ECG_FS
+    return parameters.DEFAULT_OTHER_FS
+
+
+# In[6]:
+
+# start and end in seconds
+def get_annotation(sample, ann_type, ann_fs, start, end): 
     try: 
         annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
     except Exception as e: 
