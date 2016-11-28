@@ -3,7 +3,7 @@
 
 # # Specific arrhythmia tests
 
-# In[80]:
+# In[3]:
 
 import invalid_sample_detection    as invalid
 import load_annotations            as annotate
@@ -22,7 +22,7 @@ ecg_ann_type = 'gqrs'
 
 # ## Asystole
 
-# In[2]:
+# In[8]:
 
 def calc_summed_asystole_score(ann_path, sample_name, subsig, channels, ecg_ann_type, current_start, current_end): 
     summed_score = 0
@@ -44,14 +44,14 @@ def calc_summed_asystole_score(ann_path, sample_name, subsig, channels, ecg_ann_
         elif len(annotation[0]) > 0: 
             current_score = -cval
         else: 
-            current_score = cval
-            
+            current_score = cval        
+        
         summed_score += current_score        
         
     return summed_score   
 
 
-# In[3]:
+# In[13]:
 
 def test_asystole(data_path, ann_path, sample_name, ecg_ann_type): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
@@ -62,6 +62,12 @@ def test_asystole(data_path, ann_path, sample_name, ecg_ann_type):
     start, end, alarm_duration = invalid.get_start_and_end(fields)
     current_start = start
     current_end = current_start + parameters.ASYSTOLE_WINDOW_SIZE
+    
+    annotation = annotate.get_annotation(ann_path + sample_name, ecg_ann_type, 125, start*fs, end*fs)
+    plt.figure(figsize=[15,8])
+    plt.plot(sig[start*fs:end*fs,0], 'g-')
+    plt.plot(annotation[0], 'bo', markersize=8)
+    plt.show()
     
     max_score = 0
     
@@ -77,9 +83,9 @@ def test_asystole(data_path, ann_path, sample_name, ecg_ann_type):
     return max_score > 0
     
 # sample_name = "a653l"
-# sample_name = "a203l" # true alarm
+sample_name = "a670s" # "a203l" # true alarm
 # # sample_name = "a152s" # false alarm
-# print test_asystole(data_path, ann_path, sample_name, ecg_ann_type)
+print test_asystole(data_path, ann_path, sample_name, ecg_ann_type)
 
 
 # ## Bradycardia
@@ -232,7 +238,14 @@ def test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type):
 
 # In[54]:
 
-def hilbert_transform(x, fs, f_low, f_high, demod=False):
+plt.figure(figsize=[15,8])
+#     plt.plot(channel_sig, 'g-')
+#     plt.plot(sub,'b-')
+#     plt.plot(lf,'r-')
+    
+#     plt.plot(nonventricular_beat_indices, [sub[index] for index in nonventricular_beat_indices], 'bo', markersize=8)
+#     plt.plot(ventricular_beat_indices, [ lf[index] for index in ventricular_beat_indices ], 'ro', markersize=8)
+#     plt.show()def hilbert_transform(x, fs, f_low, f_high, demod=False):
     N = len(x)
     f = scipy.fftpack.fft(x, n=N)
     i_high = int(np.floor(float(f_high)/fs*N))
