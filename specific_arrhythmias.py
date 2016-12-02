@@ -22,9 +22,10 @@ ecg_ann_type = 'gqrs'
 
 # ## Asystole
 
-# In[8]:
+# In[36]:
 
-def calc_summed_asystole_score(ann_path, sample_name, subsig, channels, ecg_ann_type, current_start, current_end): 
+def calc_summed_asystole_score(ann_path, sample_name, subsig, channels, ecg_ann_type, current_start, current_end,
+                               verbose=False): 
     summed_score = 0
     
     for channel_index, channel in zip(range(len(channels)), channels): 
@@ -41,19 +42,31 @@ def calc_summed_asystole_score(ann_path, sample_name, subsig, channels, ecg_ann_
         
         if len(annotation) == 0: 
             continue
-        elif len(annotation[0]) > 0: 
+        
+        plt.figure(figsize=[15,8])
+        print "subsig: ", subsig
+        print "annotation: ", annotation[0]
+        plt.plot(subsig[:,channel_index], 'g-')
+        ann = [ subsig[]]
+#         plt.plot(annotation[0], 'bo', markersize=8)
+        plt.show()
+            
+        if len(annotation[0]) > 0: 
             current_score = -cval
         else: 
             current_score = cval        
+        
+        if verbose: 
+            print sample_name + ": " + channel + " [" + str(current_start) + ", " + str(current_end) + "] " + str(current_score)
         
         summed_score += current_score        
         
     return summed_score   
 
 
-# In[13]:
+# In[37]:
 
-def test_asystole(data_path, ann_path, sample_name, ecg_ann_type): 
+def test_asystole(data_path, ann_path, sample_name, ecg_ann_type, verbose=False): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     channels = fields['signame']
     fs = fields['fs']
@@ -63,29 +76,26 @@ def test_asystole(data_path, ann_path, sample_name, ecg_ann_type):
     current_start = start
     current_end = current_start + parameters.ASYSTOLE_WINDOW_SIZE
     
-    annotation = annotate.get_annotation(ann_path + sample_name, ecg_ann_type, 125, start*fs, end*fs)
-    plt.figure(figsize=[15,8])
-    plt.plot(sig[start*fs:end*fs,0], 'g-')
-    plt.plot(annotation[0], 'bo', markersize=8)
-    plt.show()
-    
     max_score = 0
     
     while current_end < end: 
         subsig = sig[current_start*fs:current_end*fs,:]
         summed_asystole_score = calc_summed_asystole_score(ann_path, sample_name, subsig, channels, ecg_ann_type,
-                                                           current_start, current_end)
+                                                           current_start, current_end, verbose)
         max_score = max(max_score, summed_asystole_score)
         
         current_start += parameters.ASYSTOLE_ROLLING_INCREMENT
         current_end = current_start + parameters.ASYSTOLE_WINDOW_SIZE
-        
+    
+    if verbose: 
+        print sample_name + " has max asystole score: " + str(max_score)
+    
     return max_score > 0
     
 # sample_name = "a653l"
 sample_name = "a670s" # "a203l" # true alarm
 # # sample_name = "a152s" # false alarm
-print test_asystole(data_path, ann_path, sample_name, ecg_ann_type)
+print test_asystole(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
 
 
 # ## Bradycardia
@@ -165,7 +175,7 @@ def get_min_hr(rr_intervals, num_beats_per_block):
 
 # In[7]:
 
-def test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type): 
+def test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type, verbose=False): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     channels = fields['signame']
 
@@ -212,7 +222,7 @@ def get_max_hr(rr_intervals, num_beats_per_block):
 
 # In[10]:
 
-def test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type): 
+def test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type, verbose=False): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     channels = fields['signame']
         
@@ -236,16 +246,17 @@ def test_tachycardia(data_path, ann_path, sample_name, ecg_ann_type):
 
 # ## Ventricular tachycardia
 
-# In[54]:
+# In[14]:
 
-plt.figure(figsize=[15,8])
+# plt.figure(figsize=[15,8])
 #     plt.plot(channel_sig, 'g-')
 #     plt.plot(sub,'b-')
 #     plt.plot(lf,'r-')
     
 #     plt.plot(nonventricular_beat_indices, [sub[index] for index in nonventricular_beat_indices], 'bo', markersize=8)
 #     plt.plot(ventricular_beat_indices, [ lf[index] for index in ventricular_beat_indices ], 'ro', markersize=8)
-#     plt.show()def hilbert_transform(x, fs, f_low, f_high, demod=False):
+#     plt.show()
+def hilbert_transform(x, fs, f_low, f_high, demod=False):
     N = len(x)
     f = scipy.fftpack.fft(x, n=N)
     i_high = int(np.floor(float(f_high)/fs*N))
@@ -422,7 +433,8 @@ def calc_summed_vtach_score(subsig, channels, num_beats, fs, sample, start, end,
 def test_ventricular_tachycardia(data_path, 
                                  ann_path, 
                                  sample_name, 
-                                 ecg_ann_type, 
+                                 ecg_ann_type,
+                                 verbose=False,
                                  fs=parameters.DEFAULT_ECG_FS,
                                  num_beats=parameters.VTACH_NUM_BEATS): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
@@ -580,12 +592,13 @@ def adjust_dominant_freqs(dominant_freqs, regular_activity):
     return adjusted_dominant_freqs
 
 
-# In[17]:
+# In[24]:
 
 def test_ventricular_flutter_fibrillation(data_path, 
                                           ann_path, 
                                           sample_name, 
                                           ecg_ann_type,
+                                          verbose=False,
                                           fs=parameters.DEFAULT_ECG_FS,
                                           ann_fs=parameters.DEFAULT_ECG_FS):
     sig, fields = wfdb.rdsamp(data_path + sample_name)

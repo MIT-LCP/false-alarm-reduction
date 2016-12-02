@@ -3,15 +3,18 @@
 
 # # Summary of results
 
-# In[16]:
+# In[2]:
 
 import matplotlib.pyplot  as plt
 import parameters
+import pipeline
 import wfdb
 
 get_ipython().magic(u'matplotlib inline')
 
 data_path = 'sample_data/challenge_training_data/'
+ann_path = 'sample_data/challenge_training_multiann/'
+ecg_ann_type = 'gqrs'
 
 
 # ## Overall comparison of results
@@ -21,6 +24,11 @@ data_path = 'sample_data/challenge_training_data/'
 # | ---       | :---:                       | :---:     |
 # | **True**  | 245                         | 97        |
 # | **False** | <font color='red'>49</font> | 359       |
+# 
+# |           | **True**                        | **False** |        
+# | ---       | :---:                           | :---:     |
+# | **True**  | 0.327                           | 0.129     |
+# | **False** | <font color='red'>0.0653</font> | 0.479       |
 # 
 # | **Asys** | **Brady** | **Tachy** | **Vfib/flutter** | **Vtach** |
 # | :---:    | :---:     | :---:     | :---:            | :---:     |
@@ -103,31 +111,42 @@ data_path = 'sample_data/challenge_training_data/'
 
 # ## Examples
 
-# In[29]:
+# In[16]:
 
+def classify_and_plot(data_path, ann_path, sample_name, ecg_ann_type): 
+    true_alarm = pipeline.is_true_alarm(data_path, sample_name)
+    classified_true_alarm = pipeline.is_classified_true_alarm(data_path, ann_path, sample_name, ecg_ann_type)
+    matrix_classification = pipeline.get_confusion_matrix_classification(true_alarm, classified_true_alarm)
+
+    title = matrix_classification + ": " + sample_name
+    plot_signal(data_path, sample_name, title)
+
+    
 def plot_signal(data_path, sample_name, plot_title=""): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     fs = fields['fs']
+    channels = fields['signame']
+    non_resp_channels = [ index for index in range(len(channels)) if channels[index] != "RESP" ]
     alarm_type = fields['comments'][0]
     tested_block_length = parameters.TESTED_BLOCK_LENGTHS[alarm_type]
     
     start_time, end_time = parameters.ALARM_TIME - tested_block_length, parameters.ALARM_TIME
     start, end = int(start_time * fs), int(end_time * fs)
-    wfdb.plotwfdb(sig[start:end,:], fields, title=plot_title)
+    wfdb.plotwfdb(sig[start:end, non_resp_channels], fields, title=plot_title)
 
 
 # ### Asystole
 
-# In[31]:
+# In[17]:
 
-title = "True positive: a161l"
-plot_signal(data_path, "a161l", title)
+sample_name = "a161l"
+classify_and_plot(data_path, ann_path, sample_name, ecg_ann_type)
 
 
-# In[32]:
+# In[18]:
 
-title = "False negative: a670s"
-plot_signal(data_path, "a670s", title)
+sample_name = "a670s"
+classify_and_plot(data_path, ann_path, sample_name, ecg_ann_type)
 
 
 # In[ ]:

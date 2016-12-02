@@ -24,16 +24,18 @@ ecg_ann_type = 'gqrs'
 
 # ## Classifying arrhythmia alarms
 
-# In[3]:
+# In[4]:
 
 # Returns true if alarm is classified as a true alarm
-def is_classified_true_alarm(data_path, ann_path, sample_name, ecg_ann_type): 
+def is_classified_true_alarm(data_path, ann_path, sample_name, ecg_ann_type, verbose=False): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     alarm_type, is_true_alarm = regular.check_gold_standard_classification(fields)
 
     is_regular = regular.is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type, alarm_type, should_check_nan=False)    
-    if is_regular: 
-        return is_true_alarm, False
+    if is_regular:
+        if verbose: 
+            print sample_name + "with regular activity"
+        return False
     
     if alarm_type == "Asystole": 
         arrhythmia_test = arrhythmia.test_asystole
@@ -48,8 +50,8 @@ def is_classified_true_alarm(data_path, ann_path, sample_name, ecg_ann_type):
     else: 
         raise Exception("Unknown arrhythmia alarm type")
     
-    classified_true_alarm = arrhythmia_test(data_path, ann_path, sample_name, ecg_ann_type)
-    return is_true_alarm, classified_true_alarm
+    classified_true_alarm = arrhythmia_test(data_path, ann_path, sample_name, ecg_ann_type, verbose)
+    return classified_true_alarm
 
 
 def is_true_alarm(data_path, sample_name): 
@@ -58,7 +60,7 @@ def is_true_alarm(data_path, sample_name):
     return true_alarm
 
 
-# In[4]:
+# In[28]:
 
 # Generate confusion matrix for all samples given sample name/directory
 def generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type): 
@@ -74,8 +76,7 @@ def generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type):
             sample_name = filename.rstrip(parameters.HEADER_EXTENSION)
             
             true_alarm = is_true_alarm(data_path, sample_name)
-            true_alarm, classified_true_alarm = is_classified_true_alarm(data_path, ann_path, sample_name, 
-                                                                         ecg_ann_type)
+            classified_true_alarm = is_classified_true_alarm(data_path, ann_path, sample_name, ecg_ann_type)
 
             matrix_classification = get_confusion_matrix_classification(true_alarm, classified_true_alarm)
             confusion_matrix[matrix_classification].append(sample_name)
@@ -119,19 +120,19 @@ def get_counts(confusion_matrix):
 
 # In[16]:
 
-if __name__ == '__main__': 
-    start = datetime.now() 
-    confusion_matrix_gqrs = generate_confusion_matrix_dir(data_path, ann_path, 'gqrs')
-    counts_gqrs = get_counts(confusion_matrix_gqrs)
-    print "total time: ", datetime.now() - start
+# if __name__ == '__main__': 
+#     start = datetime.now() 
+#     confusion_matrix_gqrs = generate_confusion_matrix_dir(data_path, ann_path, 'gqrs')
+#     counts_gqrs = get_counts(confusion_matrix_gqrs)
+#     print "total time: ", datetime.now() - start
 
-    evaluate.print_stats(counts_gqrs)
-    print_by_type(confusion_matrix_gqrs['FN'])
+#     evaluate.print_stats(counts_gqrs)
+#     print_by_type(confusion_matrix_gqrs['FN'])
 
 
 # ## Comparing classification with other algorithms
 
-# In[12]:
+# In[23]:
 
 def generate_others_confusion_matrices(filename, data_path): 
     others_confusion_matrices = {}
@@ -159,13 +160,13 @@ filename = "sample_data/answers.csv"
 others_confusion_matrices = generate_others_confusion_matrices(filename, data_path)    
 
 
-# In[17]:
+# In[24]:
 
 for author in others_confusion_matrices.keys(): 
     other_confusion_matrix = others_confusion_matrices[author]
     print author
-    print get_counts(other_confusion_matrix)
-    print other_confusion_matrix['FN']
+    counts = get_counts(other_confusion_matrix)
+    evaluate.print_stats(counts)
     print_by_type(other_confusion_matrix['FN'])
 
 

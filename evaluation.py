@@ -234,7 +234,7 @@ def generate_confusion_matrix_intermediate(data_path, ann_path, ecg_ann_type,
 
 # ## Evaluation stats
 
-# In[6]:
+# In[2]:
 
 def calc_sensitivity(counts): 
     tp = counts["TP"]
