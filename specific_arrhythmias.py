@@ -3,7 +3,7 @@
 
 # # Specific arrhythmia tests
 
-# In[3]:
+# In[4]:
 
 import invalid_sample_detection    as invalid
 import load_annotations            as annotate
@@ -22,10 +22,10 @@ ecg_ann_type = 'gqrs'
 
 # ## Asystole
 
-# In[36]:
+# In[30]:
 
 def calc_summed_asystole_score(ann_path, sample_name, subsig, channels, ecg_ann_type, current_start, current_end,
-                               verbose=False): 
+                               verbose=False, data_fs=parameters.DEFAULT_FS): 
     summed_score = 0
     
     for channel_index, channel in zip(range(len(channels)), channels): 
@@ -33,7 +33,8 @@ def calc_summed_asystole_score(ann_path, sample_name, subsig, channels, ecg_ann_
         if channel_type == "Resp": 
             continue
         
-        invalids = invalid.calculate_channel_invalids(subsig[:,channel_index], channel_type)
+        channel_subsig = subsig[:,channel_index]
+        invalids = invalid.calculate_channel_invalids(channel_subsig, channel_type)
         cval = invalid.calculate_cval_channel(invalids)
         
         ann_type = annotate.get_ann_type(channel, channel_index, ecg_ann_type)
@@ -41,22 +42,21 @@ def calc_summed_asystole_score(ann_path, sample_name, subsig, channels, ecg_ann_
         annotation = annotate.get_annotation(ann_path + sample_name, ann_type, ann_fs, current_start, current_end)
         
         if len(annotation) == 0: 
-            continue
-        
-        plt.figure(figsize=[15,8])
-        print "subsig: ", subsig
-        print "annotation: ", annotation[0]
-        plt.plot(subsig[:,channel_index], 'g-')
-        ann = [ subsig[]]
-#         plt.plot(annotation[0], 'bo', markersize=8)
-        plt.show()
-            
-        if len(annotation[0]) > 0: 
+            continue            
+        elif len(annotation[0]) > 0: 
             current_score = -cval
         else: 
             current_score = cval        
         
         if verbose: 
+            plt.figure(figsize=[7,5])
+            plt.plot(channel_subsig, 'g-')
+            annotation_seconds = annotation[0] / float(ann_fs)
+            ann_x = [ (seconds - current_start) * data_fs for seconds in annotation_seconds ]
+            ann_y = [ channel_subsig[index] for index in ann_x ]
+            plt.plot(ann_x, ann_y, 'bo', markersize=8)
+            plt.show()
+
             print sample_name + ": " + channel + " [" + str(current_start) + ", " + str(current_end) + "] " + str(current_score)
         
         summed_score += current_score        
@@ -64,7 +64,7 @@ def calc_summed_asystole_score(ann_path, sample_name, subsig, channels, ecg_ann_
     return summed_score   
 
 
-# In[37]:
+# In[31]:
 
 def test_asystole(data_path, ann_path, sample_name, ecg_ann_type, verbose=False): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)

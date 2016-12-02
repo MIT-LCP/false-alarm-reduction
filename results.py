@@ -149,6 +149,8 @@ sample_name = "a670s"
 classify_and_plot(data_path, ann_path, sample_name, ecg_ann_type)
 
 
+# Annotations indicated for pacemarker artifacts despite not QRS --> asystole not detected because of the pacemarker artifacts in the ECG channels
+
 # In[ ]:
 
 

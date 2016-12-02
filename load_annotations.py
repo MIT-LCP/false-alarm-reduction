@@ -3,7 +3,7 @@
 
 # # QRS detection
 
-# In[22]:
+# In[2]:
 
 import invalid_sample_detection   as invalid
 import matplotlib.pyplot          as plt
@@ -27,7 +27,7 @@ else:
 
 # ## Helper methods
 
-# In[8]:
+# In[3]:
 
 # Get annotation file type based on channel type and index
 def get_ann_type(channel, channel_index, ecg_ann_type): 
@@ -47,7 +47,7 @@ def get_ann_type(channel, channel_index, ecg_ann_type):
     return ann_type
 
 
-# In[10]:
+# In[4]:
 
 # Start and end in seconds
 def get_annotation_annfs(sample, ann_type, start, end, channel_type): 
@@ -75,7 +75,7 @@ def get_annotation_annfs(sample, ann_type, start, end, channel_type):
     return annotation, ann_fs
 
 
-# In[4]:
+# In[5]:
 
 def get_ann_fs(channel_type): 
     if channel_type == "ECG": 
@@ -124,7 +124,7 @@ def get_annotation(sample, ann_type, ann_fs, start, end):
 # print "rr_intervals", rr_intervals
 
 
-# In[13]:
+# In[7]:
 
 def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_ann_type, start=None, end=None):
     if start is None or end is None: 
@@ -155,7 +155,7 @@ def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_a
     return channel_rr_intervals
 
 
-# In[14]:
+# In[8]:
 
 # Start and end given in seconds
 def get_rr_dict(ann_path, sample_name, fields, ecg_ann_type, start=None, end=None): 
@@ -180,7 +180,7 @@ def get_rr_dict(ann_path, sample_name, fields, ecg_ann_type, start=None, end=Non
 
 # ## Plotting
 
-# In[25]:
+# In[9]:
 
 # Plot signal together with annotation types on the channel for data ranging from start to end
 def plot_annotations(data_path, ann_path, sample_name, ann_types_list, channel, data_fs, start, end): 
@@ -191,7 +191,7 @@ def plot_annotations(data_path, ann_path, sample_name, ann_types_list, channel, 
         
     # Plot the time series of the signal
     plt.figure(figsize=[16, 10])
-    plt.plot(time_vector, sig[int(start * data_fs):int(end * data_fs), channel], '-',
+    plt.plot(d, sig[int(start * data_fs):int(end * data_fs), channel], '-',
              color=parameters.COLORS[0], linewidth=2, 
              label=fields['signame'][channel])
     
@@ -220,17 +220,17 @@ def plot_annotations(data_path, ann_path, sample_name, ann_types_list, channel, 
     plt.show()
 
 
-# In[15]:
+# In[10]:
 
-# data_fs = 250
-# sample_name = 't384s'
-# start = 286
-# end = 300
+data_fs = 250
+sample_name = 't384s'
+start = 286
+end = 300
 
-# # choose the lead to plot (annotations are generated off the first lead)
-# channel = 2
+# choose the lead to plot (annotations are generated off the first lead)
+channel = 2
 
-# plot_annotations(data_path, ann_path, sample_name, ['wabp'], channel, data_fs, start, end)
+plot_annotations(data_path, ann_path, sample_name, ['wabp'], channel, data_fs, start, end)
 
 
 # In[ ]:
