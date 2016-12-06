@@ -3,7 +3,7 @@
 
 # # QRS detection
 
-# In[2]:
+# In[4]:
 
 import invalid_sample_detection   as invalid
 import matplotlib.pyplot          as plt
@@ -27,7 +27,7 @@ else:
 
 # ## Helper methods
 
-# In[3]:
+# In[5]:
 
 # Get annotation file type based on channel type and index
 def get_ann_type(channel, channel_index, ecg_ann_type): 
@@ -47,7 +47,7 @@ def get_ann_type(channel, channel_index, ecg_ann_type):
     return ann_type
 
 
-# In[4]:
+# In[6]:
 
 # Start and end in seconds
 def get_annotation_annfs(sample, ann_type, start, end, channel_type): 
@@ -75,7 +75,7 @@ def get_annotation_annfs(sample, ann_type, start, end, channel_type):
     return annotation, ann_fs
 
 
-# In[5]:
+# In[7]:
 
 def get_ann_fs(channel_type): 
     if channel_type == "ECG": 
@@ -83,7 +83,7 @@ def get_ann_fs(channel_type):
     return parameters.DEFAULT_OTHER_FS
 
 
-# In[6]:
+# In[8]:
 
 # start and end in seconds
 def get_annotation(sample, ann_type, ann_fs, start, end): 
@@ -124,7 +124,7 @@ def get_annotation(sample, ann_type, ann_fs, start, end):
 # print "rr_intervals", rr_intervals
 
 
-# In[7]:
+# In[9]:
 
 def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_ann_type, start=None, end=None):
     if start is None or end is None: 
@@ -155,7 +155,7 @@ def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_a
     return channel_rr_intervals
 
 
-# In[8]:
+# In[10]:
 
 # Start and end given in seconds
 def get_rr_dict(ann_path, sample_name, fields, ecg_ann_type, start=None, end=None): 
@@ -180,57 +180,54 @@ def get_rr_dict(ann_path, sample_name, fields, ecg_ann_type, start=None, end=Non
 
 # ## Plotting
 
-# In[9]:
+# In[54]:
 
 # Plot signal together with annotation types on the channel for data ranging from start to end
-def plot_annotations(data_path, ann_path, sample_name, ann_types_list, channel, data_fs, start, end): 
+def plot_annotations(data_path, ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
-    channel_name = fields['signame'][channel]
+    channel_name = fields['signame'][channel_index]
+    ann_type = get_ann_type(channel_name, channel_index, ecg_ann_type)
     channel_type = invalid.get_channel_type(channel_name)
     time_vector = np.linspace(start, end, (end-start) * data_fs)
         
     # Plot the time series of the signal
-    plt.figure(figsize=[16, 10])
-    plt.plot(d, sig[int(start * data_fs):int(end * data_fs), channel], '-',
+    plt.figure(figsize=[8,5])
+    plt.plot(time_vector, sig[int(start * data_fs):int(end * data_fs), channel_index], '-',
              color=parameters.COLORS[0], linewidth=2, 
-             label=fields['signame'][channel])
-    
-    if len(ann_types_list) > len(parameters.MARKER_TYPES) or len(ann_types_list) > len(parameters.COLORS)-1: 
-        raise RuntimeException("too many types of annotations to plot")
+             label=fields['signame'][channel_index])
     
     # Plot each annotation type
-    for index in range(len(ann_types_list)): 
-        ann_type = ann_types_list[index]
-        annotation, ann_fs = get_annotation_annfs(ann_path + sample_name, ann_type, start, end, channel_type)
-        if len(annotation[0]) == 0: 
-            plt.show()
-            return
+    annotation, ann_fs = get_annotation_annfs(ann_path + sample_name, ann_type, start, end, channel_type)
+    if len(annotation[0]) == 0: 
+        plt.show()
+        return
+
+    annotation_seconds = annotation[0] / float(ann_fs)
+    annotation_y = [ sig[int(ann_time * data_fs), channel_index] for ann_time in annotation_seconds ]
+    plt.plot(annotation_seconds, annotation_y,
+         color=parameters.COLORS[1],
+         linestyle='none', linewidth=3,
+         marker=parameters.MARKER_TYPES[0], markersize=9,
+         label=ann_type)
         
-        annotation_seconds = annotation[0] / float(ann_fs)
-        annotation_y = [ sig[int(ann_time * data_fs), channel] for ann_time in annotation_seconds ]
-        plt.plot(annotation_seconds, annotation_y,
-             color=parameters.COLORS[index + 1],
-             linestyle='none', linewidth=3,
-             marker=parameters.MARKER_TYPES[index], markersize=12,
-             label=ann_type)
-        
-    plt.xlabel('Time (seconds)',fontsize=16)
-    plt.legend(fontsize=16)
+    plt.xlabel('Time (seconds)',fontsize=12)
+    plt.legend(fontsize=12)
     plt.grid()
     plt.show()
 
 
-# In[10]:
+# In[55]:
 
 data_fs = 250
 sample_name = 't384s'
 start = 286
 end = 300
+ecg_ann_type = "gqrs"
 
 # choose the lead to plot (annotations are generated off the first lead)
-channel = 2
+channel_index = 1
 
-plot_annotations(data_path, ann_path, sample_name, ['wabp'], channel, data_fs, start, end)
+plot_annotations(data_path, ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs)
 
 
 # In[ ]:

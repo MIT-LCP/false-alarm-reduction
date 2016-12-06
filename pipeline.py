@@ -24,7 +24,7 @@ ecg_ann_type = 'gqrs'
 
 # ## Classifying arrhythmia alarms
 
-# In[4]:
+# In[7]:
 
 # Returns true if alarm is classified as a true alarm
 def is_classified_true_alarm(data_path, ann_path, sample_name, ecg_ann_type, verbose=False): 
@@ -60,7 +60,7 @@ def is_true_alarm(data_path, sample_name):
     return true_alarm
 
 
-# In[28]:
+# In[4]:
 
 # Generate confusion matrix for all samples given sample name/directory
 def generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type): 
@@ -118,16 +118,16 @@ def get_counts(confusion_matrix):
     return { key : len(confusion_matrix[key]) for key in confusion_matrix.keys() }
 
 
-# In[16]:
+# In[6]:
 
-# if __name__ == '__main__': 
-#     start = datetime.now() 
-#     confusion_matrix_gqrs = generate_confusion_matrix_dir(data_path, ann_path, 'gqrs')
-#     counts_gqrs = get_counts(confusion_matrix_gqrs)
-#     print "total time: ", datetime.now() - start
+if __name__ == '__main__': 
+    start = datetime.now() 
+    confusion_matrix_gqrs = generate_confusion_matrix_dir(data_path, ann_path, 'gqrs')
+    counts_gqrs = get_counts(confusion_matrix_gqrs)
+    print "total time: ", datetime.now() - start
 
-#     evaluate.print_stats(counts_gqrs)
-#     print_by_type(confusion_matrix_gqrs['FN'])
+    evaluate.print_stats(counts_gqrs)
+    print_by_type(confusion_matrix_gqrs['FN'])
 
 
 # ## Comparing classification with other algorithms

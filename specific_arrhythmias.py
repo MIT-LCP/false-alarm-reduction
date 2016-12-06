@@ -3,7 +3,7 @@
 
 # # Specific arrhythmia tests
 
-# In[4]:
+# In[3]:
 
 import invalid_sample_detection    as invalid
 import load_annotations            as annotate
@@ -95,7 +95,7 @@ def test_asystole(data_path, ann_path, sample_name, ecg_ann_type, verbose=False)
 # sample_name = "a653l"
 sample_name = "a670s" # "a203l" # true alarm
 # # sample_name = "a152s" # false alarm
-print test_asystole(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
+# print test_asystole(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
 
 
 # ## Bradycardia
@@ -173,7 +173,7 @@ def get_min_hr(rr_intervals, num_beats_per_block):
     return min_hr
 
 
-# In[7]:
+# In[21]:
 
 def test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type, verbose=False): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
@@ -181,15 +181,20 @@ def test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type, verbose=Fal
 
     # Start and end given in seconds
     start, end, alarm_duration = invalid.get_start_and_end(fields)
+    start, end = 290, 300
     
     rr_intervals_list = get_rr_intervals_list(ann_path, sample_name, ecg_ann_type, fields, start, end)    
     best_channel_rr = find_best_channel(rr_intervals_list, alarm_duration)
     min_hr = get_min_hr(best_channel_rr, parameters.BRADYCARDIA_NUM_BEATS)
+    
+    if verbose: 
+        print sample_name + " with min HR: " + str(min_hr)
+    
     return min_hr < parameters.BRADYCARDIA_HR_MIN
 
-# sample_name = "b183l" # true alarm
+sample_name = "b379l" # b183l" # true alarm
 # # sample_name = "b216s" #"b184s" # false alarm
-# print test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type)
+# print test_bradycardia(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
 
 
 # ## Tachycardia

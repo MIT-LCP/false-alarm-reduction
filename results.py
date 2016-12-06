@@ -3,7 +3,7 @@
 
 # # Summary of results
 
-# In[2]:
+# In[ ]:
 
 import matplotlib.pyplot  as plt
 import parameters
@@ -153,5 +153,27 @@ classify_and_plot(data_path, ann_path, sample_name, ecg_ann_type)
 
 # In[ ]:
 
+sig, fields = wfdb.rdsamp(data_path + sample_name)
+current_start = 294.5
+current_end = 297.7
 
+channel_index = 0
+data_fs = fields['fs']
+channels = fields['signame']
+channel = channels[channel_index] 
+
+ann_type = annotate.get_ann_type(channel, channel_index, ecg_ann_type)
+ann_fs = annotate.get_ann_fs(channel_type)
+annotation = annotate.get_annotation(ann_path + sample_name, ann_type, ann_fs, current_start, current_end)
+
+
+channel_subsig = sig[current_start*data_fs:current_end*data_fs,channel_index]
+
+plt.figure(figsize=[7,5])
+plt.plot(channel_subsig, 'g-')
+annotation_seconds = annotation[0] / float(ann_fs)
+ann_x = [ (seconds - current_start) * data_fs for seconds in annotation_seconds ]
+ann_y = [ channel_subsig[index] for index in ann_x ]
+plt.plot(ann_x, ann_y, 'bo', markersize=8)
+plt.show()
 

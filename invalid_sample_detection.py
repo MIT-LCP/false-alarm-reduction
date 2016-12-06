@@ -140,7 +140,7 @@ def histogram_test(signal, histogram_cutoff):
 
 # ## Putting it all together
 
-# In[24]:
+# In[8]:
 
 def get_channel_type(channel_name): 
     channel_types_dict = {}
@@ -155,7 +155,7 @@ def get_channel_type(channel_name):
         return channel_types_dict[channel_name]
     
     raise Exception("Unknown channel name")
-    
+        
     
 # Return list of channel indices for channels of type channel_type
 def get_channels_of_type(channels, channel_type): 
