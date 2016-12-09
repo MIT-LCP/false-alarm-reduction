@@ -118,7 +118,7 @@ def get_counts(confusion_matrix):
     return { key : len(confusion_matrix[key]) for key in confusion_matrix.keys() }
 
 
-# In[6]:
+# In[ ]:
 
 if __name__ == '__main__': 
     start = datetime.now() 
@@ -128,11 +128,9 @@ if __name__ == '__main__':
 
     evaluate.print_stats(counts_gqrs)
     print_by_type(confusion_matrix_gqrs['FN'])
-
-
-# In[10]:
-
-print [ sample for sample in confusion_matrix_gqrs['TP'] if sample[0] == 'f' ]
+    
+    print "TP: ", [ sample for sample in confusion_matrix_gqrs['TP'] if sample[0] == 'v' ]
+    print "FN: ", [ sample for sample in confusion_matrix_gqrs['FN'] if sample[0] == 'v' ]
 
 
 # ## Comparing classification with other algorithms
