@@ -3,7 +3,7 @@
 
 # # QRS detection
 
-# In[4]:
+# In[2]:
 
 import invalid_sample_detection   as invalid
 import matplotlib.pyplot          as plt
@@ -27,7 +27,7 @@ else:
 
 # ## Helper methods
 
-# In[5]:
+# In[3]:
 
 # Get annotation file type based on channel type and index
 def get_ann_type(channel, channel_index, ecg_ann_type): 
@@ -47,7 +47,7 @@ def get_ann_type(channel, channel_index, ecg_ann_type):
     return ann_type
 
 
-# In[6]:
+# In[4]:
 
 # Start and end in seconds
 def get_annotation_annfs(sample, ann_type, start, end, channel_type): 
@@ -75,7 +75,7 @@ def get_annotation_annfs(sample, ann_type, start, end, channel_type):
     return annotation, ann_fs
 
 
-# In[7]:
+# In[5]:
 
 def get_ann_fs(channel_type): 
     if channel_type == "ECG": 
@@ -83,7 +83,7 @@ def get_ann_fs(channel_type):
     return parameters.DEFAULT_OTHER_FS
 
 
-# In[8]:
+# In[6]:
 
 # start and end in seconds
 def get_annotation(sample, ann_type, ann_fs, start, end): 
@@ -98,7 +98,7 @@ def get_annotation(sample, ann_type, ann_fs, start, end):
 
 # ## Calculating RR intervals
 
-# In[1]:
+# In[7]:
 
 # # Calculate RR intervals in the sample, where start and end in seconds
 # def calculate_rr_intervals(sample, ann_type, start, end, channel_type): 
@@ -124,7 +124,7 @@ def get_annotation(sample, ann_type, ann_fs, start, end):
 # print "rr_intervals", rr_intervals
 
 
-# In[9]:
+# In[8]:
 
 def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_ann_type, start=None, end=None):
     if start is None or end is None: 
@@ -155,7 +155,7 @@ def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_a
     return channel_rr_intervals
 
 
-# In[10]:
+# In[9]:
 
 # Start and end given in seconds
 def get_rr_dict(ann_path, sample_name, fields, ecg_ann_type, start=None, end=None): 
@@ -180,10 +180,10 @@ def get_rr_dict(ann_path, sample_name, fields, ecg_ann_type, start=None, end=Non
 
 # ## Plotting
 
-# In[54]:
+# In[14]:
 
 # Plot signal together with annotation types on the channel for data ranging from start to end
-def plot_annotations(data_path, ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs): 
+def plot_annotations(data_path, ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs, loc=1): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     channel_name = fields['signame'][channel_index]
     ann_type = get_ann_type(channel_name, channel_index, ecg_ann_type)
@@ -211,15 +211,15 @@ def plot_annotations(data_path, ann_path, sample_name, channel_index, start, end
          label=ann_type)
         
     plt.xlabel('Time (seconds)',fontsize=12)
-    plt.legend(fontsize=12)
+    plt.legend(fontsize=12, loc=loc)
     plt.grid()
     plt.show()
 
 
-# In[55]:
+# In[15]:
 
 data_fs = 250
-sample_name = 't384s'
+sample_name = 't700s'
 start = 286
 end = 300
 ecg_ann_type = "gqrs"
@@ -227,7 +227,7 @@ ecg_ann_type = "gqrs"
 # choose the lead to plot (annotations are generated off the first lead)
 channel_index = 1
 
-plot_annotations(data_path, ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs)
+plot_annotations(data_path, ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs, loc=4)
 
 
 # In[ ]:

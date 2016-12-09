@@ -3,7 +3,7 @@
 
 # # Invalid Sample Detection
 
-# In[17]:
+# In[2]:
 
 from scipy               import signal
 from datetime            import datetime, timedelta
@@ -27,7 +27,7 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 
 # We make a bandpass filter on the range 70-90 Hz and check the signal amplitude in this range. If the signal amplitude exceeds limits, the data is marked as invalid.
 
-# In[37]:
+# In[3]:
 
 order = 50
 f_low = 5

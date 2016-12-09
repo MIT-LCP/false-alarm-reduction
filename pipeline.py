@@ -24,7 +24,7 @@ ecg_ann_type = 'gqrs'
 
 # ## Classifying arrhythmia alarms
 
-# In[7]:
+# In[3]:
 
 # Returns true if alarm is classified as a true alarm
 def is_classified_true_alarm(data_path, ann_path, sample_name, ecg_ann_type, verbose=False): 
@@ -128,6 +128,11 @@ if __name__ == '__main__':
 
     evaluate.print_stats(counts_gqrs)
     print_by_type(confusion_matrix_gqrs['FN'])
+
+
+# In[10]:
+
+print [ sample for sample in confusion_matrix_gqrs['TP'] if sample[0] == 'f' ]
 
 
 # ## Comparing classification with other algorithms

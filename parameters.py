@@ -71,8 +71,8 @@ DEFAULT_OTHER_FS = 125.0
 
 TESTED_BLOCK_LENGTHS = { # seconds
     "Asystole": 14,
-    "Bradycardia": 10,
-    "Tachycardia": 10,
+    "Bradycardia": 16,
+    "Tachycardia": 14,
     "Ventricular_Tachycardia": 10,
     "Ventricular_Flutter_Fib": 13
 }

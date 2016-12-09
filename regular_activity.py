@@ -200,7 +200,7 @@ def is_sample_regular(data_path,
 #         { channel0: [rr_intervals], channel1: [rr_intervals], ...}
 # param: alarm_duration duration of alarm in seconds
 def is_rr_invalids_regular(rr_dict, invalids, alarm_duration,
-                           should_check_invalids=True, should_check_rr=True, should_num_check=True): 
+                           should_check_invalids=True, should_check_rr=True, should_num_check=False): 
 
     for channel in rr_dict.keys(): 
         channel_type = invalid.get_channel_type(channel)
