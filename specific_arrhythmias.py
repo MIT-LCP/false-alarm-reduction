@@ -421,9 +421,7 @@ def get_ventricular_beats_scores(channel_sig,
         sample = ann_path + sample_name
         ventricular_beats = ventricular_beat_annotations(lf_subsig, sub_subsig, sample, ann_type, start_time, end_time)
         max_hr = max_ventricular_hr(ventricular_beats, num_beats, fs)
-        
-        print "start: ", start, " end: ", end, " max_hr: ", max_hr
-        
+            
         invalids = invalid.calculate_channel_invalids(channel_subsig, "ECG")
         cval = invalid.calculate_cval_channel(invalids)
                 

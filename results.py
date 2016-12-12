@@ -302,6 +302,12 @@ annotate.plot_annotations(data_path, ann_path, sample_name, 1, start, end, ecg_a
 # - Vtach?: v206s, v534s
 # - Detected in both channels: v626s
 
+# In[ ]:
+
+sample_name = "v206s"
+classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
+
+
 # #### Detected in one channel
 
 # In[4]:
