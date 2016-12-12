@@ -3,7 +3,7 @@
 
 # # Overall pipeline
 
-# In[2]:
+# In[8]:
 
 from datetime                      import datetime
 import invalid_sample_detection    as invalid
@@ -50,8 +50,12 @@ def is_classified_true_alarm(data_path, ann_path, sample_name, ecg_ann_type, ver
     else: 
         raise Exception("Unknown arrhythmia alarm type")
     
-    classified_true_alarm = arrhythmia_test(data_path, ann_path, sample_name, ecg_ann_type, verbose)
-    return classified_true_alarm
+    try: 
+        classified_true_alarm = arrhythmia_test(data_path, ann_path, sample_name, ecg_ann_type, verbose)
+        return classified_true_alarm
+
+    except Exception as e: 
+        print "sample_name: ", sample_name, e
 
 
 def is_true_alarm(data_path, sample_name): 
@@ -118,7 +122,7 @@ def get_counts(confusion_matrix):
     return { key : len(confusion_matrix[key]) for key in confusion_matrix.keys() }
 
 
-# In[ ]:
+# In[6]:
 
 if __name__ == '__main__': 
     start = datetime.now() 

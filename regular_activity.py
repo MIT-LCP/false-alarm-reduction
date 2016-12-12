@@ -104,7 +104,7 @@ def is_classified_correctly(is_true_alarm, is_regular):
 
 # ### Check interval regular activity
 
-# In[9]:
+# In[1]:
 
 # Returns True for a given channel if all regular activity tests checked pass
 def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, channel,
@@ -193,21 +193,28 @@ def is_sample_regular(data_path,
 
 # ### Check regular activity of intermediate data
 
-# In[5]:
+# In[7]:
 
 # Determines regular activity of sample based on RR intervals and invalids array: 
 # param: rr_dict as a dictionary of the form: 
 #         { channel0: [rr_intervals], channel1: [rr_intervals], ...}
 # param: alarm_duration duration of alarm in seconds
-def is_rr_invalids_regular(rr_dict, invalids, alarm_duration,
-                           should_check_invalids=True, should_check_rr=True, should_num_check=False): 
+def is_rr_invalids_regular(rr_dict, invalids, alarm_duration, arrhythmia_type,
+                           should_check_invalids=True, should_check_rr=True, should_num_check=True): 
 
     for channel in rr_dict.keys(): 
         channel_type = invalid.get_channel_type(channel)
-        rr_intervals = rr_dict[channel]
         
+        if arrhythmia_type == "Ventricular_Flutter_Fib" and channel_type != "ECG": 
+            continue       
+        
+        rr_intervals = rr_dict[channel]
+                
         is_regular = check_interval_regular_activity(rr_intervals, invalids, alarm_duration, channel, 
                                                      should_check_invalids, should_check_rr, should_num_check)
+        
+        print "rr intervals: ", rr_intervals, is_regular
+
         
         # If any channel is regular, reject alarm as false alarm
         if is_regular: 
@@ -216,7 +223,7 @@ def is_rr_invalids_regular(rr_dict, invalids, alarm_duration,
         
 
 
-# In[11]:
+# In[4]:
 
 if __name__ == '__main__': 
     data_path = 'sample_data/challenge_training_data/'

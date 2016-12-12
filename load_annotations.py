@@ -27,7 +27,7 @@ else:
 
 # ## Helper methods
 
-# In[3]:
+# In[5]:
 
 # Get annotation file type based on channel type and index
 def get_ann_type(channel, channel_index, ecg_ann_type): 
@@ -47,7 +47,7 @@ def get_ann_type(channel, channel_index, ecg_ann_type):
     return ann_type
 
 
-# In[4]:
+# In[7]:
 
 # Start and end in seconds
 def get_annotation_annfs(sample, ann_type, start, end, channel_type): 
@@ -180,7 +180,7 @@ def get_rr_dict(ann_path, sample_name, fields, ecg_ann_type, start=None, end=Non
 
 # ## Plotting
 
-# In[14]:
+# In[3]:
 
 # Plot signal together with annotation types on the channel for data ranging from start to end
 def plot_annotations(data_path, ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs, loc=1): 
@@ -216,10 +216,10 @@ def plot_annotations(data_path, ann_path, sample_name, channel_index, start, end
     plt.show()
 
 
-# In[15]:
+# In[9]:
 
 data_fs = 250
-sample_name = 't700s'
+sample_name = 'f450s'
 start = 286
 end = 300
 ecg_ann_type = "gqrs"
