@@ -222,10 +222,15 @@ annotate.plot_annotations(data_path, ann_path, sample_name, channel_index, start
 
 # #### Representative false negative
 
-# In[7]:
+# In[21]:
 
 sample_name = "b497l"
 classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
+
+start = 292
+end = 300
+for channel_index in [0, 1, 2]: 
+    annotate.plot_annotations(data_path, ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs)
 
 
 # The cutoff HR for bradycardia is 45 bpm. Most of the false negatives have heart rates only slightly greater than the cutoff. 
@@ -302,15 +307,21 @@ annotate.plot_annotations(data_path, ann_path, sample_name, 1, start, end, ecg_a
 # - Vtach?: v206s, v534s
 # - Detected in both channels: v626s
 
-# In[ ]:
+# In[22]:
 
 sample_name = "v206s"
 classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
 
 
+# In[23]:
+
+sample_name = "v534s"
+classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
+
+
 # #### Detected in one channel
 
-# In[4]:
+# In[16]:
 
 sample_name = "v133l"
 classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
@@ -323,7 +334,7 @@ classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose
 
 # #### Detected in both channels
 
-# In[47]:
+# In[17]:
 
 sample_name = "v626s"
 classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
@@ -333,7 +344,7 @@ classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose
 
 # #### Irregular signal
 
-# In[14]:
+# In[18]:
 
 sample_name = "v448s"
 classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
