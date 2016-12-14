@@ -131,17 +131,18 @@ def get_counts(confusion_matrix):
     return { key : len(confusion_matrix[key]) for key in confusion_matrix.keys() }
 
 
-# In[6]:
+# In[ ]:
 
 if __name__ == '__main__': 
     start = datetime.now() 
     confusion_matrix_gqrs = generate_confusion_matrix_dir(data_path, ann_path, 'gqrs')
     counts_gqrs = get_counts(confusion_matrix_gqrs)
+    print "confusion matrix: ", confusion_matrix_gqrs
     print "total time: ", datetime.now() - start
 
     evaluate.print_stats(counts_gqrs)
     print_by_type(confusion_matrix_gqrs['FN'])
-    print_by_arrhythmia(confusion_matrix_gqrs)    
+    print_by_arrhythmia(confusion_matrix_gqrs, 'v')    
     
     tp_v = [ sample for sample in confusion_matrix_gqrs['TP'] if sample[0] == 'v' ]
     fn_v = [ sample for sample in confusion_matrix_gqrs['FN'] if sample[0] == 'v' ]
@@ -189,6 +190,22 @@ for author in others_confusion_matrices.keys():
     counts = get_counts(other_confusion_matrix)
     evaluate.print_stats(counts)
     print_by_type(other_confusion_matrix['FN'])
+
+
+# In[ ]:
+
+def get_missed(confusion_matrix, other_confusion_matrix, classification): 
+    missed = []
+    
+    for sample in other_confusion_matrix[classification]: 
+        if sample not in confusion_matrix[classification]: 
+            missed.append(sample)
+            
+    return missed
+    
+# fplesinger_confusion_matrix = others_confusion_matrices['fplesinger-210']
+# print "missed true positives: ", get_missed(confusion_matrix_gqrs, fplesinger_confusion_matrix, "TP")
+# print "missed true negatives: ", get_missed(confusion_matrix_gqrs, fplesinger_confusion_matrix, "TN")
 
 
 # In[ ]:
