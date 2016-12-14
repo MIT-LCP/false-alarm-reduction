@@ -460,7 +460,7 @@ def get_abp_std_scores(channel_sig,
     return r_delta
 
 
-# In[89]:
+# In[2]:
 
 def test_ventricular_tachycardia(data_path, 
                                  ann_path, 
@@ -493,9 +493,7 @@ def test_ventricular_tachycardia(data_path,
         ann_type = annotate.get_ann_type(channels[index], index, ecg_ann_type)
         r_delta = get_ventricular_beats_scores(alarm_sig[:,index], ann_path, sample_name, ann_type, start_time, end_time)
         r_vector = r_vector + r_delta
-        
-        print r_vector, r_delta
-        
+                
         if verbose: 
             channel_sig = alarm_sig[:,index]
             lf, sub = get_lf_sub(channel_sig, order)
@@ -508,9 +506,7 @@ def test_ventricular_tachycardia(data_path,
     for channel_index in abp_channels: 
         r_delta = get_abp_std_scores(alarm_sig[:,channel_index], std_threshold, window_size, rolling_increment)
         r_vector = r_vector + r_delta
-        
-        print r_vector, r_delta
-                    
+          
     return any([ r_value > 0 for r_value in r_vector ])
 
 sample_name = "v626s"
@@ -521,7 +517,7 @@ sample_name = "v626s"
 
 # ## Ventricular flutter/fibrillation
 
-# In[27]:
+# In[1]:
 
 def calculate_dlfmax(channel_sig, 
                      order=parameters.ORDER): 
@@ -608,8 +604,6 @@ def get_regular_activity_array(sig,
         else: 
             regular_activity_array = np.append(regular_activity_array, 0)
 
-        print "start: ", start, " end: ", end, " is_regular: ", is_regular, regular_activity_array
-
         end += (rolling_increment * fs)
     
     return regular_activity_array
@@ -661,9 +655,7 @@ def test_ventricular_flutter_fibrillation(data_path,
         r_vector_value = 0.
     size = int((alarm_duration - window_size) / rolling_increment) + 1
     r_vector = [r_vector_value] * size
-    
-    print r_vector
-    
+        
     # Adjust R vector based on whether standard deviation of ABP channel is > or < the threshold
     for channel_index in abp_channels: 
         r_delta = get_abp_std_scores(alarm_sig[:,channel_index], std_threshold, window_size, rolling_increment)
@@ -672,11 +664,8 @@ def test_ventricular_flutter_fibrillation(data_path,
     # Adjust R vector based on dominant frequency in signal
     for channel_index in ecg_channels: 
         dominant_freqs = get_dominant_freq_array(alarm_sig[:,channel_index])
-        print "dominant freqs: ", dominant_freqs
         regular_activity = get_regular_activity_array(alarm_sig, fields, ann_path, sample_name, ecg_ann_type)
-        print "regular activity: ", regular_activity
         adjusted_dominant_freqs = adjust_dominant_freqs(dominant_freqs, regular_activity)
-        print "adjusted: ", adjusted_dominant_freqs
         
         new_r_vector = np.array([])
         for dominant_freq, r_value in zip(adjusted_dominant_freqs, r_vector): 
@@ -688,7 +677,7 @@ def test_ventricular_flutter_fibrillation(data_path,
         r_vector = new_r_vector
     
     return any([ r_value > 0 for r_value in r_vector ])
-    
+
 # sample_name = "f593l"
 sample_name = "f450s" # false negative --> fixed
 # sample_name = "f543l" # true positive

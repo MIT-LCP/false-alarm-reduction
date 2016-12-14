@@ -3,7 +3,7 @@
 
 # # Overall pipeline
 
-# In[8]:
+# In[2]:
 
 from datetime                      import datetime
 import invalid_sample_detection    as invalid
@@ -118,6 +118,15 @@ def print_by_type(false_negatives):
 
     print counts_by_type
     
+    
+def print_by_arrhythmia(confusion_matrix, arrhythmia_prefix): 
+    counts_by_arrhythmia = {}
+    for classification_type in confusion_matrix.keys(): 
+        sample_list = [ sample for sample in confusion_matrix[classification_type] if sample[0] == arrhythmia_prefix]
+        counts_by_arrhythmia[classification_type] = (len(sample_list), sample_list)
+
+    print counts_by_arrhythmia
+    
 def get_counts(confusion_matrix): 
     return { key : len(confusion_matrix[key]) for key in confusion_matrix.keys() }
 
@@ -132,9 +141,14 @@ if __name__ == '__main__':
 
     evaluate.print_stats(counts_gqrs)
     print_by_type(confusion_matrix_gqrs['FN'])
+    print_by_arrhythmia(confusion_matrix_gqrs)    
     
-    print "TP: ", [ sample for sample in confusion_matrix_gqrs['TP'] if sample[0] == 'v' ]
-    print "FN: ", [ sample for sample in confusion_matrix_gqrs['FN'] if sample[0] == 'v' ]
+    tp_v = [ sample for sample in confusion_matrix_gqrs['TP'] if sample[0] == 'v' ]
+    fn_v = [ sample for sample in confusion_matrix_gqrs['FN'] if sample[0] == 'v' ]
+    fp_v = [ sample for sample in confusion_matrix_gqrs['FP'] if sample[0] == 'v' ]
+    print "TP: ", tp_v, len(tp_v)
+    print "FN: ", fn_v, len(fn_v)
+    print "FP: ", fp_v, len(fp_v)
 
 
 # ## Comparing classification with other algorithms

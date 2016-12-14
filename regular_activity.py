@@ -213,9 +213,6 @@ def is_rr_invalids_regular(rr_dict, invalids, alarm_duration, arrhythmia_type,
         is_regular = check_interval_regular_activity(rr_intervals, invalids, alarm_duration, channel, 
                                                      should_check_invalids, should_check_rr, should_num_check)
         
-        print "rr intervals: ", rr_intervals, is_regular
-
-        
         # If any channel is regular, reject alarm as false alarm
         if is_regular: 
             return True
