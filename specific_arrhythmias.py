@@ -460,7 +460,7 @@ def get_abp_std_scores(channel_sig,
     return r_delta
 
 
-# In[31]:
+# In[39]:
 
 def test_ventricular_tachycardia(data_path, 
                                  ann_path, 
@@ -509,7 +509,7 @@ def test_ventricular_tachycardia(data_path,
           
     return any([ r_value > 0 for r_value in r_vector ])
 
-sample_name = "v133l"
+sample_name = "v139l"
 # sample_name = "v784s" # false alarm
 # sample_name = "v803l" # true alarm
 print test_ventricular_tachycardia(data_path, ann_path, sample_name, ecg_ann_type, True)
