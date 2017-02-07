@@ -3,7 +3,7 @@
 
 # # QRS detection
 
-# In[2]:
+# In[16]:
 
 import invalid_sample_detection   as invalid
 import matplotlib.pyplot          as plt
@@ -23,14 +23,29 @@ if hostname=='alistair-pc70':
 else:
     data_path = 'sample_data/challenge_training_data/'
     ann_path = 'sample_data/challenge_training_multiann/'
+    fp_ann_path = 'sample_data/fplesinger_data/output/'
 
 
 # ## Helper methods
 
-# In[5]:
+# In[13]:
 
 # Get annotation file type based on channel type and index
 def get_ann_type(channel, channel_index, ecg_ann_type): 
+    if ecg_ann_type == "fp": 
+        return ann_type_fplesinger(channel_index)
+    
+    else: 
+        return ann_type_qrs(channel, channel_index, ecg_ann_type)
+    
+    
+# Get annotation file type for fplesinger ann files
+def ann_type_fplesinger(channel_index): 
+    return "fp" + channel_index
+    
+    
+# Get annotation file type for non-fplesinger ann files
+def ann_type_qrs(channel, channel_index, ecg_ann_type): 
     channel_type = invalid.get_channel_type(channel)
 
     if channel_type == "ECG": 
@@ -47,7 +62,7 @@ def get_ann_type(channel, channel_index, ecg_ann_type):
     return ann_type
 
 
-# In[7]:
+# In[4]:
 
 # Start and end in seconds
 def get_annotation_annfs(sample, ann_type, start, end, channel_type): 
@@ -124,7 +139,7 @@ def get_annotation(sample, ann_type, ann_fs, start, end):
 # print "rr_intervals", rr_intervals
 
 
-# In[8]:
+# In[17]:
 
 def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_ann_type, start=None, end=None):
     if start is None or end is None: 
@@ -154,6 +169,12 @@ def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_a
 
     return channel_rr_intervals
 
+sample_name = "a103l"
+sig, fields = wfdb.rdsamp(data_path + sample_name)
+ecg_ann_type = "fp"
+channel_index = 1
+print get_channel_rr_intervals(fp_ann_path, sample_name, channel_index, fields, ecg_ann_type)
+
 
 # In[9]:
 
@@ -180,7 +201,7 @@ def get_rr_dict(ann_path, sample_name, fields, ecg_ann_type, start=None, end=Non
 
 # ## Plotting
 
-# In[3]:
+# In[10]:
 
 # Plot signal together with annotation types on the channel for data ranging from start to end
 def plot_annotations(data_path, ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs, loc=1): 
@@ -216,18 +237,18 @@ def plot_annotations(data_path, ann_path, sample_name, channel_index, start, end
     plt.show()
 
 
-# In[9]:
+# In[18]:
 
 data_fs = 250
-sample_name = 'f450s'
+sample_name = 'a103l'
 start = 286
 end = 300
-ecg_ann_type = "gqrs"
+ecg_ann_type = "fp"
 
 # choose the lead to plot (annotations are generated off the first lead)
 channel_index = 1
 
-plot_annotations(data_path, ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs, loc=4)
+plot_annotations(data_path, fp_ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs, loc=4)
 
 
 # In[ ]:

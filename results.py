@@ -54,6 +54,8 @@ data_fs = parameters.DEFAULT_FS
 # ##### Ventricular tachycardia test: 
 # - ECG channels: 4 consecutive ventricular beats at a heart rate of > 95 bpm
 # - ABP channel: searches for a 3s window with standard deviation < 6 mmHg
+# - Original algorithm: add cval if vtach detected, add -cval if vtach not detected
+# - Modified algorithm with better performance: add cval if vtach detected, add 0 if vtach not detected
 # - If local scores weighted by validity score (cval) sum to > 0, return true
 # 
 # ##### Ventricular flutter/fibrillation test: 
@@ -64,7 +66,13 @@ data_fs = parameters.DEFAULT_FS
 
 # ## Overall comparison of results
 
-# #### Confusion matrix for current algorithm: 
+# #### Confusion matrix for original algorithm: 
+# Score: 0.656
+# 
+# Sensitivity: 0.847
+# 
+# Specificity: 0.792
+# 
 # |           | **True**                    | **False** |        
 # | ---       | :---:                       | :---:     |
 # | **True**  | 249                         | 95        |
@@ -78,6 +86,29 @@ data_fs = parameters.DEFAULT_FS
 # | **Asys** | **Brady** | **Tachy** | **Vfib/flutter** | **Vtach** |
 # | :---:    | :---:     | :---:     | :---:            | :---:     |
 # | 1        | 8         | 2         | 0                | 34        |
+# 
+# #### Confusion matrix for modified algorithm (modified vtach test): 
+# - Different vtach channels cannot cancel out vtach detection because we add 0 instead of -cval when vtach is not detected in a channel
+# 
+# Score: 0.703
+# 
+# Sensitivity: 0.939
+# 
+# Specificity: 0.662
+# 
+# |           | **True**                    | **False** |        
+# | ---       | :---:                       | :---:     |
+# | **True**  | 276                         | 154       |
+# | **False** | <font color='red'>18</font> | 302       |
+# 
+# |           | **True**                        | **False** |        
+# | ---       | :---:                           | :---:     |
+# | **True**  | 0.368                           | 0.205     |
+# | **False** | <font color='red'>0.024</font>  | 0.403     |
+# 
+# | **Asys** | **Brady** | **Tachy** | **Vfib/flutter** | **Vtach** |
+# | :---:    | :---:     | :---:     | :---:            | :---:     |
+# | 1        | 8         | 2         | 0                | 7         |
 
 # #### Confusion matrix for other algorithms: 
 # 
@@ -342,7 +373,7 @@ classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose
 
 # 1. Improve criteria for selecting "best" channel for bradycardia and tachycardia
 # 2. Fewer beats necessary to detect tachycardia 
-# 3. Better annotations for QRS complexes
+# 3. Better annotations for QRS complexes --> try comparing debug data with fplesinger data
 # 4. Ventricular tachycardia detected in one channel can be canceled out by vtach not detected in other channel
 
 # In[ ]:

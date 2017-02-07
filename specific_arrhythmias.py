@@ -17,6 +17,7 @@ from datetime import datetime
 
 data_path = 'sample_data/challenge_training_data/'
 ann_path = 'sample_data/challenge_training_multiann/'
+fp_ann_path = 'sample_data/fplesinger_data/output/'
 ecg_ann_type = 'gqrs'
 
 
@@ -24,8 +25,15 @@ ecg_ann_type = 'gqrs'
 
 # In[5]:
 
-def calc_summed_asystole_score(ann_path, sample_name, subsig, channels, ecg_ann_type, current_start, current_end,
-                               verbose=False, data_fs=parameters.DEFAULT_FS): 
+def calc_summed_asystole_score(ann_path, 
+                               sample_name, 
+                               subsig, 
+                               channels, 
+                               ecg_ann_type, 
+                               current_start, 
+                               current_end,
+                               verbose=False, 
+                               data_fs=parameters.DEFAULT_FS): 
     summed_score = 0
     
     for channel_index, channel in zip(range(len(channels)), channels): 
@@ -39,8 +47,13 @@ def calc_summed_asystole_score(ann_path, sample_name, subsig, channels, ecg_ann_
         
         ann_type = annotate.get_ann_type(channel, channel_index, ecg_ann_type)
         ann_fs = annotate.get_ann_fs(channel_type)
-        annotation = annotate.get_annotation(ann_path + sample_name, ann_type, ann_fs, current_start, current_end)
         
+        if ecg_ann_type == 'fp': 
+            path = fp_ann_path
+        else: 
+            path = ann_path 
+        annotation = annotate.get_annotation(path + sample_name, ann_type, ann_fs, current_start, current_end)
+                
         if len(annotation) == 0: 
             continue            
         elif len(annotation[0]) > 0: 
@@ -112,7 +125,12 @@ def get_rr_intervals_list(ann_path, sample_name, ecg_ann_type, fields, start, en
         if channel_type == "Resp": 
             continue
             
-        rr_intervals = annotate.get_channel_rr_intervals(ann_path, sample_name, channel_index, fields,
+        if ecg_ann_type == 'fp': 
+            path = fp_ann_path
+        else: 
+            path = ann_path 
+            
+        rr_intervals = annotate.get_channel_rr_intervals(path, sample_name, channel_index, fields,
                                                          ecg_ann_type, start, end)
         rr_intervals_list.append(rr_intervals)
         
@@ -464,6 +482,7 @@ def get_abp_std_scores(channel_sig,
 
 def test_ventricular_tachycardia(data_path, 
                                  ann_path, 
+                                 fp_ann_path,
                                  sample_name, 
                                  ecg_ann_type,
                                  verbose=False,

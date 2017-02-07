@@ -3,7 +3,7 @@
 
 # # Overall pipeline
 
-# In[2]:
+# In[8]:
 
 from datetime                      import datetime
 import invalid_sample_detection    as invalid
@@ -24,28 +24,28 @@ ecg_ann_type = 'gqrs'
 
 # ## Classifying arrhythmia alarms
 
-# In[3]:
+# In[9]:
 
 # Returns true if alarm is classified as a true alarm
-def is_classified_true_alarm(data_path, ann_path, sample_name, ecg_ann_type, verbose=False): 
+def classify_alarm(data_path, ann_path, sample_name, ecg_ann_type, verbose=False): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
-    alarm_type, is_true_alarm = regular.check_gold_standard_classification(fields)
 
-    is_regular = regular.is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type, alarm_type, should_check_nan=False)    
+    is_regular = regular.is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type, should_check_nan=False)    
     if is_regular:
         if verbose: 
             print sample_name + "with regular activity"
         return False
     
-    if alarm_type == "Asystole": 
+    alarm_type = sample_name[0]
+    if alarm_type == "a": 
         arrhythmia_test = arrhythmia.test_asystole
-    elif alarm_type == "Bradycardia": 
+    elif alarm_type == "b": 
         arrhythmia_test = arrhythmia.test_bradycardia
-    elif alarm_type == "Tachycardia": 
+    elif alarm_type == "t": 
         arrhythmia_test = arrhythmia.test_tachycardia
-    elif alarm_type == "Ventricular_Tachycardia": 
+    elif alarm_type == "v": 
         arrhythmia_test = arrhythmia.test_ventricular_tachycardia
-    elif alarm_type == "Ventricular_Flutter_Fib": 
+    elif alarm_type == "f": 
         arrhythmia_test = arrhythmia.test_ventricular_flutter_fibrillation
     else: 
         raise Exception("Unknown arrhythmia alarm type")
@@ -58,13 +58,17 @@ def is_classified_true_alarm(data_path, ann_path, sample_name, ecg_ann_type, ver
         print "sample_name: ", sample_name, e
 
 
+# In[6]:
+
+# Returns true if alarm is a true alarm
+# Only for samples with known classification
 def is_true_alarm(data_path, sample_name): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     alarm_type, true_alarm = regular.check_gold_standard_classification(fields)
     return true_alarm
 
 
-# In[4]:
+# In[10]:
 
 # Generate confusion matrix for all samples given sample name/directory
 def generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type): 
@@ -80,7 +84,7 @@ def generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type):
             sample_name = filename.rstrip(parameters.HEADER_EXTENSION)
             
             true_alarm = is_true_alarm(data_path, sample_name)
-            classified_true_alarm = is_classified_true_alarm(data_path, ann_path, sample_name, ecg_ann_type)
+            classified_true_alarm = classify_alarm(data_path, ann_path, sample_name, ecg_ann_type)
 
             matrix_classification = get_confusion_matrix_classification(true_alarm, classified_true_alarm)
             confusion_matrix[matrix_classification].append(sample_name)
@@ -105,6 +109,8 @@ def get_confusion_matrix_classification(true_alarm, classified_true_alarm):
 
     return matrix_classification
 
+
+# ## Printing and calculating counts
 
 # In[5]:
 
@@ -131,22 +137,22 @@ def get_counts(confusion_matrix):
     return { key : len(confusion_matrix[key]) for key in confusion_matrix.keys() }
 
 
-# In[ ]:
+# In[9]:
 
 if __name__ == '__main__': 
     start = datetime.now() 
-    confusion_matrix_gqrs = generate_confusion_matrix_dir(data_path, ann_path, 'gqrs')
-    counts_gqrs = get_counts(confusion_matrix_gqrs)
-    print "confusion matrix: ", confusion_matrix_gqrs
-    print "total time: ", datetime.now() - start
+#     confusion_matrix_gqrs = generate_confusion_matrix_dir(data_path, ann_path, 'gqrs')
+#     counts_gqrs = get_counts(confusion_matrix_gqrs)
+#     print "confusion matrix: ", confusion_matrix_gqrs
+#     print "total time: ", datetime.now() - start
 
-    evaluate.print_stats(counts_gqrs)
-    print_by_type(confusion_matrix_gqrs['FN'])
-    print_by_arrhythmia(confusion_matrix_gqrs, 'v')
+#     evaluate.print_stats(counts_gqrs)
+#     print_by_type(confusion_matrix_gqrs['FN'])
+#     print_by_arrhythmia(confusion_matrix_gqrs, 'v')
     
-    fplesinger_confusion_matrix = others_confusion_matrices['fplesinger-210']
-    print "missed true positives: ", get_missed(confusion_matrix_gqrs, fplesinger_confusion_matrix, "TP")
-    print "missed true negatives: ", get_missed(confusion_matrix_gqrs, fplesinger_confusion_matrix, "TN")
+#     fplesinger_confusion_matrix = others_confusion_matrices['fplesinger-210']
+#     print "missed true positives: ", get_missed(confusion_matrix_gqrs, fplesinger_confusion_matrix, "TP")
+#     print "missed true negatives: ", get_missed(confusion_matrix_gqrs, fplesinger_confusion_matrix, "TN")
 
 
 # Regular algorithm: 
@@ -217,9 +223,9 @@ def get_missed(confusion_matrix, other_confusion_matrix, classification):
             
     return missed
     
-fplesinger_confusion_matrix = others_confusion_matrices['fplesinger-210']
-print "missed true positives: ", get_missed(confusion_matrix_gqrs, fplesinger_confusion_matrix, "TP")
-print "missed true negatives: ", get_missed(confusion_matrix_gqrs, fplesinger_confusion_matrix, "TN")
+# fplesinger_confusion_matrix = others_confusion_matrices['fplesinger-210']
+# print "missed true positives: ", get_missed(confusion_matrix_gqrs, fplesinger_confusion_matrix, "TP")
+# print "missed true negatives: ", get_missed(confusion_matrix_gqrs, fplesinger_confusion_matrix, "TN")
 
 
 # In[ ]:

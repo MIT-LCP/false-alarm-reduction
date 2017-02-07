@@ -3,7 +3,7 @@
 
 # # Regular activity test
 
-# In[5]:
+# In[12]:
 
 from datetime                      import datetime
 import invalid_sample_detection    as invalid
@@ -20,12 +20,13 @@ get_ipython().magic(u'config IPCompleter.greedy=True')
 
 data_path = 'sample_data/challenge_training_data/'
 ann_path = 'sample_data/challenge_training_multiann/'
+fp_ann_path = 'sample_data/fplesinger_data/output/'
 ecg_ann_type = 'gqrs'
 
 
 # ## RR intervals tests
 
-# In[6]:
+# In[4]:
 
 # Check if standard deviation of RR intervals of signal are within limits
 def check_rr_stdev(rr_intervals): 
@@ -62,7 +63,7 @@ def check_num_rr_intervals(rr_intervals):
 
 # ## Invalids tests
 
-# In[7]:
+# In[5]:
 
 # Returns False if any block within signal is identified as invalid (invalid sample detection)
 def check_invalids(invalids, channel): 
@@ -79,7 +80,7 @@ def check_invalids(invalids, channel):
 
 # Helper methods to check classification of alarms and whether the algorithm classified alarm correctly: 
 
-# In[8]:
+# In[6]:
 
 # Returns type of alarm and whether gold standard classified alarm as true or false
 def check_gold_standard_classification(fields): 
@@ -104,7 +105,7 @@ def is_classified_correctly(is_true_alarm, is_regular):
 
 # ### Check interval regular activity
 
-# In[1]:
+# In[7]:
 
 # Returns True for a given channel if all regular activity tests checked pass
 def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, channel,
@@ -135,7 +136,7 @@ def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, chan
 
 # ### Check regular activity for sample
 
-# In[12]:
+# In[8]:
 
 # Check overall sample for regular activity by iterating through each channel.
 # If any channel exhibits regular activity, alarm indicated as false alarm.
@@ -143,13 +144,13 @@ def is_sample_regular(data_path,
                       ann_path, 
                       sample_name, 
                       ecg_ann_type,
-                      alarm_type,
                       start=None, 
                       end=None, 
                       should_check_invalids=True,
                       should_check_rr=True,
                       should_num_check=True,
-                      should_check_nan=True): 
+                      should_check_nan=True, 
+                      verbose=False): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     channels = fields['signame']
     
@@ -169,15 +170,19 @@ def is_sample_regular(data_path,
         # Ignore respiratory channel
         if channel_type == "Resp": 
             continue
-            
+           
+        alarm_prefix = sample_name[0]
         # Only use ECG channels for ventricular fib
-        if alarm_type == "Ventricular_Flutter_Fib": 
+        if alarm_prefix == "f": 
             if channel_type != "ECG": 
                 continue
             
         rr = np.array([])
         if should_check_rr: 
-            rr = annotate.get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_ann_type)
+            if ecg_ann_type == 'fp': 
+                rr = annotate.get_channel_rr_intervals(fp_ann_path, sample_name, channel_index, fields, 'fp')
+            else: 
+                rr = annotate.get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_ann_type)
             
         is_regular = check_interval_regular_activity(rr, invalids, alarm_duration, channel, should_check_invalids,
                                                      should_check_rr, should_num_check)
@@ -193,7 +198,7 @@ def is_sample_regular(data_path,
 
 # ### Check regular activity of intermediate data
 
-# In[7]:
+# In[9]:
 
 # Determines regular activity of sample based on RR intervals and invalids array: 
 # param: rr_dict as a dictionary of the form: 
@@ -220,7 +225,7 @@ def is_rr_invalids_regular(rr_dict, invalids, alarm_duration, arrhythmia_type,
         
 
 
-# In[4]:
+# In[11]:
 
 if __name__ == '__main__': 
     data_path = 'sample_data/challenge_training_data/'
@@ -236,7 +241,7 @@ if __name__ == '__main__':
 
     print is_classified_correctly(is_true_alarm, is_regular)
     
-    annotate.plot_annotations(data_path, ann_path, sample_name, ['jqrs1'], 1, fields['fs'], start, end)
+    annotate.plot_annotations(data_path, ann_path, sample_name, 1, start, end, 'jqrs', fields['fs'])
 
 
 # In[ ]:
