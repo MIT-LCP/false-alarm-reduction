@@ -3,7 +3,7 @@
 
 # # Summary of results
 
-# In[2]:
+# In[10]:
 
 import matplotlib.pyplot  as plt
 import load_annotations   as annotate
@@ -15,6 +15,7 @@ get_ipython().magic(u'matplotlib inline')
 
 data_path = 'sample_data/challenge_training_data/'
 ann_path = 'sample_data/challenge_training_multiann/'
+fp_ann_path = 'sample_data/fplesinger_data/output/'
 ecg_ann_type = 'gqrs'
 data_fs = parameters.DEFAULT_FS
 
@@ -187,11 +188,11 @@ data_fs = parameters.DEFAULT_FS
 
 # ## Examples
 
-# In[3]:
+# In[5]:
 
 def classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose=False): 
     true_alarm = pipeline.is_true_alarm(data_path, sample_name)
-    classified_true_alarm = pipeline.is_classified_true_alarm(data_path, ann_path, sample_name, ecg_ann_type, verbose)
+    classified_true_alarm = pipeline.classify_alarm(data_path, ann_path, sample_name, ecg_ann_type, verbose)
     matrix_classification = pipeline.get_confusion_matrix_classification(true_alarm, classified_true_alarm)
 
     title = matrix_classification + ": " + sample_name
@@ -216,7 +217,7 @@ def plot_signal(data_path, sample_name, plot_title=""):
 
 # #### True positive
 
-# In[4]:
+# In[6]:
 
 sample_name = "a161l"
 classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type)
@@ -224,7 +225,7 @@ classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type)
 
 # #### False negative
 
-# In[5]:
+# In[7]:
 
 sample_name = "a670s"
 classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type)
@@ -232,11 +233,16 @@ classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type)
 
 # Annotations indicated for pacemarker artefacts despite not QRS --> asystole not detected because QRS complexes annotated in ECG channels
 
-# In[6]:
+# In[15]:
 
 channel_index = 0
 start, end = 294, 298.5
+
+# GQRS annotations
 annotate.plot_annotations(data_path, ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs)
+
+# FPlesinger annotations
+annotate.plot_annotations(data_path, fp_ann_path, sample_name, channel_index, start, end, "fp", data_fs)
 
 
 # ### Bradycardia
@@ -253,7 +259,7 @@ annotate.plot_annotations(data_path, ann_path, sample_name, channel_index, start
 
 # #### Representative false negative
 
-# In[21]:
+# In[16]:
 
 sample_name = "b497l"
 classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
@@ -268,7 +274,7 @@ for channel_index in [0, 1, 2]:
 
 # #### Interesting annotations/signals?
 
-# In[8]:
+# In[17]:
 
 sample_name = "b187l"
 classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
@@ -276,7 +282,7 @@ classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose
 
 # Very different annotations between the different ECG channels. II channel was chosen by the algorithm to find the min HR in determining bradycardia.
 
-# In[9]:
+# In[18]:
 
 start, end = 284, 300
 annotate.plot_annotations(data_path, ann_path, sample_name, 0, start, end, ecg_ann_type, data_fs)
@@ -285,7 +291,7 @@ annotate.plot_annotations(data_path, ann_path, sample_name, 1, start, end, ecg_a
 
 # Similar issue for "b494s": (channel II was selected as the best channel)
 
-# In[10]:
+# In[19]:
 
 sample_name = "b494s"
 classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
@@ -298,7 +304,7 @@ annotate.plot_annotations(data_path, ann_path, sample_name, 0, start, end, ecg_a
 
 # #### Too few beats before alarm
 
-# In[11]:
+# In[20]:
 
 sample_name = "t418s"
 classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
@@ -306,7 +312,7 @@ classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose
 
 # II channel was chosen by the algorithm to find the max HR in determining tachycardia. This ECG data segment has a high heart rate for a short period of time at the end of the segment right before the alarm gets triggered. Because a high heart rate is only seen at the end of the segment, the overall HR for a segment of at least 12 beats (as necessitated by the algorithm) is not seen to be higher than the minimum needed to trigger tachycardia.
 
-# In[12]:
+# In[21]:
 
 start, end = 290, 300
 annotate.plot_annotations(data_path, ann_path, sample_name, 0, start, end, ecg_ann_type, data_fs, loc=2)
@@ -315,7 +321,7 @@ annotate.plot_annotations(data_path, ann_path, sample_name, 1, start, end, ecg_a
 
 # #### Poor selection of best channel
 
-# In[13]:
+# In[22]:
 
 sample_name = "t700s"
 classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
@@ -323,7 +329,7 @@ classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose
 
 # II channel is chosen by the algorithm as the channel by which to determine tachycardia, even though the annotations for the second channel (V) is much cleaner. This is because of the criterion used to determine the "best" channel: min standard deviation of all the channels that satisfy the other tests (# of annotations and sum of the annotations > min threshold). This is maybe not the best/most relevant criterion in deciding the best test, and we should likely explore something else to eliminate these false negatives. 
 
-# In[14]:
+# In[23]:
 
 start, end = 290, 300
 annotate.plot_annotations(data_path, ann_path, sample_name, 0, start, end, ecg_ann_type, data_fs, loc=4)
@@ -340,7 +346,7 @@ annotate.plot_annotations(data_path, ann_path, sample_name, 1, start, end, ecg_a
 
 # #### Detected in one channel
 
-# In[4]:
+# In[24]:
 
 sample_name = "v133l"
 classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
@@ -353,7 +359,7 @@ classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose
 
 # #### Detected in both channels
 
-# In[5]:
+# In[25]:
 
 sample_name = "v626s"
 classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)
@@ -363,7 +369,7 @@ classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose
 
 # #### Irregular signal
 
-# In[6]:
+# In[26]:
 
 sample_name = "v448s"
 classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose=True)

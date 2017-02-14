@@ -28,26 +28,28 @@ else:
 
 # ## Helper methods
 
-# In[13]:
+# In[24]:
 
 # Get annotation file type based on channel type and index
 def get_ann_type(channel, channel_index, ecg_ann_type): 
+    channel_type = invalid.get_channel_type(channel)
+    if channel_type == "Resp": 
+        return ""
+    
     if ecg_ann_type == "fp": 
         return ann_type_fplesinger(channel_index)
     
     else: 
-        return ann_type_qrs(channel, channel_index, ecg_ann_type)
+        return ann_type_qrs(channel_type, channel_index, ecg_ann_type)
     
     
 # Get annotation file type for fplesinger ann files
 def ann_type_fplesinger(channel_index): 
-    return "fp" + channel_index
+    return "fp" + str(channel_index)
     
     
 # Get annotation file type for non-fplesinger ann files
-def ann_type_qrs(channel, channel_index, ecg_ann_type): 
-    channel_type = invalid.get_channel_type(channel)
-
+def ann_type_qrs(channel_type, channel_index, ecg_ann_type): 
     if channel_type == "ECG": 
         ann_type = ecg_ann_type + str(channel_index)
     elif channel_type == "BP": 
@@ -64,27 +66,53 @@ def ann_type_qrs(channel, channel_index, ecg_ann_type):
 
 # In[4]:
 
+# # Start and end in seconds
+# def get_annotation_annfs(sample, ann_type, start, end, channel_type): 
+#     # Check annotation fs with guess of smaller val (DEFAULT_OTHER_FS) to prevent checking out of range data
+#     ann_fs = parameters.DEFAULT_OTHER_FS
+
+#     # Find annotation fs from wfdb.rdann
+#     annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
+
+#     # If rdann's provided ann_fs is valid, use that annotation fs
+#     if annotation[-1] is not None and annotation[-1] != 0 and isinstance(annotation[-1], (int, float)):  
+#         ann_fs = annotation[-1]
+
+#     # Otherwise, use default annotation fs and print warning if the annotation is not empty
+#     elif len(annotation[0]) > 0: 
+#         if channel_type == "ECG" or ann_type.startswith("fp"): 
+#             ann_fs = parameters.DEFAULT_ECG_FS
+#         else: 
+#             print "Annotation fs defaulted to ", parameters.DEFAULT_OTHER_FS, " for ", sample, ann_type
+
+#     # Get proper range of annotation based on annotation fs, only run if different ann_fs from before 
+#     if ann_fs != parameters.DEFAULT_OTHER_FS: 
+#         annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
+                        
+#     return annotation, ann_fs
+
+
+# In[28]:
+
 # Start and end in seconds
 def get_annotation_annfs(sample, ann_type, start, end, channel_type): 
-    # Check annotation fs with guess of smaller val (DEFAULT_OTHER_FS) to prevent checking out of range data
-    ann_fs = parameters.DEFAULT_OTHER_FS
+    if channel_type == "ECG" or ann_type.startswith("fp"): 
+        ann_fs = parameters.DEFAULT_ECG_FS
+    else: 
+        ann_fs = parameters.DEFAULT_OTHER_FS
 
     # Find annotation fs from wfdb.rdann
     annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
 
     # If rdann's provided ann_fs is valid, use that annotation fs
     if annotation[-1] is not None and annotation[-1] != 0 and isinstance(annotation[-1], (int, float)):  
-        ann_fs = annotation[-1]
-
-    # Otherwise, use default annotation fs and print warning if the annotation is not empty
-    elif len(annotation[0]) > 0: 
-        if channel_type == "ECG": 
-            ann_fs = parameters.DEFAULT_ECG_FS
-        else: 
-            print "Annotation fs defaulted to ", parameters.DEFAULT_OTHER_FS, " for ", sample, ann_type
-
+        fs = annotation[-1]
+    else: 
+        fs = ann_fs
+        
     # Get proper range of annotation based on annotation fs, only run if different ann_fs from before 
-    if ann_fs != parameters.DEFAULT_OTHER_FS: 
+    if fs != ann_fs: 
+        ann_fs = fs
         annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
                         
     return annotation, ann_fs
@@ -92,8 +120,8 @@ def get_annotation_annfs(sample, ann_type, start, end, channel_type):
 
 # In[5]:
 
-def get_ann_fs(channel_type): 
-    if channel_type == "ECG": 
+def get_ann_fs(channel_type, ecg_ann_type): 
+    if channel_type == "ECG" or ecg_ann_type.startswith("fp"): 
         return parameters.DEFAULT_ECG_FS
     return parameters.DEFAULT_OTHER_FS
 
@@ -101,7 +129,7 @@ def get_ann_fs(channel_type):
 # In[6]:
 
 # start and end in seconds
-def get_annotation(sample, ann_type, ann_fs, start, end): 
+def get_annotation(sample, get, ann_fs, start, end): 
     try: 
         annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
     except Exception as e: 
@@ -139,7 +167,7 @@ def get_annotation(sample, ann_type, ann_fs, start, end):
 # print "rr_intervals", rr_intervals
 
 
-# In[17]:
+# In[29]:
 
 def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_ann_type, start=None, end=None):
     if start is None or end is None: 
@@ -172,7 +200,7 @@ def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_a
 sample_name = "a103l"
 sig, fields = wfdb.rdsamp(data_path + sample_name)
 ecg_ann_type = "fp"
-channel_index = 1
+channel_index = 2
 print get_channel_rr_intervals(fp_ann_path, sample_name, channel_index, fields, ecg_ann_type)
 
 

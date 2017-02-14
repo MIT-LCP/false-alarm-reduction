@@ -3,7 +3,7 @@
 
 # # Specific arrhythmia tests
 
-# In[4]:
+# In[2]:
 
 import invalid_sample_detection    as invalid
 import load_annotations            as annotate
@@ -46,13 +46,9 @@ def calc_summed_asystole_score(ann_path,
         cval = invalid.calculate_cval_channel(invalids)
         
         ann_type = annotate.get_ann_type(channel, channel_index, ecg_ann_type)
-        ann_fs = annotate.get_ann_fs(channel_type)
+        ann_fs = annotate.get_ann_fs(channel_type, ecg_ann_type)
         
-        if ecg_ann_type == 'fp': 
-            path = fp_ann_path
-        else: 
-            path = ann_path 
-        annotation = annotate.get_annotation(path + sample_name, ann_type, ann_fs, current_start, current_end)
+        annotation = annotate.get_annotation(ann_path + sample_name, ann_type, ann_fs, current_start, current_end)
                 
         if len(annotation) == 0: 
             continue            
@@ -125,12 +121,7 @@ def get_rr_intervals_list(ann_path, sample_name, ecg_ann_type, fields, start, en
         if channel_type == "Resp": 
             continue
             
-        if ecg_ann_type == 'fp': 
-            path = fp_ann_path
-        else: 
-            path = ann_path 
-            
-        rr_intervals = annotate.get_channel_rr_intervals(path, sample_name, channel_index, fields,
+        rr_intervals = annotate.get_channel_rr_intervals(ann_path, sample_name, channel_index, fields,
                                                          ecg_ann_type, start, end)
         rr_intervals_list.append(rr_intervals)
         
@@ -270,7 +261,7 @@ sample_name = "t700s" # "t418s" # "t209l" # true alarm
 
 # ## Ventricular tachycardia
 
-# In[14]:
+# In[3]:
 
 def hilbert_transform(x, fs, f_low, f_high, demod=False):
     N = len(x)
@@ -291,45 +282,7 @@ def hilbert_transform(x, fs, f_low, f_high, demod=False):
     return 2*np.abs(scipy.fftpack.ifft(f, n=N))
 
 
-# In[15]:
-
-# Returns index of peak (max value) in the signal out of the indices provided
-def get_peak_index(signal, peak_indices): 
-    max_peak_value = 0
-    max_peak_index = 0
-    
-    for index in peak_indices: 
-        if signal[index] > max_peak_value: 
-            max_peak_value = signal[index]
-            max_peak_index = index
-    
-    return max_peak_index
-
-# Groups together indices for a single peak and outputs a list of peaks (one sample per peak)
-# param index_threshold: minimum difference in sample number to be classified as a different peak
-def get_single_peak_indices(signal, peak_indices, index_threshold=50): 
-    single_peak_indices = np.array([])
-    current_peak_indices = []
-    prev_index = peak_indices[0]
-    
-    for index in peak_indices[1:]: 
-        if abs(prev_index - index) > index_threshold: 
-            peak_index = get_peak_index(signal, current_peak_indices)
-            single_peak_indices = np.append(single_peak_indices, peak_index)
-            current_peak_indices = [index]
-        else: 
-            current_peak_indices.append(index)
-        
-        prev_index = index
-
-    # Handle the last peak
-    peak_index = get_peak_index(signal, current_peak_indices)
-    single_peak_indices = np.append(single_peak_indices, peak_index)
-    
-    return single_peak_indices
-
-
-# In[16]:
+# In[10]:
 
 def get_lf_sub(channel_sig, order): 
     lf = abs(hilbert_transform(channel_sig, parameters.DEFAULT_ECG_FS, parameters.LF_LOW, parameters.LF_HIGH))
@@ -350,7 +303,7 @@ def ventricular_beat_annotations(lf_subsig, sub_subsig, sample, ann_type, start_
         return []
         
     single_peak_indices = [ index - ann_fs * start_time for index in annotation[0] ]
-    
+        
     ventricular_beat_indices = np.array([])
     nonventricular_beat_indices = np.array([])
     
@@ -381,13 +334,14 @@ start_time = 290
 end_time = 300
 order = 50
 sample_name = "v803l"
+ecg_ann_type = "fp"
 sig, fields = wfdb.rdsamp(data_path + sample_name)
 channel = "V"
 channel_index = 1
 ann_type = annotate.get_ann_type(channel, channel_index, ecg_ann_type)
 channel_sig = sig[start:end,channel_index]
 lf, sub = get_lf_sub(channel_sig, order)
-print ventricular_beat_annotations(lf, sub, ann_path + sample_name, ann_type, start_time, end_time)
+print ventricular_beat_annotations(lf, sub, fp_ann_path + sample_name, ann_type, start_time, end_time, verbose=True)
 
 
 # In[17]:
@@ -482,7 +436,6 @@ def get_abp_std_scores(channel_sig,
 
 def test_ventricular_tachycardia(data_path, 
                                  ann_path, 
-                                 fp_ann_path,
                                  sample_name, 
                                  ecg_ann_type,
                                  verbose=False,
@@ -510,6 +463,7 @@ def test_ventricular_tachycardia(data_path,
     for channel_index in ecg_channels:
         index = int(channel_index)
         ann_type = annotate.get_ann_type(channels[index], index, ecg_ann_type)
+            
         r_delta = get_ventricular_beats_scores(alarm_sig[:,index], ann_path, sample_name, ann_type, start_time, end_time)
         r_vector = r_vector + r_delta
                 

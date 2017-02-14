@@ -136,7 +136,7 @@ def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, chan
 
 # ### Check regular activity for sample
 
-# In[8]:
+# In[14]:
 
 # Check overall sample for regular activity by iterating through each channel.
 # If any channel exhibits regular activity, alarm indicated as false alarm.
@@ -179,10 +179,7 @@ def is_sample_regular(data_path,
             
         rr = np.array([])
         if should_check_rr: 
-            if ecg_ann_type == 'fp': 
-                rr = annotate.get_channel_rr_intervals(fp_ann_path, sample_name, channel_index, fields, 'fp')
-            else: 
-                rr = annotate.get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_ann_type)
+            rr = annotate.get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_ann_type)
             
         is_regular = check_interval_regular_activity(rr, invalids, alarm_duration, channel, should_check_invalids,
                                                      should_check_rr, should_num_check)
@@ -192,7 +189,7 @@ def is_sample_regular(data_path,
             return True
     return False
 
-# sample_name = "v135l"
+# sample_name = "v666s"
 # print is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type)
 
 
