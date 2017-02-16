@@ -3,7 +3,7 @@
 
 # # Regular activity test
 
-# In[12]:
+# In[18]:
 
 from datetime                      import datetime
 import invalid_sample_detection    as invalid
@@ -13,6 +13,7 @@ import numpy                       as np
 import parameters
 import wfdb
 import math
+import csv
 
 get_ipython().magic(u'matplotlib inline')
 get_ipython().magic(u'config IPCompleter.greedy=True')
@@ -136,7 +137,7 @@ def check_interval_regular_activity(rr_intervals, invalids, alarm_duration, chan
 
 # ### Check regular activity for sample
 
-# In[14]:
+# In[32]:
 
 # Check overall sample for regular activity by iterating through each channel.
 # If any channel exhibits regular activity, alarm indicated as false alarm.
@@ -153,15 +154,33 @@ def is_sample_regular(data_path,
                       verbose=False): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
     channels = fields['signame']
+    nonresp_channels = [ channels.index(channel) for channel in channels if channel != "RESP" ]
     
     if start is None or end is None: 
         start, end, alarm_duration = invalid.get_start_and_end(fields)
     else: 
         alarm_duration = end - start
-            
-    invalids = {}    
-    if should_check_invalids: 
+    
+    fp_ann_path = "sample_data/fplesinger_data/output/"
+    
+    try: 
+        invalids = {}
+        for channel_index in nonresp_channels: 
+            channel = channels[channel_index]
+
+            with open(fp_ann_path + sample_name + "-invalids.csv", "r") as f: 
+                reader = csv.reader(f)
+                channel_invalids = [ int(float(row[channel_index])) for row in reader]
+                invalids[channel] = channel_invalids[start*250:end*250]
+                        
+    except Exception as e: 
+        print "Error finding invalids for sample " + sample_name, e
         invalids = invalid.calculate_invalids_sig(sig, fields, start, end, should_check_nan)
+    
+#     invalids = {}    
+#     if should_check_invalids: 
+#         invalids = invalid.calculate_invalids_sig(sig, fields, start, end, should_check_nan)
+#         print len(invalids["PLETH"])
 
     for channel_index in range(len(channels)): 
         channel = channels[channel_index]
@@ -189,8 +208,8 @@ def is_sample_regular(data_path,
             return True
     return False
 
-# sample_name = "v666s"
-# print is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type)
+sample_name = "v666s"
+print is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type)
 
 
 # ### Check regular activity of intermediate data

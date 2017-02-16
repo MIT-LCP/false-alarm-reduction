@@ -143,7 +143,7 @@ def get_counts(confusion_matrix):
 
 # In[ ]:
 
-def run(filename, ecg_ann_type):
+def run(data_path, ann_path, filename, ecg_ann_type):
     if ecg_ann_type == "fp": 
         ann_path = fp_ann_path
     print "ecg_ann_type: ", ecg_ann_type, " ann_path: ", ann_path
@@ -162,18 +162,23 @@ def read_json(filename):
         
     return dictionary
 
-write_filename = "sample_data/pipeline_fp.json"
-ecg_ann_type = "fp"
-run(write_filename, ecg_ann_type)
+write_filename = "sample_data/pipeline_fpinvalids.json"
+ecg_ann_type = "gqrs"
+run(data_path, ann_path, write_filename, ecg_ann_type)
 
 
-# In[21]:
+# In[9]:
 
 if __name__ == '__main__': 
+    print "GQRS"
     gqrs_matrix = read_json("sample_data/pipeline_gqrs.json")
-    
     counts_gqrs = get_counts(gqrs_matrix)
     evaluate.print_stats(counts_gqrs)
+    
+    print "FP"
+    fp_matrix = read_json("sample_data/pipeline_fp.json")
+    counts_fp = get_counts(fp_matrix)
+    evaluate.print_stats(counts_fp)
     
 #     print_by_type(gqrs_matrix['FN'])
 #     print_by_arrhythmia(confusion_matrix_gqrs, 'v')
