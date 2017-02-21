@@ -110,10 +110,61 @@ data_fs = parameters.DEFAULT_FS
 # | **Asys** | **Brady** | **Tachy** | **Vfib/flutter** | **Vtach** |
 # | :---:    | :---:     | :---:     | :---:            | :---:     |
 # | 1        | 8         | 2         | 0                | 7         |
+# 
+# #### Confusion matrix for modified algorithm (modified vtach test) + fp invalids: 
+# - Different vtach channels cannot cancel out vtach detection because we add 0 instead of -cval when vtach is not detected in a channel
+# - Using fplesinger invalids calculations
+# 
+# Score: 0.717
+# 
+# Sensitivity: 0.939
+# 
+# Specificity: 0.686
+# 
+# |           | **True**                    | **False** |        
+# | ---       | :---:                       | :---:     |
+# | **True**  | 276                         | 143       |
+# | **False** | <font color='red'>18</font> | 313       |
+# 
+# |           | **True**                        | **False** |        
+# | ---       | :---:                           | :---:     |
+# | **True**  | 0.368                           | 0.191     |
+# | **False** | <font color='red'>0.024</font>  | 0.417     |
+# 
+# | **Asys** | **Brady** | **Tachy** | **Vfib/flutter** | **Vtach** |
+# | :---:    | :---:     | :---:     | :---:            | :---:     |
+# | 1        | 8         | 2         | 0                | 7         |
+# 
+# #### Confusion matrix for modified algorithm (modified vtach test) + fp invalids + fp ann for vtach: 
+# - Different vtach channels cannot cancel out vtach detection because we add 0 instead of -cval when vtach is not detected in a channel
+# - Using fplesinger invalids calculations
+# - Using fplesinger annotations for only the vtach test
+# 
+# Score: 0.780
+# 
+# Sensitivity: 0.912
+# 
+# Specificity: 0.873
+# 
+# |           | **True**                    | **False** |        
+# | ---       | :---:                       | :---:     |
+# | **True**  | 268                         | 58        |
+# | **False** | <font color='red'>26</font> | 398       |
+# 
+# |           | **True**                        | **False** |        
+# | ---       | :---:                           | :---:     |
+# | **True**  | 0.357                           | 0.077     |
+# | **False** | <font color='red'>0.035</font>  | 0.531     |
+# 
+# | **Asys** | **Brady** | **Tachy** | **Vfib/flutter** | **Vtach** |
+# | :---:    | :---:     | :---:     | :---:            | :---:     |
+# | 1        | 8         | 2         | 0                | 15        |
 
 # #### Confusion matrix for other algorithms: 
 # 
 # ##### fplesinger-210: 
+# Score: 0.806
+# 
 # |           | **True**                    | **False** |        
 # | ---       | :---:                       | :---:     |
 # | **True**  | 275                         | 64        |
@@ -380,7 +431,32 @@ classify_and_plot_signal(data_path, ann_path, sample_name, ecg_ann_type, verbose
 # 1. Improve criteria for selecting "best" channel for bradycardia and tachycardia
 # 2. Fewer beats necessary to detect tachycardia 
 # 3. Better annotations for QRS complexes --> try comparing debug data with fplesinger data
-# 4. Ventricular tachycardia detected in one channel can be canceled out by vtach not detected in other channel
+# 4. Ventricular tachycardia detected in one channel can be canceled out by vtach not detected in other channel --> done
+
+# ## Debugging with fplesinger data
+
+# Regular activity: 
+# - No differences between the two algorithms
+# 
+# Annotations: 
+# - Many annotations missing even for channels with nonzero data 
+# - Increased false negatives from 18 to 34 while decreasing false positives from 154 to 103
+# - Score: 0.693 (vs. 0.703)
+# 
+# Invalids (with GQRS annotations): 
+# - Decreased false positives from 154 to 143 without changing the false negatives
+# - Score: 0.717 (vs. 0.703)
+# - Most of the true negatives missed by this algorithm (compared with fplesinger): vtach 
+# 
+# | **Asys** | **Brady** | **Tachy** | **Vfib/flutter** | **Vtach** |
+# | :---:    | :---:     | :---:     | :---:            | :---:     |
+# | 6        | 0         | 1         | 5                | 85        |
+# 
+# - Out of the vtach false positives in our algorithm, many would have been detected as false alarms if we had used fplesinger annotations instead of the gqrs annotations.
+# 
+# Invalids + fplesinger annotations for vtach: 
+# - Fplesinger annotations for only vtach tests and the gqrs annotations for the rest of the tests
+# - Score: 0.780 (vs. 0.703)
 
 # In[ ]:
 

@@ -3,7 +3,7 @@
 
 # # Specific arrhythmia tests
 
-# In[2]:
+# In[64]:
 
 import invalid_sample_detection    as invalid
 import load_annotations            as annotate
@@ -261,7 +261,7 @@ sample_name = "t700s" # "t418s" # "t209l" # true alarm
 
 # ## Ventricular tachycardia
 
-# In[3]:
+# In[11]:
 
 def hilbert_transform(x, fs, f_low, f_high, demod=False):
     N = len(x)
@@ -282,7 +282,7 @@ def hilbert_transform(x, fs, f_low, f_high, demod=False):
     return 2*np.abs(scipy.fftpack.ifft(f, n=N))
 
 
-# In[10]:
+# In[12]:
 
 def get_lf_sub(channel_sig, order): 
     lf = abs(hilbert_transform(channel_sig, parameters.DEFAULT_ECG_FS, parameters.LF_LOW, parameters.LF_HIGH))
@@ -344,7 +344,7 @@ lf, sub = get_lf_sub(channel_sig, order)
 print ventricular_beat_annotations(lf, sub, fp_ann_path + sample_name, ann_type, start_time, end_time, verbose=True)
 
 
-# In[17]:
+# In[13]:
 
 def max_ventricular_hr(ventricular_beats, num_beats, fs):     
     max_hr = 0
@@ -363,7 +363,7 @@ def max_ventricular_hr(ventricular_beats, num_beats, fs):
     return max_hr
 
 
-# In[27]:
+# In[14]:
 
 def get_ventricular_beats_scores(channel_sig,
                                  ann_path, 
@@ -432,7 +432,7 @@ def get_abp_std_scores(channel_sig,
     return r_delta
 
 
-# In[39]:
+# In[72]:
 
 def test_ventricular_tachycardia(data_path, 
                                  ann_path, 
@@ -476,21 +476,34 @@ def test_ventricular_tachycardia(data_path,
 
         
     # Adjust R vector based on whether standard deviation of ABP channel is > or < the threshold
-    for channel_index in abp_channels: 
-        r_delta = get_abp_std_scores(alarm_sig[:,channel_index], std_threshold, window_size, rolling_increment)
-        r_vector = r_vector + r_delta
+#     for channel_index in abp_channels: 
+#         r_delta = get_abp_std_scores(alarm_sig[:,channel_index], std_threshold, window_size, rolling_increment)
+#         r_vector = r_vector + r_delta
           
     return any([ r_value > 0 for r_value in r_vector ])
 
-sample_name = "v139l"
-# sample_name = "v784s" # false alarm
-# sample_name = "v803l" # true alarm
-print test_ventricular_tachycardia(data_path, ann_path, sample_name, ecg_ann_type, True)
+
+# fixed_using_fpann = ['v113l','v140s', 'v176s', 'v177l', 'v180s', 'v200s', 'v205l', 'v222s', 'v230s', 'v241l', 
+#                      'v242s', 'v244s', 'v250s', 'v262s', 'v295l', 'v296s', 'v298s', 'v326s', 'v336s', 'v337l', 
+#                      'v338s',
+# fixed_using_fpann (missing anns): ['v204s', 
+# flat_abp = ['v115l', ]
+# missed_true_negatives = ['v224s', 'v232s', 'v243l', 'v259l', 'v283l','v322s', 'v148s', 
+#                          'v347l', 'v353l', 'v355l', 'v364s', 'v367l', 'v373l', 'v375l', 'v390s', 'v401l', 'v405l',
+#                          'v427l', 'v432s', 'v437l', 'v459l', 'v463l', 'v470s', 'v472s', 'v479l', 'v489l', 'v491l',
+#                          'v492s', 'v498s', 'v501l', 'v513l', 'v518s', 'v519l', 'v531l', 'v533l', 'v536s', 'v551l',
+#                          'v569l', 'v581l', 'v583l', 'v598s', 'v609l', 'v633l', 'v634s', 'v640s', 'v658s', 'v682s',
+#                          'v687l', 'v721l', 'v725l', 'v736s', 'v766s', 'v767l', 'v770s', 'v775l', 'v791l', 'v795l',
+#                          'v804s', 'v814s', 'v843l', 'v845l', 'v846s']
+sample_name = "v148s"
+
+fp_ann_path = "sample_data/fplesinger_data/output/"
+print test_ventricular_tachycardia(data_path, ann_path, sample_name, 'gqrs', True)
 
 
 # ## Ventricular flutter/fibrillation
 
-# In[20]:
+# In[58]:
 
 def calculate_dlfmax(channel_sig, 
                      order=parameters.ORDER): 
@@ -593,7 +606,7 @@ def adjust_dominant_freqs(dominant_freqs, regular_activity):
     return adjusted_dominant_freqs
 
 
-# In[21]:
+# In[63]:
 
 def test_ventricular_flutter_fibrillation(data_path, 
                                           ann_path, 
@@ -651,10 +664,11 @@ def test_ventricular_flutter_fibrillation(data_path,
     
     return any([ r_value > 0 for r_value in r_vector ])
 
-# sample_name = "f593l"
-sample_name = "f450s" # false negative --> fixed
+sample_name = "f593l"
+# sample_name = "f450s" # false negative --> fixed
 # sample_name = "f543l" # true positive
-# print test_ventricular_flutter_fibrillation(data_path, ann_path, sample_name, ecg_ann_type)
+fp_ann_path = "sample_data/fplesinger_data/output/"
+print test_ventricular_flutter_fibrillation(data_path, fp_ann_path, sample_name, 'fp')
 
 
 # In[ ]:

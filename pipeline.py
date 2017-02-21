@@ -3,7 +3,7 @@
 
 # # Overall pipeline
 
-# In[2]:
+# In[27]:
 
 from datetime                      import datetime
 import invalid_sample_detection    as invalid
@@ -26,10 +26,10 @@ ecg_ann_type = 'gqrs'
 
 # ## Classifying arrhythmia alarms
 
-# In[3]:
+# In[33]:
 
 # Returns true if alarm is classified as a true alarm
-def classify_alarm(data_path, ann_path, sample_name, ecg_ann_type, verbose=False): 
+def classify_alarm(data_path, ann_path, fp_ann_path, sample_name, ecg_ann_type, verbose=False): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
 
     is_regular = regular.is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type, should_check_nan=False)    
@@ -46,6 +46,8 @@ def classify_alarm(data_path, ann_path, sample_name, ecg_ann_type, verbose=False
     elif alarm_type == "t": 
         arrhythmia_test = arrhythmia.test_tachycardia
     elif alarm_type == "v": 
+        ann_path = fp_ann_path
+        ecg_ann_type = 'fp'
         arrhythmia_test = arrhythmia.test_ventricular_tachycardia
     elif alarm_type == "f": 
         arrhythmia_test = arrhythmia.test_ventricular_flutter_fibrillation
@@ -60,7 +62,7 @@ def classify_alarm(data_path, ann_path, sample_name, ecg_ann_type, verbose=False
         print "sample_name: ", sample_name, e
 
 
-# In[4]:
+# In[34]:
 
 # Returns true if alarm is a true alarm
 # Only for samples with known classification
@@ -70,10 +72,10 @@ def is_true_alarm(data_path, sample_name):
     return true_alarm
 
 
-# In[5]:
+# In[37]:
 
 # Generate confusion matrix for all samples given sample name/directory
-def generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type): 
+def generate_confusion_matrix_dir(data_path, ann_path, fp_ann_path, ecg_ann_type): 
     confusion_matrix = {
         "TP": [],
         "FP": [],
@@ -86,7 +88,7 @@ def generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type):
             sample_name = filename.rstrip(parameters.HEADER_EXTENSION)
             
             true_alarm = is_true_alarm(data_path, sample_name)
-            classified_true_alarm = classify_alarm(data_path, ann_path, sample_name, ecg_ann_type)
+            classified_true_alarm = classify_alarm(data_path, ann_path, fp_ann_path, sample_name, ecg_ann_type)
 
             matrix_classification = get_confusion_matrix_classification(true_alarm, classified_true_alarm)
             confusion_matrix[matrix_classification].append(sample_name)
@@ -114,7 +116,7 @@ def get_confusion_matrix_classification(true_alarm, classified_true_alarm):
 
 # ## Printing and calculating counts
 
-# In[6]:
+# In[36]:
 
 def print_by_type(false_negatives): 
     counts_by_type = {}
@@ -149,8 +151,8 @@ def run(data_path, ann_path, filename, ecg_ann_type):
     print "ecg_ann_type: ", ecg_ann_type, " ann_path: ", ann_path
     
     start = datetime.now() 
-    confusion_matrix_gqrs = generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type)
-    print "confusion matrix: ", confusion_matrix_gqrs
+    confusion_matrix_gqrs = generate_confusion_matrix_dir(data_path, ann_path, fp_ann_path, ecg_ann_type)
+#     print "confusion matrix: ", confusion_matrix_gqrs
     print "total time: ", datetime.now() - start
     
     with open(filename, "w") as f: 
@@ -162,35 +164,63 @@ def read_json(filename):
         
     return dictionary
 
-write_filename = "sample_data/pipeline_fpinvalids.json"
+print datetime.now()
+write_filename = "sample_data/pipeline_fpinvalids_vtachfpann.json"
 ecg_ann_type = "gqrs"
 run(data_path, ann_path, write_filename, ecg_ann_type)
 
 
-# In[9]:
+# In[32]:
 
 if __name__ == '__main__': 
     print "GQRS"
     gqrs_matrix = read_json("sample_data/pipeline_gqrs.json")
     counts_gqrs = get_counts(gqrs_matrix)
     evaluate.print_stats(counts_gqrs)
+    print_by_type(gqrs_matrix['FN'])
     
-    print "FP"
+    fplesinger_confusion_matrix = others_confusion_matrices['fplesinger-210']
+    print "missed true positives: ", get_missed(gqrs_matrix, fplesinger_confusion_matrix, "TP")
+    print "missed true negatives: ", get_missed(gqrs_matrix, fplesinger_confusion_matrix, "TN")
+    
+    
+    print "\nFP"
     fp_matrix = read_json("sample_data/pipeline_fp.json")
     counts_fp = get_counts(fp_matrix)
     evaluate.print_stats(counts_fp)
+    print_by_type(fp_matrix['FN'])
+
+    
+    print "\nFP invalids with GQRS"
+    fpinvalids_matrix = read_json("sample_data/pipeline_fpinvalids.json")
+    counts_fpinvalids = get_counts(fpinvalids_matrix)
+    evaluate.print_stats(counts_fpinvalids)
+    print_by_type(fpinvalids_matrix['FN'])
+    
+    missed_true_negatives = get_missed(fpinvalids_matrix, fplesinger_confusion_matrix, "TN")
+    print "missed true positives: ", get_missed(fpinvalids_matrix, fplesinger_confusion_matrix, "TP")
+    print "missed true negatives: ", missed_true_negatives
+    print_by_type(missed_true_negatives)
+    print len(missed_true_negatives)
+    
+    
+    print "\nFP invalids with GQRS without abp test in vtach"
+    fpinvalids_without_vtach_abp = read_json("sample_data/pipeline_fpinvalids_novtachabp.json")
+    counts_fpinvalids_without_vtach_abp = get_counts(fpinvalids_without_vtach_abp)
+    evaluate.print_stats(counts_fpinvalids_without_vtach_abp)
+    print_by_type(fpinvalids_without_vtach_abp['FN'])
     
 #     print_by_type(gqrs_matrix['FN'])
 #     print_by_arrhythmia(confusion_matrix_gqrs, 'v')
     
 #     fplesinger_confusion_matrix = others_confusion_matrices['fplesinger-210']
-#     print "missed true positives: ", get_missed(confusion_matrix_gqrs, fplesinger_confusion_matrix, "TP")
-#     print "missed true negatives: ", get_missed(confusion_matrix_gqrs, fplesinger_confusion_matrix, "TN")
+#     print "missed true positives: ", get_missed(gqrs_matrix, fplesinger_confusion_matrix, "TP")
+#     print "missed true negatives: ", get_missed(gqrs_matrix, fplesinger_confusion_matrix, "TN")
 
 
 # ## Comparing classification with other algorithms
 
-# In[6]:
+# In[21]:
 
 def generate_others_confusion_matrices(filename, data_path): 
     others_confusion_matrices = {}
@@ -228,7 +258,7 @@ for author in others_confusion_matrices.keys():
     print_by_type(other_confusion_matrix['FN'])
 
 
-# In[13]:
+# In[23]:
 
 def get_missed(confusion_matrix, other_confusion_matrix, classification): 
     missed = []
