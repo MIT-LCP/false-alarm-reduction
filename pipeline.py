@@ -26,13 +26,13 @@ ecg_ann_type = 'gqrs'
 
 # ## Classifying arrhythmia alarms
 
-# In[33]:
+# In[39]:
 
 # Returns true if alarm is classified as a true alarm
 def classify_alarm(data_path, ann_path, fp_ann_path, sample_name, ecg_ann_type, verbose=False): 
     sig, fields = wfdb.rdsamp(data_path + sample_name)
 
-    is_regular = regular.is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type, should_check_nan=False)    
+    is_regular = regular.is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type, should_check_nan=True)    
     if is_regular:
         if verbose: 
             print sample_name + "with regular activity"
@@ -165,7 +165,7 @@ def read_json(filename):
     return dictionary
 
 print datetime.now()
-write_filename = "sample_data/pipeline_fpinvalids_vtachfpann.json"
+write_filename = "sample_data/pipeline_fpinvalids_vtachfpann_nancheck.json"
 ecg_ann_type = "gqrs"
 run(data_path, ann_path, write_filename, ecg_ann_type)
 

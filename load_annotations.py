@@ -129,7 +129,7 @@ def get_ann_fs(channel_type, ecg_ann_type):
 # In[6]:
 
 # start and end in seconds
-def get_annotation(sample, get, ann_fs, start, end): 
+def get_annotation(sample, ann_type, ann_fs, start, end): 
     try: 
         annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
     except Exception as e: 
