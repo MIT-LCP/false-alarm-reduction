@@ -145,7 +145,7 @@ def get_counts(confusion_matrix):
 
 # In[ ]:
 
-def run(data_path, ann_path, filename, ecg_ann_type):
+def run(data_path, ann_path, fp_ann_path, filename, ecg_ann_type):
     if ecg_ann_type == "fp": 
         ann_path = fp_ann_path
     print "ecg_ann_type: ", ecg_ann_type, " ann_path: ", ann_path
@@ -167,7 +167,7 @@ def read_json(filename):
 print datetime.now()
 write_filename = "sample_data/pipeline_fpinvalids_vtachfpann_nancheck.json"
 ecg_ann_type = "gqrs"
-run(data_path, ann_path, write_filename, ecg_ann_type)
+run(data_path, ann_path, fp_ann_path, write_filename, ecg_ann_type)
 
 
 # In[32]:
