@@ -1,6 +1,6 @@
 
 
-def abs_value_dist_metric(x, y):
+def abs_value(x, y):
     return abs(x-y)
 
 
@@ -16,7 +16,7 @@ def get_arrhythmia_type(fields):
     Arguments
     ---------
     fields: fields of sample read from wfdb.rdsamp
-    
+
     Returns
     -------
     Type of arrhythmia
@@ -45,10 +45,10 @@ def get_channel_type(channel_name, sigtypes_filename):
     Arguments
     ---------
     channel_name: name of channel (e.g. "II", "V", etc.)
-    
+
     sigtypes_filename: file mapping channel names to channel
     types
-    
+
     Returns
     -------
     Type of channel (e.g. "ECG", "BP", "PLETH", "Resp")
@@ -68,21 +68,21 @@ def get_channel_type(channel_name, sigtypes_filename):
     raise Exception("Unknown channel name")
 
 
-def get_samples_of_type(samples_dict, arrhythmia_type): 
+def get_samples_of_type(samples_dict, arrhythmia_type):
     """Returns a sub-dictionary of only the given arrhythmia type
 
     Arguments
     ---------
     samples_dict: dictionary mapping sample names to data associated
     with the given sample
-    
+
     arrhythmia_type:
         'a': asystole
         'b': bradycardia
         't': tachycardia
         'f': ventricular fibrillation
         'v': ventricular tachycardia
-    
+
     Returns
     -------
     a sub-dictionary with keys of only the given arrhythmia
@@ -90,8 +90,8 @@ def get_samples_of_type(samples_dict, arrhythmia_type):
 
     subdict = {}
 
-    for sample_name in samples_dict.keys(): 
-        if sample_name[0] == arrhythmia_type: 
+    for sample_name in samples_dict.keys():
+        if sample_name[0] == arrhythmia_type:
             subdict[sample_name] = samples_dict[sample_name]
 
     return subdict
