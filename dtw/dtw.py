@@ -39,32 +39,7 @@ def get_data(sig_dict, fields_dict, num_training):
     return sig_training, fields_training, sig_testing, fields_testing
 
 
-def channel_distance(timeseries1, timeseries2, dist_metric=abs_value):
-    ts1 = np.array(timeseries1)
-    ts2 = np.array(timeseries2)
-
-    ts1_size = len(timeseries1)
-    ts2_size = len(timeseries2)
-
-    cost = float("inf") * np.ones((ts1_size, ts2_size))
-
-    cost[0,0] = dist_metric(ts1[0], ts2[0])
-
-    for i in range(1,ts1_size):
-        cost[i,0] = cost[i-1,0] + dist_metric(ts1[i], ts2[0])
-
-    for j in range(1,ts2_size):
-        cost[0,j] = cost[0,j-1] + dist_metric(ts1[0], ts2[j])
-
-    for i in range(1,ts1_size):
-        for j in range(1,ts2_size):
-            min_prev_cost = min(cost[i,j-1], cost[i-1,j], cost[i-1,j-1])
-            cost[i,j] = min_prev_cost + dist_metric(ts1[i], ts2[j])
-
-    return cost[-1, -1]
-
-
-def sig_distance(sig1, fields1, sig2, fields2, max_channels=1):
+def sig_distance(sig1, fields1, sig2, fields2, radius=1, max_channels=1):
     channels_dists = {}
     channels1 = fields1['signame']
     channels2 = fields2['signame']
@@ -92,13 +67,12 @@ def sig_distance(sig1, fields1, sig2, fields2, max_channels=1):
         channel2 = sig2[start_index:end_index,channel_index2]
 
         try:
-            distance, path = fastdtw.fastdtw(channel1, channel2, dist=euclidean)
+            distance, path = fastdtw.fastdtw(channel1, channel2, radius=radius, dist=euclidean)
         except Exception as e:
             # print "Error, continuing...", e
             continue
 
         channels_dists[channel] = distance
-        # channels_dists[channel] = channel_distance(channel1, channel2)
 
     return channels_dists
 
@@ -207,6 +181,43 @@ def get_classification_accuracy(matrix):
     return float(num_correct) / num_total
 
 
+def calc_sensitivity(counts): 
+    tp = counts["TP"]
+    fn = counts["FN"]
+    return tp / float(tp + fn)
+    
+def calc_specificity(counts): 
+    tn = counts["TN"]
+    fp = counts["FP"]
+    
+    return tn / float(tn + fp)
+
+def calc_ppv(counts): 
+    tp = counts["TP"]
+    fp = counts["FP"]
+    return tp / float(tp + fp)
+
+def calc_f1(counts): 
+    sensitivity = calc_sensitivity(counts)
+    ppv = calc_ppv(counts)
+    
+    return 2 * sensitivity * ppv / float(sensitivity + ppv)    
+
+
+# In[8]:
+
+def print_stats(counts): 
+    sensitivity = calc_sensitivity(counts)
+    specificity = calc_specificity(counts)
+    ppv = calc_ppv(counts)
+    f1 = calc_f1(counts)
+
+    print "counts: ", counts
+    print "sensitivity: ", sensitivity
+    print "specificity: ", specificity
+    print "ppv: ", ppv
+    print "f1: ", f1
+
 def get_score(matrix):
     numerator = len(matrix["TP"]) + len(matrix["TN"])
     denominator = len(matrix["FP"]) + 5*len(matrix["FN"]) + numerator
@@ -230,17 +241,37 @@ def run(data_path, num_training, arrhythmias, matrix_filename, distances_filenam
     write_json(matrix, matrix_filename)
     write_json(min_distances, distances_filename)
 
+def get_counts_by_arrhythmia(confusion_matrix, arrhythmia_prefix): 
+    counts_by_arrhythmia = {}
+    for classification_type in confusion_matrix.keys(): 
+        sample_list = [ sample for sample in confusion_matrix[classification_type] if sample[0] == arrhythmia_prefix]
+        counts_by_arrhythmia[classification_type] = (len(sample_list), sample_list)
+
+    return counts_by_arrhythmia
+
 
 if __name__ == '__main__':
     num_training = 500
     arrhythmias = ['a', 'b', 't', 'v', 'f']
-    matrix_filename = "../../sample_data/dtw.json"
-    distances_filename = "../../sample_data/dtw_distances.json"
+    # matrix_filename = "../../sample_data/dtw.json"
+    matrix_filename = "../sample_data/pipeline_fpinvalids_vtachfpann.json"
+    # distances_filename = "../../sample_data/dtw_distances.json"
 
     matrix = read_json(matrix_filename)
-    min_distances = read_json(distances_filename)
-
-    print { key : len(matrix[key]) for key in matrix.keys() }
-
+    # min_distances = read_json(distances_filename)
+    counts = { key : len(matrix[key]) for key in matrix.keys()}
+    
     print "accuracy:", get_classification_accuracy(matrix)
     print "score:", get_score(matrix)
+    print_stats(counts)
+
+
+    print "\nVTACH STATS"
+
+    arrhythmia_dict = get_counts_by_arrhythmia(matrix, "v")
+    arrhythmia_counts = { key : arrhythmia_dict[key][0] for key in arrhythmia_dict.keys() }
+    arrhythmia_matrix = { key : arrhythmia_dict[key][1] for key in arrhythmia_dict.keys() }
+
+    print "accuracy:", get_classification_accuracy(arrhythmia_matrix)
+    print "score:", get_score(arrhythmia_matrix)
+    print_stats(arrhythmia_counts)
