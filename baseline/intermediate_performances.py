@@ -36,20 +36,33 @@ if __name__ == '__main__':
     ann_path = '../sample_data/challenge_training_multiann/'
     fp_ann_path = '../sample_data/fplesinger_data/'
 
-    arrhythmias = ['a', 'b', 't', 'f', 'v']
-    ann_types = ['gqrs', 'jqrs', 'fp']
+    arrhythmias = {
+        'a': 'asystole', 
+        'b': 'bradycardia',
+        't': 'tachycardia',
+        'f': 'vfib', 
+        'v': 'vtach' 
+    }
+    # ann_types = ['gqrs', 'jqrs', 'fp']
+
+    # for ecg_ann_type in ann_types: 
+    #     for arrhythmia in arrhythmias.keys(): 
+    #         json_filename = "../sample_data/" + arrhythmias[arrhythmia] + "_" + ecg_ann_type + ".json"
+
 
     ecg_ann_type = 'gqrs'
 
-    json_filename = '../sample_data/asystole_gqrs.json'
+    for arrhythmia in arrhythmias.keys(): 
+        json_filename = "../sample_data/" + arrhythmias[arrhythmia] + "_" + ecg_ann_type + ".json"
 
-    run_by_arrhythmia(data_path, ann_path, fp_ann_path, ecg_ann_type, 'a', json_filename)
+        run_by_arrhythmia(data_path, ann_path, fp_ann_path, ecg_ann_type, arrhythmia, json_filename)
 
-    matrix = read_json(json_filename)
-    counts = { key : len(matrix[key]) for key in matrix.keys()}
-    
-    print "accuracy:", get_classification_accuracy(matrix)
-    print "score:", get_score(matrix)
-    print_stats(counts)
+        matrix = read_json(json_filename)
+        counts = { key : len(matrix[key]) for key in matrix.keys()}
+
+        print "\nARRHYTHMIA: ", arrhythmias[arrhythmia]
+        print "accuracy:", get_classification_accuracy(matrix)
+        print "score:", get_score(matrix)
+        print_stats(counts)
 
 
