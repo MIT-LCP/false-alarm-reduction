@@ -1,11 +1,16 @@
+import wfdb
 
 
 def abs_value(x, y):
     return abs(x-y)
 
-
-def is_true_alarm(fields):
+def is_true_alarm_fields(fields):
     return fields['comments'][1] == 'True alarm'
+
+
+def is_true_alarm(data_path, sample_name):
+    sig, fields = wfdb.rdsamp(data_path + sample_name)
+    return is_true_alarm_fields(fields)
 
 
 ## Returns type of arrhythmia alarm
@@ -95,3 +100,80 @@ def get_samples_of_type(samples_dict, arrhythmia_type):
             subdict[sample_name] = samples_dict[sample_name]
 
     return subdict
+
+
+def write_json(dictionary, filename):
+    with open(filename, "w") as f:
+        json.dump(dictionary, f)
+
+
+def read_json(filename):
+    with open(filename, "r") as f:
+        dictionary = json.load(f)
+    return dictionary
+
+
+def get_classification_accuracy(matrix):
+    num_correct = len(matrix["TP"]) + len(matrix["TN"])
+    num_total = len(matrix["FP"]) + len(matrix["FN"]) + num_correct
+
+    return float(num_correct) / num_total
+
+
+def calc_sensitivity(counts): 
+    tp = counts["TP"]
+    fn = counts["FN"]
+    return tp / float(tp + fn)
+    
+
+def calc_specificity(counts): 
+    tn = counts["TN"]
+    fp = counts["FP"]
+    
+    return tn / float(tn + fp)
+
+
+def calc_ppv(counts): 
+    tp = counts["TP"]
+    fp = counts["FP"]
+    return tp / float(tp + fp)
+
+
+def calc_f1(counts): 
+    sensitivity = calc_sensitivity(counts)
+    ppv = calc_ppv(counts)
+    
+    return 2 * sensitivity * ppv / float(sensitivity + ppv)    
+
+
+def print_stats(counts): 
+    sensitivity = calc_sensitivity(counts)
+    specificity = calc_specificity(counts)
+    ppv = calc_ppv(counts)
+    f1 = calc_f1(counts)
+
+    print "counts: ", counts
+    print "sensitivity: ", sensitivity
+    print "specificity: ", specificity
+    print "ppv: ", ppv
+    print "f1: ", f1
+
+
+def get_matrix_classification(true_alarm, classified_true_alarm): 
+    if true_alarm and classified_true_alarm: 
+        return "TP"
+    elif true_alarm and not classified_true_alarm: 
+        return "FN"
+    elif not true_alarm and classified_true_alarm: 
+        return "FP"
+    return "TN"
+
+
+def get_score(matrix):
+    numerator = len(matrix["TP"]) + len(matrix["TN"])
+    denominator = len(matrix["FP"]) + 5*len(matrix["FN"]) + numerator
+
+    return float(numerator) / denominator
+
+
+

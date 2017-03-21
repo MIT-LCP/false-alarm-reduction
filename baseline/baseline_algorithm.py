@@ -82,9 +82,10 @@ def histogram_test(signal, histogram_cutoff):
     return not (diffs > histogram_cutoff).any()
 
 
+# TODO: fix path for sigtypes file
 def get_channel_type(channel_name): 
     channel_types_dict = {}
-    with open("sample_data/sigtypes", "r") as f: 
+    with open("../sample_data/sigtypes", "r") as f: 
         for line in f: 
             splitted_line = line.split("\t")
             channel = splitted_line[-1].rstrip()
@@ -1074,11 +1075,10 @@ def classify_alarm(data_path, ann_path, fp_ann_path, sample_name, ecg_ann_type, 
         return True
 
 
-# data_path = 'sample_data/challenge_training_data/'
-# ann_path = 'sample_data/challenge_training_multiann/'
-# fp_ann_path = 'sample_data/fplesinger_data/output/'
-# ecg_ann_type = 'gqrs'
+# if __name__ == '__main__': 
+#     data_path = '../sample_data/challenge_training_data/'
+#     ann_path = '../sample_data/challenge_training_multiann/'
+#     fp_ann_path = '../sample_data/fplesinger_data/'
+#     ecg_ann_type = 'gqrs'
 
-# sample_name = "t467l"
-
-# print(classify_alarm(data_path, ann_path, fp_ann_path, sample_name, ecg_ann_type))
+#     print(classify_alarm(data_path, ann_path, fp_ann_path, sample_name, ecg_ann_type))

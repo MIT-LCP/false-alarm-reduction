@@ -126,7 +126,7 @@ def predict(test_sig, test_fields, sig_training_by_arrhythmia, fields_training_b
 
         if distance < min_distance:
             min_distance = distance
-            min_label = is_true_alarm(train_fields)
+            min_label = is_true_alarm_fields(train_fields)
             min_sample = sample_name
 
     return min_label, min_distance, min_sample
@@ -147,7 +147,7 @@ def run_classification(sig_training_by_arrhythmia, fields_training_by_arrhythmia
         test_fields = fields_testing[sample_name]
 
         prediction, distance, sample = predict(test_sig, test_fields, sig_training_by_arrhythmia, fields_training_by_arrhythmia)
-        actual = is_true_alarm(test_fields)
+        actual = is_true_alarm_fields(test_fields)
         print "sample:", sample_name, " prediction:", prediction, " actual:", actual
 
         min_distances[sample_name] = (distance, sample, prediction == actual)
@@ -163,66 +163,6 @@ def run_classification(sig_training_by_arrhythmia, fields_training_by_arrhythmia
 
     return matrix, min_distances
 
-
-def write_json(dictionary, filename):
-    with open(filename, "w") as f:
-        json.dump(dictionary, f)
-
-
-def read_json(filename):
-    with open(filename, "r") as f:
-        dictionary = json.load(f)
-    return dictionary
-
-def get_classification_accuracy(matrix):
-    num_correct = len(matrix["TP"]) + len(matrix["TN"])
-    num_total = len(matrix["FP"]) + len(matrix["FN"]) + num_correct
-
-    return float(num_correct) / num_total
-
-
-def calc_sensitivity(counts): 
-    tp = counts["TP"]
-    fn = counts["FN"]
-    return tp / float(tp + fn)
-    
-def calc_specificity(counts): 
-    tn = counts["TN"]
-    fp = counts["FP"]
-    
-    return tn / float(tn + fp)
-
-def calc_ppv(counts): 
-    tp = counts["TP"]
-    fp = counts["FP"]
-    return tp / float(tp + fp)
-
-def calc_f1(counts): 
-    sensitivity = calc_sensitivity(counts)
-    ppv = calc_ppv(counts)
-    
-    return 2 * sensitivity * ppv / float(sensitivity + ppv)    
-
-
-# In[8]:
-
-def print_stats(counts): 
-    sensitivity = calc_sensitivity(counts)
-    specificity = calc_specificity(counts)
-    ppv = calc_ppv(counts)
-    f1 = calc_f1(counts)
-
-    print "counts: ", counts
-    print "sensitivity: ", sensitivity
-    print "specificity: ", specificity
-    print "ppv: ", ppv
-    print "f1: ", f1
-
-def get_score(matrix):
-    numerator = len(matrix["TP"]) + len(matrix["TN"])
-    denominator = len(matrix["FP"]) + 5*len(matrix["FN"]) + numerator
-
-    return float(numerator) / denominator
 
 def run(data_path, num_training, arrhythmias, matrix_filename, distances_filename):
     print "Generating sig and fields dicts..."
@@ -240,6 +180,7 @@ def run(data_path, num_training, arrhythmias, matrix_filename, distances_filenam
 
     write_json(matrix, matrix_filename)
     write_json(min_distances, distances_filename)
+
 
 def get_counts_by_arrhythmia(confusion_matrix, arrhythmia_prefix): 
     counts_by_arrhythmia = {}
