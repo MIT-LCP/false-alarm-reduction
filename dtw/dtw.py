@@ -127,7 +127,7 @@ def predict(test_sig, test_fields, sig_training_by_arrhythmia, fields_training_b
 
         if distance < min_distance:
             min_distance = distance
-            min_label = is_true_alarm(train_fields)
+            min_label = is_true_alarm_fields(train_fields)
             min_sample = sample_name
 
     return min_label, min_distance, min_sample
@@ -148,7 +148,7 @@ def run_classification(sig_training_by_arrhythmia, fields_training_by_arrhythmia
         test_fields = fields_testing[sample_name]
 
         prediction, distance, sample = predict(test_sig, test_fields, sig_training_by_arrhythmia, fields_training_by_arrhythmia, use_radius)
-        actual = is_true_alarm(test_fields)
+        actual = is_true_alarm_fields(test_fields)
         print "sample:", sample_name, " prediction:", prediction, " actual:", actual
 
         min_distances[sample_name] = (distance, sample, prediction == actual)
@@ -241,6 +241,7 @@ def run(data_path, num_training, arrhythmias, matrix_filename, distances_filenam
 
     write_json(matrix, matrix_filename)
     write_json(min_distances, distances_filename)
+
 
 def get_counts_by_arrhythmia(confusion_matrix, arrhythmia_prefix): 
     counts_by_arrhythmia = {}
