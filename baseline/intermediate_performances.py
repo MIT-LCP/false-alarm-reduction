@@ -3,6 +3,7 @@ from parameters                 import *
 sys.path.append('../dtw')
 from baseline_algorithm         import classify_alarm
 from utils                      import *  # utils from dtw file
+from datetime                   import datetime 
 import wfdb
 import os
 
@@ -31,38 +32,34 @@ def run_by_arrhythmia(data_path, ann_path, fp_ann_path, ecg_ann_type, arrhythmia
     write_json(matrix, json_filename)
 
 
-if __name__ == '__main__': 
+if __name__ == '__main__':
+    start = datetime.now() 
     data_path = '../sample_data/challenge_training_data/'
     ann_path = '../sample_data/challenge_training_multiann/'
     fp_ann_path = '../sample_data/fplesinger_data/'
 
     arrhythmias = {
         'a': 'asystole', 
-        'b': 'bradycardia',
-        't': 'tachycardia',
-        'f': 'vfib', 
-        'v': 'vtach' 
+        # 'b': 'bradycardia',
+        # 't': 'tachycardia',
+        # 'f': 'vfib', 
+        # 'v': 'vtach' 
     }
-    # ann_types = ['gqrs', 'jqrs', 'fp']
+    ann_types = ['fp']
 
-    # for ecg_ann_type in ann_types: 
-    #     for arrhythmia in arrhythmias.keys(): 
-    #         json_filename = "../sample_data/" + arrhythmias[arrhythmia] + "_" + ecg_ann_type + ".json"
+    for ecg_ann_type in ann_types: 
+        for arrhythmia in arrhythmias.keys(): 
+            json_filename = "../sample_data/regactivity_" + arrhythmias[arrhythmia] + "_" + ecg_ann_type + ".json"
 
+            # run_by_arrhythmia(data_path, ann_path, fp_ann_path, ecg_ann_type, arrhythmia, json_filename)
 
-    ecg_ann_type = 'gqrs'
+            matrix = read_json(json_filename)
+            counts = { key : len(matrix[key]) for key in matrix.keys()}
 
-    for arrhythmia in arrhythmias.keys(): 
-        json_filename = "../sample_data/" + arrhythmias[arrhythmia] + "_" + ecg_ann_type + ".json"
-
-        run_by_arrhythmia(data_path, ann_path, fp_ann_path, ecg_ann_type, arrhythmia, json_filename)
-
-        matrix = read_json(json_filename)
-        counts = { key : len(matrix[key]) for key in matrix.keys()}
-
-        print "\nARRHYTHMIA: ", arrhythmias[arrhythmia]
-        print "accuracy:", get_classification_accuracy(matrix)
-        print "score:", get_score(matrix)
-        print_stats(counts)
+            print("\nonly reg activity, ARRHYTHMIA: ", arrhythmias[arrhythmia], "ann: ", ecg_ann_type)
+            print("accuracy:", get_classification_accuracy(matrix))
+            print("score:", get_score(matrix))
+            print_stats(counts)
 
 
+    print(datetime.now() - start)

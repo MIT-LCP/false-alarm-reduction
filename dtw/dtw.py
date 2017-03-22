@@ -1,7 +1,9 @@
 from utils                  import *
 from parameters             import *
 from datetime               import datetime
+from scipy.signal           import resample
 from scipy.spatial.distance import euclidean
+from scipy.stats.mstats     import zscore
 import numpy                as np
 import sklearn
 import fastdtw
@@ -27,6 +29,7 @@ def read_signals(data_path):
 
     return signals_dict, fields_dict
 
+
 def get_data(sig_dict, fields_dict, num_training):
     training_keys = list(sig_dict.keys())[:num_training]
     testing_keys = list(sig_dict.keys())[num_training:]
@@ -39,7 +42,7 @@ def get_data(sig_dict, fields_dict, num_training):
     return sig_training, fields_training, sig_testing, fields_testing
 
 
-def sig_distance(sig1, fields1, sig2, fields2, use_radius, max_channels=1):
+def sig_distance(sig1, fields1, sig2, fields2, radius, new_fs, max_channels=1, num_secs=10):
     channels_dists = {}
     channels1 = fields1['signame']
     channels2 = fields2['signame']
@@ -48,7 +51,7 @@ def sig_distance(sig1, fields1, sig2, fields2, use_radius, max_channels=1):
     if len(common_channels) > max_channels:
         common_channels = common_channels[:max_channels]
 
-    start_index = int(FS * (ALARM_TIME-20))
+    start_index = int(FS * (ALARM_TIME-num_secs))
     end_index = int(FS * ALARM_TIME)
 
     for channel in common_channels:
@@ -66,11 +69,19 @@ def sig_distance(sig1, fields1, sig2, fields2, use_radius, max_channels=1):
         channel1 = sig1[start_index:end_index,channel_index1]
         channel2 = sig2[start_index:end_index,channel_index2]
 
+        # Downsample
+        channel1_sampled = resample(channel1, num_secs*new_fs)
+        channel2_sampled = resample(channel2, num_secs*new_fs)
+
+        # Normalize
+        channel1_normalized = zscore(channel1_sampled)
+        channel2_normalized = zscore(channel2_sampled)
+
         try:
-            if use_radius: 
-                distance, path = fastdtw.fastdtw(channel1, channel2, radius=len(channel1), dist=euclidean)
+            if radius > 0: 
+                distance, path = fastdtw.fastdtw(channel1_normalized, channel2_normalized, radius=radius, dist=euclidean)
             else: 
-                distance = sum([val**2 for val in (channel1 - channel2)])
+                distance = sum([val**2 for val in (channel1_normalized - channel2_normalized)])
 
         except Exception as e:
             continue
@@ -111,7 +122,7 @@ def normalize_distances(channels_dists, normalization='ecg_average', sigtypes_fi
     raise Exception("Unrecognized normalization")
 
 
-def predict(test_sig, test_fields, sig_training_by_arrhythmia, fields_training_by_arrhythmia, use_radius):
+def predict(test_sig, test_fields, sig_training_by_arrhythmia, fields_training_by_arrhythmia, radius, new_fs, weighting):
     min_distance = float("inf")
     min_label = ""
     min_sample = ""
@@ -122,7 +133,7 @@ def predict(test_sig, test_fields, sig_training_by_arrhythmia, fields_training_b
 
     for sample_name, train_sig in sig_training.items():
         train_fields = fields_training[sample_name]
-        channels_dists = sig_distance(test_sig, test_fields, train_sig, train_fields, use_radius)
+        channels_dists = sig_distance(test_sig, test_fields, train_sig, train_fields, radius, new_fs)
         distance = normalize_distances(channels_dists)
 
         if distance < min_distance:
@@ -132,9 +143,9 @@ def predict(test_sig, test_fields, sig_training_by_arrhythmia, fields_training_b
 
     return min_label, min_distance, min_sample
 
+
 ## Get classification accuracy of testing based on training set
-# sig_training_by_arrhythmia
-def run_classification(sig_training_by_arrhythmia, fields_training_by_arrhythmia, sig_testing, fields_testing, use_radius):
+def run_classification(sig_training_by_arrhythmia, fields_training_by_arrhythmia, sig_testing, fields_testing, radius, new_fs, weighting):
     num_correct = 0
     matrix = {
         "TP": [],
@@ -145,87 +156,23 @@ def run_classification(sig_training_by_arrhythmia, fields_training_by_arrhythmia
     min_distances = {}
 
     for sample_name, test_sig in sig_testing.items():
+        start = datetime.now()
         test_fields = fields_testing[sample_name]
 
-        prediction, distance, sample = predict(test_sig, test_fields, sig_training_by_arrhythmia, fields_training_by_arrhythmia, use_radius)
+        predicted, distance, sample = predict(test_sig, test_fields, sig_training_by_arrhythmia, fields_training_by_arrhythmia, radius, new_fs, weighting)
         actual = is_true_alarm_fields(test_fields)
-        print "sample:", sample_name, " prediction:", prediction, " actual:", actual
+        print "sample:", sample_name, " predicted:", predicted, " actual:", actual
+        print "elapsed: ", datetime.now() - start
 
-        min_distances[sample_name] = (distance, sample, prediction == actual)
+        min_distances[sample_name] = (distance, sample, predicted == actual)
 
-        if prediction and actual:
-            matrix["TP"].append(sample_name)
-        elif prediction and not actual:
-            matrix["FP"].append(sample_name)
-        elif not prediction and actual:
-            matrix["FN"].append(sample_name)
-        else:
-            matrix["TN"].append(sample_name)
+        classification = get_matrix_classification(actual, predicted)
+        matrix[classification].append(sample_name)
 
     return matrix, min_distances
 
 
-def write_json(dictionary, filename):
-    with open(filename, "w") as f:
-        json.dump(dictionary, f)
-
-
-def read_json(filename):
-    with open(filename, "r") as f:
-        dictionary = json.load(f)
-    return dictionary
-
-def get_classification_accuracy(matrix):
-    num_correct = len(matrix["TP"]) + len(matrix["TN"])
-    num_total = len(matrix["FP"]) + len(matrix["FN"]) + num_correct
-
-    return float(num_correct) / num_total
-
-
-def calc_sensitivity(counts): 
-    tp = counts["TP"]
-    fn = counts["FN"]
-    return tp / float(tp + fn)
-    
-def calc_specificity(counts): 
-    tn = counts["TN"]
-    fp = counts["FP"]
-    
-    return tn / float(tn + fp)
-
-def calc_ppv(counts): 
-    tp = counts["TP"]
-    fp = counts["FP"]
-    return tp / float(tp + fp)
-
-def calc_f1(counts): 
-    sensitivity = calc_sensitivity(counts)
-    ppv = calc_ppv(counts)
-    
-    return 2 * sensitivity * ppv / float(sensitivity + ppv)    
-
-
-def print_stats(counts): 
-    sensitivity = calc_sensitivity(counts)
-    specificity = calc_specificity(counts)
-    ppv = calc_ppv(counts)
-    f1 = calc_f1(counts)
-
-    print "counts: ", counts
-    print "sensitivity: ", sensitivity
-    print "specificity: ", specificity
-    print "ppv: ", ppv
-    print "f1: ", f1
-
-
-def get_score(matrix):
-    numerator = len(matrix["TP"]) + len(matrix["TN"])
-    denominator = len(matrix["FP"]) + 5*len(matrix["FN"]) + numerator
-
-    return float(numerator) / denominator
-
-
-def run(data_path, num_training, arrhythmias, matrix_filename, distances_filename, use_radius=True):
+def run(data_path, num_training, arrhythmias, matrix_filename, distances_filename, radius=0, new_fs=FS, weighting=1):
     print "Generating sig and fields dicts..."
     sig_dict, fields_dict = read_signals(data_path)
     sig_training, fields_training, sig_testing, fields_testing = \
@@ -237,7 +184,7 @@ def run(data_path, num_training, arrhythmias, matrix_filename, distances_filenam
 
     print "Calculating classification accuracy..."
     matrix, min_distances = run_classification( \
-        sig_training_by_arrhythmia, fields_training_by_arrhythmia, sig_testing, fields_testing, use_radius)
+        sig_training_by_arrhythmia, fields_training_by_arrhythmia, sig_testing, fields_testing, radius, new_fs, weighting)
 
     write_json(matrix, matrix_filename)
     write_json(min_distances, distances_filename)
@@ -254,17 +201,15 @@ def get_counts_by_arrhythmia(confusion_matrix, arrhythmia_prefix):
 
 if __name__ == '__main__':
     start = datetime.now()
-    print "start time:", start
 
+    new_fs = 125
     num_training = 500
     arrhythmias = ['a', 'b', 't', 'v', 'f']
     matrix_filename = "../sample_data/dtw_radiusinf.json"
     # matrix_filename = "../sample_data/pipeline_fpinvalids_vtachfpann.json"
     distances_filename = "../sample_data/dtw_distances_radiusinf.json"
 
-    run(data_path, num_training, arrhythmias, matrix_filename, distances_filename, use_radius=True)
-
-    print "elapsed:", datetime.now() - start
+    run(data_path, num_training, arrhythmias, matrix_filename, distances_filename, radius=new_fs*2, new_fs=new_fs)
 
     # matrix = read_json(matrix_filename)
     # min_distances = read_json(distances_filename)

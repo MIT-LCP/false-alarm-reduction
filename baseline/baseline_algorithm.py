@@ -426,21 +426,21 @@ def is_sample_regular(data_path,
     else: 
         alarm_duration = end - start
     
-    fp_ann_path = "sample_data/fplesinger_data/output/"
-    
-    try: 
-        invalids = {}
-        for channel_index in nonresp_channels: 
-            channel = channels[channel_index]
+    # try: 
+    #     invalids = {}
+    #     for channel_index in nonresp_channels: 
+    #         channel = channels[channel_index]
 
-            with open(fp_ann_path + sample_name + "-invalids.csv", "r") as f: 
-                reader = csv.reader(f)
-                channel_invalids = [ int(float(row[channel_index])) for row in reader]
-                invalids[channel] = channel_invalids[start*250:end*250]
+    #         with open(fp_ann_path + sample_name + "-invalids.csv", "r") as f: 
+    #             reader = csv.reader(f)
+    #             channel_invalids = [ int(float(row[channel_index])) for row in reader]
+    #             invalids[channel] = channel_invalids[start*250:end*250]
                         
-    except Exception as e: 
-        print("Error finding invalids for sample " + sample_name, e)
-        invalids = calculate_invalids_sig(sig, fields, start, end)
+    # except Exception as e: 
+    #     print("Error finding invalids for sample " + sample_name, e)
+    #     invalids = calculate_invalids_sig(sig, fields, start, end)
+
+    invalids = calculate_invalids_sig(sig, fields, start, end)
 
     for channel_index in range(len(channels)): 
         channel = channels[channel_index]
@@ -1043,36 +1043,40 @@ def adjust_dominant_freqs(dominant_freqs, regular_activity):
 def classify_alarm(data_path, ann_path, fp_ann_path, sample_name, ecg_ann_type, verbose=False): 
     sig, fields = wfdb.srdsamp(data_path + sample_name)
 
+    if ecg_ann_type == 'fp': 
+        ann_path = fp_ann_path
+
     is_regular = is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type)    
     if is_regular:
         return False
-    
-    alarm_type = sample_name[0]
-    if alarm_type == "a": 
-        arrhythmia_test = test_asystole
+    return True
 
-    elif alarm_type == "b": 
-        arrhythmia_test = test_bradycardia
+    # alarm_type = sample_name[0]
+    # if alarm_type == "a": 
+    #     arrhythmia_test = test_asystole
+
+    # elif alarm_type == "b": 
+    #     arrhythmia_test = test_bradycardia
     
-    elif alarm_type == "t": 
-        arrhythmia_test = test_tachycardia
+    # elif alarm_type == "t": 
+    #     arrhythmia_test = test_tachycardia
     
-    elif alarm_type == "v": 
-        ann_path = fp_ann_path
-        ecg_ann_type = 'fp'
-        arrhythmia_test = test_ventricular_tachycardia
+    # elif alarm_type == "v": 
+    #     # ann_path = fp_ann_path
+    #     # ecg_ann_type = 'fp'
+    #     arrhythmia_test = test_ventricular_tachycardia
     
-    elif alarm_type == "f": 
-        arrhythmia_test = test_ventricular_flutter_fibrillation
+    # elif alarm_type == "f": 
+    #     arrhythmia_test = test_ventricular_flutter_fibrillation
     
-    else: 
-        raise Exception("Unknown arrhythmia alarm type")
+    # else: 
+    #     raise Exception("Unknown arrhythmia alarm type")
     
-    try: 
-        return arrhythmia_test(data_path, ann_path, sample_name, ecg_ann_type, verbose)
-    except Exception as e: 
-        print("sample_name: ", sample_name, e)
-        return True
+    # try: 
+    #     return arrhythmia_test(data_path, ann_path, sample_name, ecg_ann_type, verbose)
+    # except Exception as e: 
+    #     print("sample_name: ", sample_name, e)
+    #     return True
 
 
 # if __name__ == '__main__': 

@@ -1,4 +1,5 @@
 import wfdb
+import json
 
 
 def abs_value(x, y):
@@ -9,7 +10,7 @@ def is_true_alarm_fields(fields):
 
 
 def is_true_alarm(data_path, sample_name):
-    sig, fields = wfdb.rdsamp(data_path + sample_name)
+    sig, fields = wfdb.srdsamp(data_path + sample_name)
     return is_true_alarm_fields(fields)
 
 
@@ -139,6 +140,12 @@ def calc_ppv(counts):
     return tp / float(tp + fp)
 
 
+def calc_npv(counts): 
+    tn = counts["TN"]
+    fn = counts["FN"]
+    return tn / float(tn + fn)
+
+
 def calc_f1(counts): 
     sensitivity = calc_sensitivity(counts)
     ppv = calc_ppv(counts)
@@ -147,24 +154,29 @@ def calc_f1(counts):
 
 
 def print_stats(counts): 
-    sensitivity = calc_sensitivity(counts)
-    specificity = calc_specificity(counts)
-    ppv = calc_ppv(counts)
-    f1 = calc_f1(counts)
+    try: 
+        sensitivity = calc_sensitivity(counts)
+        specificity = calc_specificity(counts)
+        ppv = calc_ppv(counts)
+        npv = calc_npv(counts)
+        f1 = calc_f1(counts)
+    except Exception as e: 
+        print(e)
 
-    print "counts: ", counts
-    print "sensitivity: ", sensitivity
-    print "specificity: ", specificity
-    print "ppv: ", ppv
-    print "f1: ", f1
+    print("counts: ", counts)
+    print("sensitivity: ", sensitivity)
+    print("specificity: ", specificity)
+    print("ppv: ", ppv)
+    print("npv: ", npv)
+    print("f1: ", f1)
 
 
-def get_matrix_classification(true_alarm, classified_true_alarm): 
-    if true_alarm and classified_true_alarm: 
+def get_matrix_classification(actual, predicted): 
+    if actual and predicted: 
         return "TP"
-    elif true_alarm and not classified_true_alarm: 
+    elif actual and not predicted: 
         return "FN"
-    elif not true_alarm and classified_true_alarm: 
+    elif not actual and predicted: 
         return "FP"
     return "TN"
 
