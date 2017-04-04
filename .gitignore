@@ -21,6 +21,7 @@ lib/
 lib64/
 parts/
 sampledata/
+dtw/dtw_data/
 sample_data/
 sdist/
 var/
