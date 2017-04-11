@@ -13,6 +13,8 @@ start_time = 290
 end_time = 300
 fs = 250.
 
+TRAINING_THRESHOLD = 600
+
 
 def get_psd(channel_subsig, order): 
     ar, rho, ref = arburg(channel_subsig, order)
@@ -31,7 +33,7 @@ def get_psd(channel_subsig, order):
 
 def get_baseline(subsig, ecg_channels, order=30): 
     channel_index = ecg_channels[0]
-    channel_subsig = subsig[:,channel_index]
+    channel_subsig = subsig[:,int(channel_index)]
 
     psd = get_psd(channel_subsig, order)
 
@@ -49,7 +51,7 @@ def get_baseline(subsig, ecg_channels, order=30):
 
 def get_power(subsig, ecg_channels, order=30):
     channel_index = ecg_channels[0]
-    channel_subsig = subsig[:,channel_index]
+    channel_subsig = subsig[:,int(channel_index)]
 
     psd = get_psd(channel_subsig, order)
 
@@ -67,7 +69,7 @@ def get_power(subsig, ecg_channels, order=30):
 
 def get_ksqi(subsig, ecg_channels):
     channel_index = ecg_channels[0]
-    channel_subsig = subsig[:,channel_index] 
+    channel_subsig = subsig[:,int(channel_index)] 
 	
     # TODO: this uses fisher as default (with normal of 0) versus pearson's (with normal of 3)
     ksqi = kurtosis(channel_subsig) - 3
@@ -79,7 +81,7 @@ def get_ksqi(subsig, ecg_channels):
 
 def get_pursqi(subsig, ecg_channels): 
     channel_index = ecg_channels[0]
-    channel_subsig = subsig[:,channel_index] 
+    channel_subsig = subsig[:,int(channel_index)] 
 
     s = channel_subsig
     sd = np.diff(channel_subsig);
@@ -132,14 +134,16 @@ def get_channels_of_type(channels, channel_type):
 # training = sample num < 600
 # testing = sample num > 600
 def generate_training_testing(): 
-    training_x, training_y = []
-    testing_x, testing_y = []
+    training_x, training_y = [], []
+    testing_x, testing_y = [], []
 
     with open(answers_filename, 'r') as f: 
         reader = csv.DictReader(f, fieldnames=['sample_name', 'baseline_is_classified_true', 'dtw_is_classified_true', 'is_true'])
+        reader.next()
 
         for row in reader: 
-            sample_number = int(sample_name[1:-1])
+            sample_name = row['sample_name']
+            sample_number = sample_name[1:-1]
 
             sig, fields = wfdb.rdsamp(data_path + sample_name)
             subsig = sig[int(start_time*fs):int(end_time*fs),:]
@@ -164,7 +168,7 @@ def generate_training_testing():
                 pursqi
             ]
 
-            if sample_number < TRAINING_THRESHOLD: 
+            if int(sample_number) < TRAINING_THRESHOLD: 
                 training_x.append(x_val)
                 training_y.append(row['is_true'])
             else: 
