@@ -337,14 +337,6 @@ def run(data_path, num_training, arrhythmias, matrix_filename, distances_filenam
     write_json(min_distances, distances_filename)
 
 
-def get_counts_by_arrhythmia(confusion_matrix, arrhythmia_prefix): 
-    counts_by_arrhythmia = {}
-    for classification_type in confusion_matrix.keys(): 
-        sample_list = [ sample for sample in confusion_matrix[classification_type] if sample[0] == arrhythmia_prefix]
-        counts_by_arrhythmia[classification_type] = (len(sample_list), sample_list)
-
-    return counts_by_arrhythmia
-
 
 if __name__ == '__main__':
     start = datetime.now()
@@ -352,19 +344,29 @@ if __name__ == '__main__':
     new_fs = 125
     num_training = 500
     arrhythmias = ['a', 'b', 't', 'v', 'f']
+    # matrix_filename = "../sample_data/dtw_radius0.json"
+    # distances_filename = "../sample_data/dtw_distances_radius0.json"
+
     matrix_filename = "../sample_data/dtw_fromfile.json"
-    # matrix_filename = "../sample_data/pipeline_fpinvalids_vtachfpann.json"
     distances_filename = "../sample_data/dtw_distances_fromfile.json"
 
-    run(data_path, num_training, arrhythmias, matrix_filename, distances_filename, radius=new_fs*2, new_fs=new_fs)
+    # matrix_filename = "../sample_data/pipeline_fpinvalids_vtachfpann.json"
+
+    # run(data_path, num_training, arrhythmias, matrix_filename, distances_filename, radius=new_fs*2, new_fs=new_fs)
 
     matrix = read_json(matrix_filename)
     min_distances = read_json(distances_filename)
 
     counts = { key : len(matrix[key]) for key in matrix.keys() }
+    # vtach_counts, vtach_matrix = get_by_arrhythmia(matrix, 'v')
+
     print "accuracy:", get_classification_accuracy(matrix)
     print "score:", get_score(matrix)
     print_stats(counts)
+
+    # print "accuracy:", get_classification_accuracy(vtach_matrix)
+    # print "score:", get_score(vtach_matrix)
+    # print_stats(vtach_counts)
 
 
     # print "\nVTACH STATS"

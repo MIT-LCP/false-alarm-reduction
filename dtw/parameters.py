@@ -7,6 +7,9 @@ HEADER_EXTENSION = ".hea"
 
 ALARM_TIME = 300 # in seconds
 FS = 250.0
+DEFAULT_ECG_FS = 250.0
+DEFAULT_OTHER_FS = 125.0
+
 
 # Hard-coded colors
 COLORS = np.asarray(

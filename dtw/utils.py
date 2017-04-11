@@ -1,7 +1,6 @@
 import wfdb
 import json
 
-
 def abs_value(x, y):
     return abs(x-y)
 
@@ -188,4 +187,12 @@ def get_score(matrix):
     return float(numerator) / denominator
 
 
+def get_by_arrhythmia(confusion_matrix, arrhythmia_prefix): 
+    counts_by_arrhythmia = {}
+    matrix_by_arrhythmia = {}
+    for classification_type in confusion_matrix.keys(): 
+        sample_list = [ sample for sample in confusion_matrix[classification_type] if sample[0] == arrhythmia_prefix]
+        counts_by_arrhythmia[classification_type] = len(sample_list)
+        matrix_by_arrhythmia[classification_type] = sample_list
 
+    return counts_by_arrhythmia, matrix_by_arrhythmia

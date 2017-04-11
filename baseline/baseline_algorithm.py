@@ -4,6 +4,7 @@ import numpy         as np
 import parameters
 import csv
 import wfdb
+from ventricular_beat_detection import ventricular_beat_annotations_dtw
 
 
 ##############################
@@ -872,20 +873,21 @@ def get_ventricular_beats_scores(channel_sig,
     r_delta = np.array([])
     end = window_size * fs
     
-    lf, sub = get_lf_sub(channel_sig, order)
+    # lf, sub = get_lf_sub(channel_sig, order)
     
     while end <= channel_sig.size: 
         start = end - window_size * fs
         start_index, end_index = int(start), int(end)
 
         channel_subsig = channel_sig[start_index:end_index]
-        lf_subsig = lf[start_index:end_index]
-        sub_subsig = sub[start_index:end_index]
+        # lf_subsig = lf[start_index:end_index]
+        # sub_subsig = sub[start_index:end_index]
         start_time = initial_start_time + start/fs
         end_time = start_time + window_size
         
-        sample = ann_path + sample_name
-        ventricular_beats = ventricular_beat_annotations(lf_subsig, sub_subsig, sample, ann_type, start_time, end_time)
+        # ventricular_beats = ventricular_beat_annotations(lf_subsig, sub_subsig, ann_path + sample_name, ann_type, start_time, end_time)
+        ventricular_beats = ventricular_beat_annotations_dtw(channel_sig, ann_path, sample_name, start_time, end_time, ann_type)
+        
         max_hr = max_ventricular_hr(ventricular_beats, num_beats, fs)
             
         invalids = calculate_channel_invalids(channel_subsig, "ECG")
@@ -898,7 +900,7 @@ def get_ventricular_beats_scores(channel_sig,
             
         end += (rolling_increment * fs)
             
-    return r_delta   
+    return r_delta
 
 
 def get_abp_std_scores(channel_sig, 
