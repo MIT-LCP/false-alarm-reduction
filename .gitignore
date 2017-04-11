@@ -22,7 +22,10 @@ lib64/
 parts/
 sampledata/
 dtw/dtw_data/
-sample_data/
+sample_data/challenge_training_ann/
+sample_data/challenge_training_data/
+sample_data/challenge_training_multiann/
+sample_data/fplesinger_data/
 sdist/
 var/
 *.egg-info/

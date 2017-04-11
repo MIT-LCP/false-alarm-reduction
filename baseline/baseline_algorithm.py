@@ -873,20 +873,20 @@ def get_ventricular_beats_scores(channel_sig,
     r_delta = np.array([])
     end = window_size * fs
     
-    # lf, sub = get_lf_sub(channel_sig, order)
+    lf, sub = get_lf_sub(channel_sig, order)
     
     while end <= channel_sig.size: 
         start = end - window_size * fs
         start_index, end_index = int(start), int(end)
 
         channel_subsig = channel_sig[start_index:end_index]
-        # lf_subsig = lf[start_index:end_index]
-        # sub_subsig = sub[start_index:end_index]
+        lf_subsig = lf[start_index:end_index]
+        sub_subsig = sub[start_index:end_index]
         start_time = initial_start_time + start/fs
         end_time = start_time + window_size
         
-        # ventricular_beats = ventricular_beat_annotations(lf_subsig, sub_subsig, ann_path + sample_name, ann_type, start_time, end_time)
-        ventricular_beats = ventricular_beat_annotations_dtw(channel_sig, ann_path, sample_name, start_time, end_time, ann_type)
+        ventricular_beats = ventricular_beat_annotations(lf_subsig, sub_subsig, ann_path + sample_name, ann_type, start_time, end_time)
+        # ventricular_beats = ventricular_beat_annotations_dtw(channel_sig, ann_path, sample_name, start_time, end_time, ann_type)
         
         max_hr = max_ventricular_hr(ventricular_beats, num_beats, fs)
             
