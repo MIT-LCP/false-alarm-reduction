@@ -1,6 +1,8 @@
 from spectrum                   import *
 from scipy.stats                import kurtosis
 from sklearn.linear_model       import LogisticRegression
+from sklearn.metrics            import auc, roc_curve
+from datetime                   import datetime
 import numpy                    as np
 import matplotlib.pyplot  		as plt
 import csv
@@ -8,6 +10,7 @@ import wfdb
 
 data_path = "sample_data/challenge_training_data/"
 answers_filename = "sample_data/answers.csv"
+features_filename = "sample_data/features.csv"
 
 start_time = 290
 end_time = 300
@@ -133,53 +136,132 @@ def get_channels_of_type(channels, channel_type):
 # x includes sample names --> exclude for classification
 # training = sample num < 600
 # testing = sample num > 600
-def generate_training_testing(): 
+def generate_features(features_filename): 
     training_x, training_y = [], []
     testing_x, testing_y = [], []
 
-    with open(answers_filename, 'r') as f: 
-        reader = csv.DictReader(f, fieldnames=['sample_name', 'baseline_is_classified_true', 'dtw_is_classified_true', 'is_true'])
-        reader.next()
+    with open(features_filename, 'w') as fo: 
+        writer = csv.writer(fo)
+        writer.writerow(['sample_name', 'is_training', 'is_true', 'baseline', 'dtw', 'psd', 'power', 'ksqi', 'pursqi'])
+
+        with open(answers_filename, 'r') as f: 
+            reader = csv.reader(f)
+            headers = reader.next()
+
+            reader = csv.DictReader(f, fieldnames=headers)
+
+            for row in reader: 
+                sample_name = row['sample_name']
+                sample_number = sample_name[1:-1]
+
+                sig, fields = wfdb.rdsamp(data_path + sample_name)
+                subsig = sig[int(start_time*fs):int(end_time*fs),:]
+                ecg_channels = get_channels_of_type(fields['signame'], "ECG")
+
+                if len(ecg_channels) == 0: 
+    		    	print "NO ECG CHANNELS FOR SAMPLE: ", sample_name
+    		    	continue
+
+                try: 
+                    baseline = get_baseline(subsig, ecg_channels)
+                    power = get_power(subsig, ecg_channels)
+                    ksqi = get_ksqi(subsig, ecg_channels)
+                    pursqi = get_pursqi(subsig, ecg_channels)
+
+                except Exception as e: 
+                    print "sample_name:", sample_name, e
+                    continue
+
+                if np.isnan([baseline, power, ksqi, pursqi]).any(): 
+                    print "sample containing nan:", sample_name, [baseline, power, ksqi, pursqi]
+                    continue
+
+                if int(sample_number) < TRAINING_THRESHOLD: 
+                    is_training = 1
+                else: 
+                    is_training = 0
+
+                x_val = [ 
+                    row['sample_name'], 
+                    is_training,
+                    int(row['is_true']),
+                    int(row['baseline_is_classified_true']), 
+                    int(row['dtw_is_classified_true']),
+                    baseline,
+                    power,
+                    ksqi, 
+                    pursqi
+                ]
+
+                writer.writerow(x_val)
+
+def generate_datasets(features_filename): 
+    training_x, training_y, testing_x, testing_y = [], [], [], []
+
+    with open(features_filename, 'r') as f: 
+        reader = csv.reader(f)
+        headers = reader.next()
+
+        reader = csv.DictReader(f, fieldnames=headers)
 
         for row in reader: 
-            sample_name = row['sample_name']
-            sample_number = sample_name[1:-1]
-
-            sig, fields = wfdb.rdsamp(data_path + sample_name)
-            subsig = sig[int(start_time*fs):int(end_time*fs),:]
-            ecg_channels = get_channels_of_type(fields['signame'], "ECG")
-
-            if len(ecg_channels) == 0: 
-		    	print "NO ECG CHANNELS FOR SAMPLE: ", sample_name
-		    	continue
-
-            baseline = get_baseline(subsig, ecg_channels)
-            power = get_power(subsig, ecg_channels)
-            ksqi = get_ksqi(subsig, ecg_channels)
-            pursqi = get_pursqi(subsig, ecg_channels)
-
-            x_val = [ 
-                row['sample_name'], 
-                row['baseline_is_classified_true'], 
-                row['dtw_is_classified_true'],
-                baseline,
-                power,
-                ksqi, 
-                pursqi
+            x_val = [
+                int(row['baseline']),
+                int(row['dtw']),
+                float(row['psd']),
+                float(row['power']),
+                float(row['ksqi']),
+                float(row['pursqi'])
             ]
+            y_val = int(row['is_true'])
 
-            if int(sample_number) < TRAINING_THRESHOLD: 
+            if int(row['is_training']) == 1: 
                 training_x.append(x_val)
-                training_y.append(row['is_true'])
+                training_y.append(y_val)
             else: 
                 testing_x.append(x_val)
-                testing_y.append(row['is_true'])
-
-
+                testing_y.append(y_val)
     return training_x, training_y, testing_x, testing_y
 
-training_x, training_y, testing_x, testing_y = generate_training_testing()
+
+print "Generating datasets..."
+# generate_features(features_filename)
+training_x, training_y, testing_x, testing_y = generate_datasets(features_filename)
+
+
+print "Running classifier..."
 classifier = LogisticRegression()
 classifier.fit(training_x, training_y)
-print classifier.score(testing_x, testing_y)
+
+# probability of class 1 (versus 0)
+predictions_y = classifier.predict_proba(testing_x)[:,1]
+score = classifier.score(testing_x, testing_y)
+
+fpr, tpr, thresholds = roc_curve(testing_y, predictions_y)
+auc = auc(fpr, tpr)
+
+print "auc: ", auc
+print "score: ", score
+print "fpr: ", fpr, "tpr: ", tpr
+
+# plt.figure()
+# plt.title("ROC curve for DTW-only classiifer")
+# plt.xlabel("False positive rate")
+# plt.ylabel("True positive rate")
+# plt.plot(fpr, tpr)
+# plt.show()
+
+# DTW only
+# auc:  0.461675144589
+# score:  0.529166666667
+
+# Baseline only 
+# auc:  0.877012054909
+# score:  0.875
+
+# Combined
+# auc:  0.910041112118
+# score:  0.841666666667
+
+
 
