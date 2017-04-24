@@ -1,6 +1,7 @@
 from spectrum                   import *
 from scipy.stats                import kurtosis
 from sklearn.linear_model       import LogisticRegression
+from datetime                   import datetime
 import numpy                    as np
 import matplotlib.pyplot  		as plt
 import csv
@@ -178,8 +179,15 @@ def generate_training_testing():
 
     return training_x, training_y, testing_x, testing_y
 
+
+start = datetime.now()
+print "Starting at", start
+print "Generating datasets..."
 training_x, training_y, testing_x, testing_y = generate_training_testing()
+
+print "Running classifier..."
 classifier = LogisticRegression()
 classifier.fit(training_x, training_y)
 print classifier.score(testing_x, testing_y)
 
+print datetime.now() - start
