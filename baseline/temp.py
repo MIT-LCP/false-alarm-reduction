@@ -1,10 +1,11 @@
 import csv
 import wfdb
-import matplotlib.pyplot as plt
+
+
 
 vtach_beats = []
 non_vtach_beats = []
-sample_name = "v135l"
+sample_name = "v676s"
 
 with open("../sample_data/vtach_beat_ann/" + sample_name + ".csv", 'r') as f: 
 	reader = csv.DictReader(f)
@@ -28,4 +29,5 @@ plt.plot(channel_subsig, 'g-')
 plt.plot(vtach_indices, [ channel_subsig[index] for index in vtach_indices ], 'ro')
 plt.plot(non_vtach_indices, [ channel_subsig[index] for index in non_vtach_indices ], 'bo')
 plt.show()
+
 

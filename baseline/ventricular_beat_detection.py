@@ -55,6 +55,24 @@ def generate_training(filename):
 
     return training
 
+def get_sample_training_beats(channel_sig, annotation, sample_name): 
+    ### TODO: add quality check before adding training beats
+
+    training_beats = []
+
+    for ann_index in range(1, len(annotation)-1):
+        start_index = (annotation[ann_index-1] + annotation[ann_index]) / 2
+        end_index = (annotation[ann_index] + annotation[ann_index+1]) / 2
+        beat_sig = channel_sig[start_index:end_index]
+
+        training_beats.append((beat_sig, 0, sample_name))
+
+        if len(training_beats) >= 5: 
+            break
+
+    return training_beats
+
+
 def normalize_sig(sig): 
     return (sig - np.mean(sig)) / np.std(sig)
 
@@ -165,9 +183,11 @@ def ventricular_beat_annotations_dtw(
     training_beats = generate_training(training_filename)
 
     annotation = get_annotation(ann_path + sample_name, ann_type, ann_fs, start_time, end_time)[0]
+    full_annotation = get_annotation(ann_path + sample_name, ann_type, ann_fs, 0, start_time)[0]
+    sample_training_beats = get_sample_training_beats(channel_sig, full_annotation, sample_name)
 
     beats = get_beats(channel_sig, annotation)
-    ventricular_beats, nonventricular_beats = get_ventricular_beats(beats, training_beats)
+    ventricular_beats, nonventricular_beats = get_ventricular_beats(beats, sample_training_beats + training_beats)
 
     ventricular_beat_annotations = [ beat[0] for beat in ventricular_beats ]
     nonventricular_beat_annotations = [ beat[0] for beat in nonventricular_beats ]
@@ -221,7 +241,7 @@ for filename in os.listdir(data_path):
 
         start = datetime.now()
 
-        with open(output_path + sample_name + ".csv", "w") as f:
+        with open(output_path + sample_name + "_selfbeats.csv", "w") as f:
             channel_sig = sig[:,channel_index]
 
             vtach_beats, nonvtach_beats = ventricular_beat_annotations_dtw(channel_sig, ann_path, sample_name, start_time, end_time, ann_type)
