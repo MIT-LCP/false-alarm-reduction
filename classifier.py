@@ -1,6 +1,6 @@
 from spectrum                   import *
 from scipy.stats                import kurtosis
-from sklearn.linear_model       import LogisticRegression
+from sklearn.linear_model       import LogisticRegression, LassoCV
 from sklearn.metrics            import auc, roc_curve
 from datetime                   import datetime
 import numpy                    as np
@@ -91,10 +91,10 @@ def get_pursqi(subsig, ecg_channels):
     sdd = np.zeros(len(channel_subsig))
     for i in range(len(channel_subsig)): 
         if i == 0: 
-            sdd[i] = channel_subsig[i+1] - 2*channel_subsig[i]
+            sdd[i] = channel_subsig[2] - 2*channel_subsig[1] + channel_subsig[0]
 
         elif i == len(channel_subsig) - 1: 
-            sdd[i] = 2*channel_subsig[i] + channel_subsig[i-1]
+            sdd[i] = channel_subsig[-1] - 2*channel_subsig[-2] + channel_subsig[-3]
 
         else: 
             sdd[i] = channel_subsig[i+1] - 2*channel_subsig[i] + channel_subsig[i-1]
@@ -215,41 +215,71 @@ def generate_datasets(features_filename):
             ]
             y_val = int(row['is_true'])
 
-            if int(row['is_training']) == 1: 
+            if int(row['is_training']) == 1 and row['sample_name'][0] == 'v': 
                 training_x.append(x_val)
                 training_y.append(y_val)
-            else: 
+            elif row['sample_name'][0] == 'v': 
                 testing_x.append(x_val)
                 testing_y.append(y_val)
     return training_x, training_y, testing_x, testing_y
+
+
+def get_score(prediction, true):
+    
+    TP = np.sum([(prediction[i] == 1) and (true[i] == 1) for i in range(len(prediction))])
+    TN = np.sum([(prediction[i] == 0) and (true[i] == 0) for i in range(len(prediction))])
+    FP = np.sum([(prediction[i] == 1) and (true[i] == 0) for i in range(len(prediction))])
+    FN = np.sum([(prediction[i] == 0) and (true[i] == 1) for i in range(len(prediction))])
+
+    # print TP, TN, FP, FN
+
+    numerator =  TP + TN
+    denominator = FP + 5*FN + numerator
+
+    return float(numerator) / denominator
 
 
 print "Generating datasets..."
 # generate_features(features_filename)
 training_x, training_y, testing_x, testing_y = generate_datasets(features_filename)
 
+print len(training_y), len(testing_y)
+
 
 print "Running classifier..."
-classifier = LogisticRegression()
+classifier = LogisticRegression(penalty='l1')
+# lasso = LassoCV()
 classifier.fit(training_x, training_y)
 
 # probability of class 1 (versus 0)
 predictions_y = classifier.predict_proba(testing_x)[:,1]
 score = classifier.score(testing_x, testing_y)
 
+# lasso.fit(training_x, training_y)
+# predictions_y = lasso.predict(testing_x)
+
 fpr, tpr, thresholds = roc_curve(testing_y, predictions_y)
+
+chall_score = list()
+for th in thresholds:
+    chall_score.append(get_score([x >= th for x in predictions_y], testing_y))
+
+
 auc = auc(fpr, tpr)
 
+print classifier.coef_
 print "auc: ", auc
 print "score: ", score
 print "fpr: ", fpr, "tpr: ", tpr
 
-# plt.figure()
-# plt.title("ROC curve for DTW-only classiifer")
-# plt.xlabel("False positive rate")
-# plt.ylabel("True positive rate")
-# plt.plot(fpr, tpr)
-# plt.show()
+
+plt.figure()
+plt.title("ROC curve for top-level classifier with challenge scores")
+plt.xlabel("False positive rate")
+plt.ylabel("True positive rate")
+plt.plot(fpr, tpr, label='ROC Curve')
+plt.plot(fpr, chall_score, label='Challenge score')
+plt.show()
 
 # DTW only
 # auc:  0.461675144589
