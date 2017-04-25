@@ -134,7 +134,7 @@ def get_annotation(sample, ann_type, ann_fs, start, end):
         annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
     except Exception as e: 
         annotation = []
-        print e
+        print(e)
     
     return annotation
 
@@ -193,15 +193,15 @@ def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_a
             channel_rr_intervals = np.append(channel_rr_intervals, round(ann_seconds[index] - ann_seconds[index - 1], 4))
 
     except Exception as e: 
-        print e
+        print(e)
 
     return channel_rr_intervals
 
-sample_name = "a103l"
-sig, fields = wfdb.rdsamp(data_path + sample_name)
-ecg_ann_type = "fp"
-channel_index = 2
-print get_channel_rr_intervals(fp_ann_path, sample_name, channel_index, fields, ecg_ann_type)
+# sample_name = "a103l"
+# sig, fields = wfdb.rdsamp(data_path + sample_name)
+# ecg_ann_type = "fp"
+# channel_index = 2
+# print get_channel_rr_intervals(fp_ann_path, sample_name, channel_index, fields, ecg_ann_type)
 
 
 # In[9]:
@@ -277,19 +277,18 @@ def plot_annotations(data_path, ann_path, fp_ann_path, sample_name, channel_inde
 
     return annotation
 
-
 # In[18]:
 
 data_fs = 250
-sample_name = 'v133l'
-start = 295
-end = 300
+sample_name = 'v162s'
+start = 294
+end = 296
 ecg_ann_type = ["gqrs", "jqrs", "fp"]
 
 # choose the lead to plot (annotations are generated off the first lead)
 channel_index = 0
 
-plot_annotations(data_path, ann_path, fp_ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs, loc=4)
+# plot_annotations(data_path, ann_path, fp_ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs, loc=4)
 
 
 # In[ ]:
