@@ -82,7 +82,7 @@ def get_self_beats(
                     self_beats.append((annotation[ann_index], beat_sig))
 
                 if len(self_beats) >= num_self_beats: 
-                    return self_beats
+                    break
 
     print "Found", len(self_beats), "self beats"
     return self_beats

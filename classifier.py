@@ -232,78 +232,78 @@ def get_score(prediction, true):
     return float(numerator) / denominator
 
 
-print "Generating datasets..."
-# generate_features(features_filename)
-training_x, training_y, testing_x, testing_y = generate_datasets(features_filename)
+# print "Generating datasets..."
+# # generate_features(features_filename)
+# training_x, training_y, testing_x, testing_y = generate_datasets(features_filename)
 
-print len(training_y), len(testing_y)
-
-
-    # start = datetime.now()
-    # print "Starting at", start
-    # print "Generating datasets..."
-    # training_x, training_y, testing_x, testing_y = generate_training_testing()
+# print len(training_y), len(testing_y)
 
 
-
-print "Running classifier..."
-classifier = LogisticRegression(penalty='l1')
-# lasso = LassoCV()
-classifier.fit(training_x, training_y)
-
-    # probability of class 1 (versus 0)
-    # predictions_y = classifier.predict_proba(testing_x)[:,1]
-    # score = classifier.score(testing_x, testing_y)
-
-    # fpr, tpr, thresholds = roc_curve(testing_y, predictions_y)
-    # auc = auc(fpr, tpr)
-
-    # print "auc: ", auc
-    # print "score: ", score
-    # print "fpr: ", fpr, "tpr: ", tpr
-
-    # # plt.figure()
-    # # plt.title("ROC curve for DTW-only classiifer")
-    # # plt.xlabel("False positive rate")
-    # # plt.ylabel("True positive rate")
-    # # plt.plot(fpr, tpr)
-    # # plt.show()
-# lasso.fit(training_x, training_y)
-# predictions_y = lasso.predict(testing_x)
-
-fpr, tpr, thresholds = roc_curve(testing_y, predictions_y)
-
-chall_score = list()
-for th in thresholds:
-    chall_score.append(get_score([x >= th for x in predictions_y], testing_y))
+#     # start = datetime.now()
+#     # print "Starting at", start
+#     # print "Generating datasets..."
+#     # training_x, training_y, testing_x, testing_y = generate_training_testing()
 
 
-auc = auc(fpr, tpr)
 
-print classifier.coef_
-print "auc: ", auc
-print "score: ", score
-print "fpr: ", fpr, "tpr: ", tpr
+# print "Running classifier..."
+# classifier = LogisticRegression(penalty='l1')
+# # lasso = LassoCV()
+# classifier.fit(training_x, training_y)
+
+#     # probability of class 1 (versus 0)
+#     # predictions_y = classifier.predict_proba(testing_x)[:,1]
+#     # score = classifier.score(testing_x, testing_y)
+
+#     # fpr, tpr, thresholds = roc_curve(testing_y, predictions_y)
+#     # auc = auc(fpr, tpr)
+
+#     # print "auc: ", auc
+#     # print "score: ", score
+#     # print "fpr: ", fpr, "tpr: ", tpr
+
+#     # # plt.figure()
+#     # # plt.title("ROC curve for DTW-only classiifer")
+#     # # plt.xlabel("False positive rate")
+#     # # plt.ylabel("True positive rate")
+#     # # plt.plot(fpr, tpr)
+#     # # plt.show()
+# # lasso.fit(training_x, training_y)
+# # predictions_y = lasso.predict(testing_x)
+
+# fpr, tpr, thresholds = roc_curve(testing_y, predictions_y)
+
+# chall_score = list()
+# for th in thresholds:
+#     chall_score.append(get_score([x >= th for x in predictions_y], testing_y))
 
 
-plt.figure()
-plt.title("ROC curve for top-level classifier with challenge scores")
-plt.xlabel("False positive rate")
-plt.ylabel("True positive rate")
-plt.plot(fpr, tpr, label='ROC Curve')
-plt.plot(fpr, chall_score, label='Challenge score')
-plt.show()
+# auc = auc(fpr, tpr)
 
-    # DTW only
-    # auc:  0.461675144589
-    # score:  0.529166666667
+# print classifier.coef_
+# print "auc: ", auc
+# print "score: ", score
+# print "fpr: ", fpr, "tpr: ", tpr
 
-    # Baseline only 
-    # auc:  0.877012054909
-    # score:  0.875
 
-    # Combined
-    # auc:  0.910041112118
-    # score:  0.841666666667
+# plt.figure()
+# plt.title("ROC curve for top-level classifier with challenge scores")
+# plt.xlabel("False positive rate")
+# plt.ylabel("True positive rate")
+# plt.plot(fpr, tpr, label='ROC Curve')
+# plt.plot(fpr, chall_score, label='Challenge score')
+# plt.show()
+
+#     # DTW only
+#     # auc:  0.461675144589
+#     # score:  0.529166666667
+
+#     # Baseline only 
+#     # auc:  0.877012054909
+#     # score:  0.875
+
+#     # Combined
+#     # auc:  0.910041112118
+#     # score:  0.841666666667
 
 
