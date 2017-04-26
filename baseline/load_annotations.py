@@ -102,7 +102,7 @@ def get_annotation_annfs(sample, ann_type, start, end, channel_type):
         ann_fs = parameters.DEFAULT_OTHER_FS
 
     # Find annotation fs from wfdb.rdann
-    annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
+    annotation = wfdb.rdann(sample, ann_type, sampfrom=int(start * ann_fs), sampto=int(end*ann_fs))
 
     # If rdann's provided ann_fs is valid, use that annotation fs
     if annotation[-1] is not None and annotation[-1] != 0 and isinstance(annotation[-1], (int, float)):  
@@ -247,7 +247,7 @@ def plot_annotations(data_path, ann_path, fp_ann_path, sample_name, channel_inde
     
     # Plot each annotation type
     for index in range(len(ecg_ann_types)):
-        ecg_ann_type = ecg_ann_types[index]
+        ecg_ann_type = ecg_ann_types[int(index)]
         ann_type = get_ann_type(channel_name, channel_index, ecg_ann_type)
 
         if ecg_ann_type == "fp": 
