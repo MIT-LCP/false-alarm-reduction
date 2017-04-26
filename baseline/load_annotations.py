@@ -280,9 +280,9 @@ def plot_annotations(data_path, ann_path, fp_ann_path, sample_name, channel_inde
 # In[18]:
 
 data_fs = 250
-sample_name = 'v162s'
+sample_name = 'v141l'
 start = 294
-end = 296
+end = 300
 ecg_ann_type = ["gqrs", "jqrs", "fp"]
 
 # choose the lead to plot (annotations are generated off the first lead)

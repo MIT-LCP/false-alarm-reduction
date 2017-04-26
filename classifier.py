@@ -19,49 +19,46 @@ fs = 250.
 TRAINING_THRESHOLD = 600
 
 
-def get_psd(channel_subsig, order): 
+def get_psd(channel_subsig, order, nfft): 
+    channel_subsig = channel_subsig-np.mean(channel_subsig)
     ar, rho, ref = arburg(channel_subsig, order)
-    psd = arma2psd(ar, rho=rho, NFFT=512)
+    psd = arma2psd(ar, rho=rho, NFFT=nfft)
     psd = psd[len(psd):len(psd)/2:-1]
 
     # plt.figure()
-    # plt.plot(10*np.log10(abs(psd)*2./(2.*np.pi)))
+    # plt.plot(linspace(0, 1, len(psd)), abs(psd)*2./(2.*np.pi))
     # plt.title('PSD')
     # plt.ylabel('Log of PSD')
-    # plt.xlabel('Frequency (Hz)')
+    # plt.xlabel('Normalized Frequency')
     # plt.show()
+
+    # print len(psd)
 
     return psd
 
 
-def get_baseline(subsig, ecg_channels, order=30): 
-    channel_index = ecg_channels[0]
-    channel_subsig = subsig[:,int(channel_index)]
+def get_baseline(channel_subsig, order=30, nfft=1024): 
+    psd = get_psd(channel_subsig, order, nfft)
 
-    psd = get_psd(channel_subsig, order)
-
-    numerator_min_freq = 1
-    numerator_max_freq = 2
-    denominator_min_freq = 1
-    denominator_max_freq = 40
+    numerator_min_freq = int(0 * nfft / 125.)
+    numerator_max_freq = int(1  * nfft / 125.)
+    denominator_min_freq =int( 0  * nfft / 125.)
+    denominator_max_freq = int(40 * nfft / 125.)
 
     numerator = sum(psd[numerator_min_freq:numerator_max_freq+1])
     denominator = sum(psd[denominator_min_freq:denominator_max_freq+1])
 
     baseline = float(numerator) / denominator
-    return baseline
+    return 1 - baseline
 
 
-def get_power(subsig, ecg_channels, order=30):
-    channel_index = ecg_channels[0]
-    channel_subsig = subsig[:,int(channel_index)]
+def get_power(channel_subsig, order=30, nfft=1024):
+    psd = get_psd(channel_subsig, order, nfft)
 
-    psd = get_psd(channel_subsig, order)
-
-    numerator_min_freq = 5
-    numerator_max_freq = 15
-    denominator_min_freq = 5
-    denominator_max_freq = 40
+    numerator_min_freq =int( 5  * nfft / 125.)
+    numerator_max_freq = int(15 * nfft / 125.)
+    denominator_min_freq = int(5 * nfft / 125.)
+    denominator_max_freq = int(40 * nfft / 125.)
 
     numerator = sum(psd[numerator_min_freq:numerator_max_freq+1])
     denominator = sum(psd[denominator_min_freq:denominator_max_freq+1])
@@ -70,10 +67,7 @@ def get_power(subsig, ecg_channels, order=30):
     return power
 
 
-def get_ksqi(subsig, ecg_channels):
-    channel_index = ecg_channels[0]
-    channel_subsig = subsig[:,int(channel_index)] 
-	
+def get_ksqi(channel_subsig):
     # TODO: this uses fisher as default (with normal of 0) versus pearson's (with normal of 3)
     ksqi = kurtosis(channel_subsig) - 3
 
@@ -82,10 +76,7 @@ def get_ksqi(subsig, ecg_channels):
     return ksqi
 
 
-def get_pursqi(subsig, ecg_channels): 
-    channel_index = ecg_channels[0]
-    channel_subsig = subsig[:,int(channel_index)] 
-
+def get_pursqi(channel_subsig): 
     s = channel_subsig
     sd = np.diff(channel_subsig);
     sdd = np.zeros(len(channel_subsig))
@@ -162,11 +153,13 @@ def generate_features(features_filename):
     		    	print "NO ECG CHANNELS FOR SAMPLE: ", sample_name
     		    	continue
 
+                channel_subsig = subsig[:,int(ecg_channels[0])]
+
                 try: 
-                    baseline = get_baseline(subsig, ecg_channels)
-                    power = get_power(subsig, ecg_channels)
-                    ksqi = get_ksqi(subsig, ecg_channels)
-                    pursqi = get_pursqi(subsig, ecg_channels)
+                    baseline = get_baseline(channel_subsig)
+                    power = get_power(channel_subsig)
+                    ksqi = get_ksqi(channel_subsig)
+                    pursqi = get_pursqi(channel_subsig)
 
                 except Exception as e: 
                     print "sample_name:", sample_name, e
@@ -224,51 +217,52 @@ def generate_datasets(features_filename):
     return training_x, training_y, testing_x, testing_y
 
 
-print "Generating datasets..."
-# generate_features(features_filename)
-training_x, training_y, testing_x, testing_y = generate_datasets(features_filename)
+if __name__ == '__main__': 
+    print "Generating datasets..."
+    # generate_features(features_filename)
+    training_x, training_y, testing_x, testing_y = generate_datasets(features_filename)
 
 
-# start = datetime.now()
-# print "Starting at", start
-# print "Generating datasets..."
-# training_x, training_y, testing_x, testing_y = generate_training_testing()
+    # start = datetime.now()
+    # print "Starting at", start
+    # print "Generating datasets..."
+    # training_x, training_y, testing_x, testing_y = generate_training_testing()
 
 
-print "Running classifier..."
-classifier = LogisticRegression()
-classifier.fit(training_x, training_y)
+    print "Running classifier..."
+    classifier = LogisticRegression()
+    classifier.fit(training_x, training_y)
 
-# probability of class 1 (versus 0)
-predictions_y = classifier.predict_proba(testing_x)[:,1]
-score = classifier.score(testing_x, testing_y)
+    # probability of class 1 (versus 0)
+    predictions_y = classifier.predict_proba(testing_x)[:,1]
+    score = classifier.score(testing_x, testing_y)
 
-fpr, tpr, thresholds = roc_curve(testing_y, predictions_y)
-auc = auc(fpr, tpr)
+    fpr, tpr, thresholds = roc_curve(testing_y, predictions_y)
+    auc = auc(fpr, tpr)
 
-print "auc: ", auc
-print "score: ", score
-print "fpr: ", fpr, "tpr: ", tpr
+    print "auc: ", auc
+    print "score: ", score
+    print "fpr: ", fpr, "tpr: ", tpr
 
-# plt.figure()
-# plt.title("ROC curve for DTW-only classiifer")
-# plt.xlabel("False positive rate")
-# plt.ylabel("True positive rate")
-# plt.plot(fpr, tpr)
-# plt.show()
+    # plt.figure()
+    # plt.title("ROC curve for DTW-only classiifer")
+    # plt.xlabel("False positive rate")
+    # plt.ylabel("True positive rate")
+    # plt.plot(fpr, tpr)
+    # plt.show()
 
-# DTW only
-# auc:  0.461675144589
-# score:  0.529166666667
+    # DTW only
+    # auc:  0.461675144589
+    # score:  0.529166666667
 
-# Baseline only 
-# auc:  0.877012054909
-# score:  0.875
+    # Baseline only 
+    # auc:  0.877012054909
+    # score:  0.875
 
-# Combined
-# auc:  0.910041112118
-# score:  0.841666666667
+    # Combined
+    # auc:  0.910041112118
+    # score:  0.841666666667
 
 
 
-print datetime.now() - start
+    print datetime.now() - start

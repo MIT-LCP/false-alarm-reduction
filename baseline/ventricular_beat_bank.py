@@ -10,10 +10,6 @@ import os
 
 
 
-data_path = "../sample_data/challenge_training_data/"
-ann_path = "../sample_data/challenge_training_multiann/"
-output_path = "../sample_data/vtach_beat_ann/"
-
 AVERAGE_START_DIFF = 0.25
 AVERAGE_END_DIFF = 0.35
 
@@ -55,7 +51,7 @@ def generate_training(filename):
 
     return training
 
-def get_sample_training_beats(channel_sig, annotation, sample_name): 
+def get_self_beats(channel_sig, annotation, sample_name): 
     ### TODO: add quality check before adding training beats
 
     training_beats = []
@@ -65,7 +61,7 @@ def get_sample_training_beats(channel_sig, annotation, sample_name):
         end_index = (annotation[ann_index] + annotation[ann_index+1]) / 2
         beat_sig = channel_sig[start_index:end_index]
 
-        training_beats.append((beat_sig, 0, sample_name))
+        training_beats.append((beat_sig, False, sample_name))
 
         if len(training_beats) >= 5: 
             break
@@ -101,9 +97,11 @@ def is_ventricular_beat(beat_sig, training_beats):
         #     beat_sig_normalized = normalize_sig(beat_sig[:len(training_beat)])
         # distance = sum([val**2 for val in (training_beat_normalized - beat_sig_normalized)])
 
-
-        distance, path = fastdtw(beat_sig_normalized, training_beat_normalized, radius=250, dist=euclidean)
-
+        try: 
+            distance, path = fastdtw(beat_sig_normalized, training_beat_normalized, radius=250, dist=euclidean)
+        except Exception as e: 
+            distance = float('inf')
+            print "Error with training sample: ", sample_name, e
 
         # print sample_name, distance, is_true_beat
         # plt.subplot(9, 5, figure_num)
@@ -138,6 +136,7 @@ def get_ventricular_beats(beats, training_beats):
 
     for beat in beats: 
         beat_sig = beat[2]
+        print "annotation index: ", beat[0]
 
         if is_ventricular_beat(beat_sig, training_beats): 
             ventricular_beats.append(beat)
@@ -156,9 +155,11 @@ def get_ventricular_beats(beats, training_beats):
 def get_beats(channel_sig, annotation): 
     beats = []
     for ann_index in range(1, len(annotation)-1):
+        # Assumes a beat starts halfway between annotations and ends halfway between annotations
         start_index = (annotation[ann_index-1] + annotation[ann_index]) / 2
         end_index = (annotation[ann_index] + annotation[ann_index+1]) / 2
 
+        # Assumes a beat starts 250ms before the annotation and ends 250 ms after the annotation
         # start_index = annotation[ann_index] - int(AVERAGE_START_DIFF * 250.)
         # end_index = annotation[ann_index] + int(AVERAGE_END_DIFF * 250.) + 1
 
@@ -184,10 +185,11 @@ def ventricular_beat_annotations_dtw(
 
     annotation = get_annotation(ann_path + sample_name, ann_type, ann_fs, start_time, end_time)[0]
     full_annotation = get_annotation(ann_path + sample_name, ann_type, ann_fs, 0, start_time)[0]
-    sample_training_beats = get_sample_training_beats(channel_sig, full_annotation, sample_name)
+    sample_training_beats = get_self_beats(channel_sig, full_annotation, sample_name)
 
     beats = get_beats(channel_sig, annotation)
     ventricular_beats, nonventricular_beats = get_ventricular_beats(beats, sample_training_beats + training_beats)
+    # ventricular_beats, nonventricular_beats = get_ventricular_beats(beats, training_beats)
 
     ventricular_beat_annotations = [ beat[0] for beat in ventricular_beats ]
     nonventricular_beat_annotations = [ beat[0] for beat in nonventricular_beats ]
@@ -195,68 +197,79 @@ def ventricular_beat_annotations_dtw(
     return ventricular_beat_annotations, nonventricular_beat_annotations
 
 
+def write_vtach_beats_files(data_path, ann_path, output_path, ecg_ann_type, start_time, end_time): 
+    for filename in os.listdir(data_path):
+        if filename.endswith(parameters.HEADER_EXTENSION):
+            sample_name = filename.rstrip(parameters.HEADER_EXTENSION)
+
+            if sample_name[0] != 'v':
+                continue
+
+            sig, fields = wfdb.rdsamp(data_path + sample_name)
+            if "II" not in fields['signame']: 
+                print "Lead II not found for sample: ", sample_name
+                continue
+
+            output_filename = output_path + sample_name + ".csv"
+
+            if os.path.isfile(output_filename): 
+                continue
+
+            channel_index = fields['signame'].index("II")
+            ann_type = ecg_ann_type + str(channel_index)
+
+            start = datetime.now()
+
+            with open(output_filename, "w") as f:
+                channel_sig = sig[:,channel_index]
+
+                vtach_beats, nonvtach_beats = ventricular_beat_annotations_dtw(channel_sig, ann_path, sample_name, start_time, end_time, ann_type)
+
+                writer = csv.writer(f)
+                writer.writerow(['ann_index', 'is_true_beat'])
+
+                for beat in vtach_beats: 
+                    writer.writerow([beat, 1])
+                for beat in nonvtach_beats: 
+                    writer.writerow([beat, 0])
+
+            print "sample_name: ", sample_name, " elapsed: ", datetime.now() - start
+
+
 
 
 training_filename = "../sample_data/vtach_beats.csv"
+data_path = "../sample_data/challenge_training_data/"
+ann_path = "../sample_data/challenge_training_multiann/"
+output_path = "../sample_data/vtach_beat_ann/"
 
 # sample_name = "v127l"
-# sample_name = "v135l"
-# ecg_ann_type = 'gqrs'
-# start_time = 294
-# end_time = 300
-# channel_index = 0
-# ann_fs = 250.
-# ann_type = 'gqrs' + str(channel_index)
+sample_name = "v141l"
+ecg_ann_type = 'gqrs'
+start_time = 296
+end_time = 300
+channel_index = 0
+ann_fs = 250.
+ann_type = 'gqrs' + str(channel_index)
 
-# sig, fields = wfdb.rdsamp(data_path + sample_name)
-# channel_sig = sig[:,channel_index]
+sig, fields = wfdb.rdsamp(data_path + sample_name)
+channel_sig = sig[:,channel_index]
 
-# vtach_beats, nonvtach_beats = ventricular_beat_annotations_dtw(channel_sig, ann_path, sample_name, start_time, end_time, ann_type)
-# vtach_indices = [ ann - start_time * 250. for ann in vtach_beats ]
-# nonvtach_indices = [ ann - start_time * 250. for ann in nonvtach_beats ]
+vtach_beats, nonvtach_beats = ventricular_beat_annotations_dtw(channel_sig, ann_path, sample_name, start_time, end_time, ann_type)
+vtach_indices = [ ann - start_time * 250. for ann in vtach_beats ]
+nonvtach_indices = [ ann - start_time * 250. for ann in nonvtach_beats ]
 
-# plt.figure(figsize=[8,5])
-# plt.plot(channel_sig[int(start_time*250.):int(end_time*250.)],'b-')
-# plt.plot(nonvtach_indices, [channel_sig[int(index)] for index in nonvtach_indices], 'bo', markersize=8)
-# plt.plot(vtach_indices, [ channel_sig[int(index)] for index in vtach_indices ], 'ro', markersize=8)
-# plt.show()
+plt.figure(figsize=[8,5])
+plt.plot(channel_sig[int(start_time*250.):int(end_time*250.)],'b-')
+plt.plot(nonvtach_indices, [channel_sig[int(index)] for index in nonvtach_indices], 'bo', markersize=8)
+plt.plot(vtach_indices, [ channel_sig[int(index)] for index in vtach_indices ], 'ro', markersize=8)
+plt.show()
 
 start_time = 290
 end_time = 300
+ecg_ann_type = "gqrs"
 
-for filename in os.listdir(data_path):
-    if filename.endswith(parameters.HEADER_EXTENSION):
-        sample_name = filename.rstrip(parameters.HEADER_EXTENSION)
-
-        if sample_name[0] != 'v':
-            continue
-
-        sig, fields = wfdb.rdsamp(data_path + sample_name)
-        if "II" not in fields['signame']: 
-            print "Lead II not found for sample: ", sample_name
-            continue
-
-        channel_index = fields['signame'].index("II")
-        ann_type = 'gqrs' + str(channel_index)
-
-        start = datetime.now()
-
-        with open(output_path + sample_name + "_selfbeats.csv", "w") as f:
-            channel_sig = sig[:,channel_index]
-
-            vtach_beats, nonvtach_beats = ventricular_beat_annotations_dtw(channel_sig, ann_path, sample_name, start_time, end_time, ann_type)
-
-            writer = csv.writer(f)
-            writer.writerow(['ann_index', 'is_true_beat'])
-
-            for beat in vtach_beats: 
-                writer.writerow([beat, 1])
-            for beat in nonvtach_beats: 
-                writer.writerow([beat, 0])
-
-        print "sample_name: ", sample_name, " elapsed: ", datetime.now() - start
-
-
+# write_vtach_beats_files(data_path, ann_path, output_path, ecg_ann_type, start_time, end_time)
 
 
 # sig, fields = wfdb.rdsamp(data_path + sample_name)
