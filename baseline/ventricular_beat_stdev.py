@@ -21,7 +21,7 @@ MIN_DISTANCE_DIFF = 5
 # Assuming a max physiologically possible HR of 300
 MIN_PEAK_DIST = 60. / 300 * 250
 
-DEBUG = False
+DEBUG = True
 
 def dprint(*args): 
     if DEBUG: 
@@ -273,7 +273,7 @@ def get_dtw_distances(beat_sig, self_beats, radius=250):
             # figure_num += 1
 
         except Exception as e: 
-            print "Error with training sample: ", sample_name, e
+            print e
 
     # plt.show()
     return distances
@@ -435,15 +435,17 @@ def ventricular_beat_annotations_dtw(
         file_prefix="../sample_data/vtach_beat_ann/std/baseline_distances_",
         ann_fs=250.):
 
-    baseline_dist_filename = file_prefix + sample_name + "_min.json"
+    baseline_dist_filename = file_prefix + sample_name + ".json"
 
     dprint("Finding alarm beats...")
-    annotation = get_annotation(ann_path + sample_name, ann_type, ann_fs, start_time, end_time).annsamp
+    # annotation = get_annotation(ann_path + sample_name, ann_type, ann_fs, start_time, end_time).annsamp
+    annotation = get_annotation(ann_path + sample_name, ann_type, ann_fs, start_time, end_time)[0]
     alarm_beats = get_alarm_beats(channel_sig, annotation)
 
     dprint("Finding self beats...")
     # Full annotation except for when the alarm signal starts (usually last 10 seconds)
-    full_annotation = get_annotation(ann_path + sample_name, ann_type, ann_fs, 0, start_time).annsamp
+    # full_annotation = get_annotation(ann_path + sample_name, ann_type, ann_fs, 0, start_time).annsamp
+    full_annotation = get_annotation(ann_path + sample_name, ann_type, ann_fs, 0, start_time)[0]
     self_beats = get_best_self_beats(channel_sig, full_annotation, sample_name)
 
     if os.path.isfile(baseline_dist_filename) and not force:
@@ -469,12 +471,15 @@ def ventricular_beat_annotations_dtw(
 
     # Only find distances if ventricular beats were found
     if len(ventricular_beats) > 1: 
-        ventricular_distances = get_baseline_distances(ventricular_beats)
-        ventricular_mean, ventricular_std = get_baseline_metrics('min', ventricular_distances)
+        try: 
+            ventricular_distances = get_baseline_distances(ventricular_beats)
+            ventricular_mean, ventricular_std = get_baseline_metrics('min', ventricular_distances)
 
-        # If ventricular beats don't look very similar, mark as noise instead
-        if ventricular_mean > 20 and ventricular_std > 15 and ventricular_mean > ventricular_std: 
-            ventricular_beats = []
+            # If ventricular beats don't look very similar, mark as noise instead
+            if ventricular_mean > 20 and ventricular_std > 15 and ventricular_mean > ventricular_std: 
+                ventricular_beats = []
+        except Exception as e: 
+            print e
 
     ventricular_beat_anns = [ beat[0] for beat in ventricular_beats ]
     nonventricular_beat_anns = [ beat[0] for beat in nonventricular_beats ]
@@ -499,7 +504,8 @@ def write_vtach_beats_files(
             if sample_name[0] != 'v':
                 continue
 
-            sig, fields = wfdb.srdsamp(data_path + sample_name)
+            # sig, fields = wfdb.srdsamp(data_path + sample_name)
+            sig, fields = wfdb.rdsamp(data_path + sample_name)
             if "II" not in fields['signame']: 
                 print "Lead II not found for sample: ", sample_name
                 continue
@@ -532,14 +538,16 @@ def write_vtach_beats_files(
 def run_one_sample():
     # sample_name = "v100s" # false alarm
     # sample_name = "v141l" # noisy at beginning
-    sample_name = "v159l" # quite clean
+    # sample_name = "v159l" # quite clean
     # sample_name = "v206s" # high baseline
     # sample_name = "v143l"
+    sample_name = "v692s"
     channel_index = 0
     ann_fs = 250.
     ann_type = 'gqrs' + str(channel_index)
 
-    sig, fields = wfdb.srdsamp(data_path + sample_name)
+    # sig, fields = wfdb.srdsamp(data_path + sample_name)
+    sig, fields = wfdb.rdsamp(data_path + sample_name)
     channel_sig = sig[:,channel_index]
 
     vtach_beats, nonvtach_beats = ventricular_beat_annotations_dtw(channel_sig, ann_path, sample_name, 'kl', start_time, end_time, ann_type)
@@ -558,9 +566,9 @@ start_time = 290
 end_time = 300
 ecg_ann_type = "gqrs"
 
-# run_one_sample()
+run_one_sample()
 
-write_vtach_beats_files(data_path, ann_path, output_path, ecg_ann_type, start_time, end_time, 'min')
+# write_vtach_beats_files(data_path, ann_path, output_path, ecg_ann_type, start_time, end_time, 'min')
 
 
 # sig, fields = wfdb.rdsamp(data_path + sample_name)

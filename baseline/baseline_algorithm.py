@@ -861,11 +861,11 @@ def max_ventricular_hr(ventricular_beats, num_beats, fs):
         
     return max_hr
 
-def read_ventricular_beat_annotations(sample_name, output_path="../sample_name/vtach_beat_ann/"): 
+def read_ventricular_beat_annotations(sample_name, metric, output_path="../sample_name/vtach_beat_ann/std"): 
     ventricular_beats = []
     nonventricular_beats = []
 
-    with open(output_path + sample_name + ".csv", 'r') as f: 
+    with open(output_path + sample_name + "_" + metric + ".csv", 'r') as f: 
         reader = csv.DictReader(f)
 
         for row in reader: 
@@ -904,8 +904,8 @@ def get_ventricular_beats_scores(channel_sig,
         start_time = initial_start_time + start/fs
         end_time = start_time + window_size
         
-        ventricular_beats = ventricular_beat_annotations(lf_subsig, sub_subsig, ann_path + sample_name, ann_type, start_time, end_time)
-        # ventricular_beats, nonventricular_beats = read_ventricular_beat_annotations(sample_name)
+        # ventricular_beats = ventricular_beat_annotations(lf_subsig, sub_subsig, ann_path + sample_name, ann_type, start_time, end_time)
+        ventricular_beats, nonventricular_beats = read_ventricular_beat_annotations(sample_name, "min")
 
         max_hr = max_ventricular_hr(ventricular_beats, num_beats, fs)
             
