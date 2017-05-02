@@ -68,8 +68,7 @@ def get_power(channel_subsig, order=30, nfft=1024):
 
 
 def get_ksqi(channel_subsig):
-    # TODO: this uses fisher as default (with normal of 0) versus pearson's (with normal of 3)
-    ksqi = kurtosis(channel_subsig) - 3
+    ksqi = kurtosis(channel_subsig)
 
     if abs(ksqi) >= 25: 
         return 25
