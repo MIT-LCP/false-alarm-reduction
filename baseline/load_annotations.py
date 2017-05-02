@@ -17,13 +17,13 @@ import socket
 # determine the paths for data/annotations based off the computer name
 hostname=socket.gethostname()
 
-if hostname=='alistair-pc70':
-    data_path = '/data/challenge-2015/data/'
-    ann_path = '/data/challenge-2015/ann/'
-else:
-    data_path = '../sample_data/challenge_training_data/'
-    ann_path = '../sample_data/challenge_training_multiann/'
-    fp_ann_path = '../sample_data/fplesinger_data/'
+# if hostname=='alistair-pc70':
+#     data_path = '/data/challenge-2015/data/'
+#     ann_path = '/data/challenge-2015/ann/'
+# else:
+data_path = '../sample_data/challenge_training_data/'
+ann_path = '../sample_data/challenge_training_multiann/'
+fp_ann_path = '../sample_data/fplesinger_data/'
 
 
 # ## Helper methods
@@ -104,16 +104,16 @@ def get_annotation_annfs(sample, ann_type, start, end, channel_type):
     # Find annotation fs from wfdb.rdann
     annotation = wfdb.rdann(sample, ann_type, sampfrom=int(start * ann_fs), sampto=int(end*ann_fs))
 
-    # If rdann's provided ann_fs is valid, use that annotation fs
-    if annotation[-1] is not None and annotation[-1] != 0 and isinstance(annotation[-1], (int, float)):  
-        fs = annotation[-1]
-    else: 
-        fs = ann_fs
+    # # If rdann's provided ann_fs is valid, use that annotation fs
+    # if annotation[-1] is not None and annotation[-1] != 0 and isinstance(annotation[-1], (int, float)):  
+    #     fs = annotation[-1]
+    # else: 
+    #     fs = ann_fs
         
-    # Get proper range of annotation based on annotation fs, only run if different ann_fs from before 
-    if fs != ann_fs: 
-        ann_fs = fs
-        annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
+    # # Get proper range of annotation based on annotation fs, only run if different ann_fs from before 
+    # if fs != ann_fs: 
+    #     ann_fs = fs
+    #     annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
                         
     return annotation, ann_fs
 
@@ -184,7 +184,7 @@ def get_channel_rr_intervals(ann_path, sample_name, channel_index, fields, ecg_a
         annotation, ann_fs = get_annotation_annfs(ann_path + sample_name, ann_type, start, end, channel_type)
 
         # Convert annotations sample numbers into seconds if >0 annotations in signal
-        if len(annotation[0]) > 0: 
+        if len(annotation.annsamp) > 0: 
             ann_seconds = np.array(annotation[0]) / float(ann_fs)
         else: 
             return np.array([0.0])
@@ -234,7 +234,7 @@ def get_rr_dict(ann_path, sample_name, fields, ecg_ann_type, start=None, end=Non
 # Plot signal together with annotation types on the channel for data ranging from start to end
 # start and end given in seconds
 def plot_annotations(data_path, ann_path, fp_ann_path, sample_name, channel_index, start, end, ecg_ann_types, data_fs=250.0, loc=1): 
-    sig, fields = wfdb.rdsamp(data_path + sample_name)
+    sig, fields = wfdb.srdsamp(data_path + sample_name)
     channel_name = fields['signame'][channel_index]
     channel_type = invalid.get_channel_type(channel_name)
     time_vector = np.linspace(start, end, (end-start) * data_fs)
@@ -256,11 +256,11 @@ def plot_annotations(data_path, ann_path, fp_ann_path, sample_name, channel_inde
             path = ann_path
 
         annotation, ann_fs = get_annotation_annfs(path + sample_name, ann_type, start, end, channel_type)
-        if len(annotation[0]) == 0: 
+        if len(annotation.annsamp) == 0: 
             plt.show()
             return
 
-        annotation_seconds = annotation[0] / float(ann_fs)
+        annotation_seconds = annotation.annsamp / float(ann_fs)
         annotation_y = [ sig[int(ann_time * data_fs), channel_index] for ann_time in annotation_seconds ]
         plt.plot(annotation_seconds, annotation_y,
              color=parameters.COLORS[index+1],
@@ -280,15 +280,16 @@ def plot_annotations(data_path, ann_path, fp_ann_path, sample_name, channel_inde
 # In[18]:
 
 data_fs = 250
-sample_name = 'v141l'
-start = 294
-end = 300
-ecg_ann_type = ["gqrs", "jqrs", "fp"]
+sample_name = 'v736s'
+start = 270
+end = 280
+# ecg_ann_type = ["gqrs", "jqrs", "fp"]
+ecg_ann_type = ['fp']
 
 # choose the lead to plot (annotations are generated off the first lead)
 channel_index = 0
 
-# plot_annotations(data_path, ann_path, fp_ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs, loc=4)
+plot_annotations(data_path, ann_path, fp_ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs, loc=4)
 
 
 # In[ ]:

@@ -328,20 +328,20 @@ def ventricular_beat_annotations(lf_subsig, sub_subsig, sample, ann_type, start_
     return ventricular_beat_indices
 
 
-start = 290 * parameters.DEFAULT_ECG_FS
-end = 300 * parameters.DEFAULT_ECG_FS
-start_time = 290
-end_time = 300
-order = 50
-sample_name = "v803l"
-ecg_ann_type = "fp"
-sig, fields = wfdb.rdsamp(data_path + sample_name)
-channel = "V"
-channel_index = 1
-ann_type = annotate.get_ann_type(channel, channel_index, ecg_ann_type)
-channel_sig = sig[start:end,channel_index]
-lf, sub = get_lf_sub(channel_sig, order)
-print ventricular_beat_annotations(lf, sub, fp_ann_path + sample_name, ann_type, start_time, end_time, verbose=True)
+# start = 290 * parameters.DEFAULT_ECG_FS
+# end = 300 * parameters.DEFAULT_ECG_FS
+# start_time = 290
+# end_time = 300
+# order = 50
+# sample_name = "v803l"
+# ecg_ann_type = "fp"
+# sig, fields = wfdb.rdsamp(data_path + sample_name)
+# channel = "V"
+# channel_index = 1
+# ann_type = annotate.get_ann_type(channel, channel_index, ecg_ann_type)
+# channel_sig = sig[start:end,channel_index]
+# lf, sub = get_lf_sub(channel_sig, order)
+# print ventricular_beat_annotations(lf, sub, fp_ann_path + sample_name, ann_type, start_time, end_time, verbose=True)
 
 
 # In[13]:
@@ -495,10 +495,10 @@ def test_ventricular_tachycardia(data_path,
 #                          'v569l', 'v581l', 'v583l', 'v598s', 'v609l', 'v633l', 'v634s', 'v640s', 'v658s', 'v682s',
 #                          'v687l', 'v721l', 'v725l', 'v736s', 'v766s', 'v767l', 'v770s', 'v775l', 'v791l', 'v795l',
 #                          'v804s', 'v814s', 'v843l', 'v845l', 'v846s']
-sample_name = "v148s"
+# sample_name = "v148s"
 
-fp_ann_path = "sample_data/fplesinger_data/output/"
-print test_ventricular_tachycardia(data_path, ann_path, sample_name, 'gqrs', True)
+# fp_ann_path = "sample_data/fplesinger_data/output/"
+# print test_ventricular_tachycardia(data_path, ann_path, sample_name, 'gqrs', True)
 
 
 # ## Ventricular flutter/fibrillation
@@ -667,8 +667,8 @@ def test_ventricular_flutter_fibrillation(data_path,
 sample_name = "f593l"
 # sample_name = "f450s" # false negative --> fixed
 # sample_name = "f543l" # true positive
-fp_ann_path = "sample_data/fplesinger_data/output/"
-print test_ventricular_flutter_fibrillation(data_path, fp_ann_path, sample_name, 'fp')
+# fp_ann_path = "sample_data/fplesinger_data/output/"
+# print test_ventricular_flutter_fibrillation(data_path, fp_ann_path, sample_name, 'fp')
 
 
 # In[ ]:

@@ -15,8 +15,8 @@ import wfdb
 import math
 import csv
 
-get_ipython().magic(u'matplotlib inline')
-get_ipython().magic(u'config IPCompleter.greedy=True')
+# get_ipython().magic(u'matplotlib inline')
+# get_ipython().magic(u'config IPCompleter.greedy=True')
 
 
 data_path = 'sample_data/challenge_training_data/'
@@ -208,8 +208,8 @@ def is_sample_regular(data_path,
             return True
     return False
 
-sample_name = "v666s"
-print is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type)
+# sample_name = "v666s"
+# print is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type)
 
 
 # ### Check regular activity of intermediate data

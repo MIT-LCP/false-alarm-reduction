@@ -15,8 +15,8 @@ import wfdb
 import os
 import json
 
-get_ipython().magic(u'matplotlib inline')
-get_ipython().magic(u'config IPCompleter.greedy=True')
+# get_ipython().magic(u'matplotlib inline')
+# get_ipython().magic(u'config IPCompleter.greedy=True')
 
 data_path = 'sample_data/challenge_training_data/'
 ann_path = 'sample_data/challenge_training_multiann/'
