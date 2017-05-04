@@ -289,7 +289,7 @@ ecg_ann_type = ['fp']
 # choose the lead to plot (annotations are generated off the first lead)
 channel_index = 0
 
-plot_annotations(data_path, ann_path, fp_ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs, loc=4)
+# plot_annotations(data_path, ann_path, fp_ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs, loc=4)
 
 
 # In[ ]:

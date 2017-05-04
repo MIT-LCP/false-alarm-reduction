@@ -223,7 +223,7 @@ if __name__ == '__main__':
     print "GQRS"
 
     ecg_ann_type = "gqrs"
-    write_filename = "../sample_data/dtw_beat/vtach_min_gqrs_multchannels.json"
+    write_filename = "../sample_data/baseline_performance/vtach_best_try2.json"
     run(data_path, ann_path, fp_ann_path, write_filename, ecg_ann_type)
 
     matrix = read_json(write_filename)

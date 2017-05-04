@@ -433,7 +433,7 @@ def is_sample_regular(data_path,
         for channel_index in nonresp_channels: 
             channel = channels[channel_index]
 
-            with open(fp_ann_path + sample_name + "-invalids.csv", "r") as f: 
+            with open(ann_path + sample_name + "-invalids.csv", "r") as f: 
                 reader = csv.reader(f)
                 channel_invalids = [ int(float(row[channel_index])) for row in reader]
                 invalids[channel] = channel_invalids[start*250:end*250]
@@ -1072,10 +1072,10 @@ def adjust_dominant_freqs(dominant_freqs, regular_activity):
 def classify_alarm(data_path, ann_path, fp_ann_path, sample_name, ecg_ann_type, verbose=False): 
     sig, fields = wfdb.srdsamp(data_path + sample_name)
 
-    if ecg_ann_type == 'fp': 
-        ann_path = fp_ann_path
+    # if ecg_ann_type == 'fp': 
+    ann_path = fp_ann_path
 
-    is_regular = is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type)    
+    is_regular = is_sample_regular(data_path, ann_path, sample_name, 'fp')    
     if is_regular:
         return False
 
@@ -1090,8 +1090,8 @@ def classify_alarm(data_path, ann_path, fp_ann_path, sample_name, ecg_ann_type, 
         arrhythmia_test = test_tachycardia
     
     elif alarm_type == "v": 
-        # ann_path = fp_ann_path
-        # ecg_ann_type = 'fp'
+        ann_path = fp_ann_path
+        ecg_ann_type = 'fp'
         arrhythmia_test = test_ventricular_tachycardia
     
     elif alarm_type == "f": 

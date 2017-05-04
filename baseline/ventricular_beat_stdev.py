@@ -128,12 +128,12 @@ def get_self_beats(
 
     dprint("Found", len(self_beats), "self beats.")
 
-    # if DEBUG: 
-    #     plt.figure()
-    #     for i, beat in enumerate(self_beats):
-    #         plt.subplot(5, 4, i+1)
-    #         plt.plot(beat[1])
-    #     plt.show()
+    if DEBUG: 
+        plt.figure()
+        for i, beat in enumerate(self_beats):
+            plt.subplot(5, 4, i+1)
+            plt.plot(beat[1])
+        plt.show()
 
     return self_beats
 
@@ -275,17 +275,17 @@ def get_dtw_distances(beat_sig, self_beats, radius=250):
             distance, path = fastdtw(beat_sig_normalized, self_beat_normalized, radius=radius, dist=euclidean)
             distances.append(distance)
 
-            # plt.subplot(5, 4, figure_num)
-            # plt.title(str(int(distance)))
-            # plt.plot(self_beat_normalized, 'b-')
-            # plt.plot(beat_sig_normalized, 'r-')
-            # plt.axis('off')
-            # figure_num += 1
+            plt.subplot(5, 4, figure_num)
+            plt.title(str(int(distance)))
+            plt.plot(self_beat_normalized, 'b-')
+            plt.plot(beat_sig_normalized, 'r-')
+            plt.axis('off')
+            figure_num += 1
 
         except Exception as e: 
             print e
 
-    # plt.show()
+    plt.show()
     return distances
 
 
@@ -297,8 +297,8 @@ def get_dtw_distances(beat_sig, self_beats, radius=250):
 #           else: [ mean, std ]
 ##
 def is_ventricular_beat_stdev(beat_sig, self_beats, metric, metric_info, threshold): 
-    # plt.figure(figsize=[12, 8])
-    # plt.title(str(metric_info[0]) + " " + str(metric_info[1]))
+    plt.figure(figsize=[12, 8])
+    plt.title(str(metric_info[0]) + " " + str(metric_info[1]))
     beat_distances = get_dtw_distances(beat_sig, self_beats)
 
     if len(beat_distances) == 0: 
@@ -563,14 +563,14 @@ def write_vtach_beats_files(
 def run_one_sample():
     # sample_name = "v100s" # false alarm
     # sample_name = "v141l" # noisy at beginning
-    sample_name = "v159l" # quite clean
+    # sample_name = "v159l" # quite clean
     # sample_name = "v206s" # high baseline
     # sample_name = "v143l"
     # sample_name = "v696s"
-    # sample_name = "v797l"
+    sample_name = "v797l"
     channel_index = 0
     ann_fs = 250.
-    ann_type = 'fp' + str(channel_index)
+    ann_type = 'gqrs' + str(channel_index)
 
     sig, fields = wfdb.srdsamp(data_path + sample_name)
     channel_sig = sig[:,channel_index]
@@ -588,14 +588,13 @@ data_path = "../sample_data/challenge_training_data/"
 ann_path = "../sample_data/challenge_training_multiann/"
 fp_path = "../sample_data/fplesinger_data/"
 output_path = "../sample_data/vtach_beat_ann/std/"
-start_time = 290
+start_time = 296
 end_time = 300
-ecg_ann_type = "fp"
-ann_path = fp_path
+ecg_ann_type = "gqrs"
 
-# run_one_sample()
+run_one_sample()
 
-write_vtach_beats_files(data_path, ann_path, output_path, ecg_ann_type, start_time, end_time, 'min')
+# write_vtach_beats_files(data_path, ann_path, output_path, ecg_ann_type, start_time, end_time, 'min')
 
 
 # sig, fields = wfdb.rdsamp(data_path + sample_name)
