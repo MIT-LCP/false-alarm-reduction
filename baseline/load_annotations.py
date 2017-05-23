@@ -271,8 +271,9 @@ def plot_annotations(data_path, ann_path, fp_ann_path, sample_name, channel_inde
 
 
     plt.xlabel('Time (seconds)',fontsize=12)
-    plt.legend(fontsize=12, loc=loc)
-    plt.grid()
+    # plt.legend(fontsize=12, loc=loc)
+    plt.axis('off')
+    # plt.grid()
     plt.show()
 
     return annotation
@@ -280,16 +281,16 @@ def plot_annotations(data_path, ann_path, fp_ann_path, sample_name, channel_inde
 # In[18]:
 
 data_fs = 250
-sample_name = 'v368s'
-start = 290
-end = 300
+sample_name = 'v206s'
+start = 286
+end = 294
 # ecg_ann_type = ["gqrs", "jqrs", "fp"]
 ecg_ann_type = ['gqrs']
 
 # choose the lead to plot (annotations are generated off the first lead)
 channel_index = 0
 
-plot_annotations(data_path, ann_path, fp_ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs, loc=4)
+plot_annotations(data_path, ann_path, fp_ann_path, sample_name, channel_index, start, end, ecg_ann_type, data_fs, loc=2)
 
 
 # In[ ]:

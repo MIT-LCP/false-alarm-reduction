@@ -25,7 +25,7 @@ def read_signals(data_path):
         if filename.endswith(HEADER_EXTENSION):
             sample_name = filename.rstrip(HEADER_EXTENSION)
 
-            sig, fields = wfdb.rdsamp(data_path + sample_name)
+            sig, fields = wfdb.srdsamp(data_path + sample_name)
 
             signals_dict[sample_name] = sig
             fields_dict[sample_name] = fields
@@ -272,11 +272,11 @@ def predict(test_sig, test_fields, sig_training_by_arrhythmia, fields_training_b
     for sample_name, train_sig in sig_training.items():
         train_fields = fields_training[sample_name]
 
-        channels_dists = sig_distance_from_file(test_sig, test_fields, train_sig, train_fields, new_fs)
+        # channels_dists = sig_distance_from_file(test_sig, test_fields, train_sig, train_fields, new_fs)
         # print "sample_name: ", sample_name, "channels_dists: ", channels_dists
         # if len(channels_dists.keys()) == 0: 
         #     print "Processing sample {} from scratch".format(sample_name)
-        #     channels_dists = sig_distance(test_sig, test_fields, train_sig, train_fields, radius, new_fs)
+        channels_dists = sig_distance(test_sig, test_fields, train_sig, train_fields, radius, new_fs)
         
         distance = normalize_distances(channels_dists)
 
@@ -344,15 +344,15 @@ if __name__ == '__main__':
     new_fs = 125
     num_training = 500
     arrhythmias = ['a', 'b', 't', 'v', 'f']
-    # matrix_filename = "../sample_data/dtw_radius0.json"
-    # distances_filename = "../sample_data/dtw_distances_radius0.json"
+    matrix_filename = "../sample_data/dtw_full/dtw_radius0_try2.json"
+    distances_filename = "../sample_data/dtw_distances_radius0_try2.json"
 
-    matrix_filename = "../sample_data/dtw_fromfile.json"
-    distances_filename = "../sample_data/dtw_distances_fromfile.json"
+    # matrix_filename = "../sample_data/dtw_fromfile.json"
+    # distances_filename = "../sample_data/dtw_distances_fromfile.json"
 
     # matrix_filename = "../sample_data/pipeline_fpinvalids_vtachfpann.json"
 
-    # run(data_path, num_training, arrhythmias, matrix_filename, distances_filename, radius=new_fs*2, new_fs=new_fs)
+    run(data_path, num_training, arrhythmias, matrix_filename, distances_filename, radius=0, new_fs=new_fs)
 
     matrix = read_json(matrix_filename)
     min_distances = read_json(distances_filename)

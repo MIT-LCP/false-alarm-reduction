@@ -21,7 +21,7 @@ import wfdb
 
 data_path = '../sample_data/challenge_training_data/'
 ann_path = '../sample_data/challenge_training_multiann/'
-fp_ann_path = '../sample_data/fplesinger_data/'
+# fp_ann_path = '../sample_data/fplesinger_data/'
 
 
 # ## Classifying arrhythmia alarms
@@ -87,12 +87,12 @@ def generate_confusion_matrix_dir(data_path, ann_path, fp_ann_path, ecg_ann_type
         if filename.endswith(parameters.HEADER_EXTENSION):
             sample_name = filename.rstrip(parameters.HEADER_EXTENSION)
 
-            if sample_name[0] != 'v': 
-                continue
+            # if sample_name[0] != 'v': 
+            #     continue
 
-            sig, fields = wfdb.srdsamp(data_path + sample_name)
-            if "II" not in fields['signame']: 
-                continue
+            # sig, fields = wfdb.srdsamp(data_path + sample_name)
+            # if "II" not in fields['signame']: 
+            #     continue
             
             true_alarm = is_true_alarm(data_path, sample_name)
             classified_true_alarm = classify_alarm(data_path, ann_path, fp_ann_path, sample_name, ecg_ann_type)
@@ -223,8 +223,8 @@ if __name__ == '__main__':
     print "GQRS"
 
     ecg_ann_type = "gqrs"
-    write_filename = "../sample_data/baseline_performance/vtach_best_try2.json"
-    run(data_path, ann_path, fp_ann_path, write_filename, ecg_ann_type)
+    write_filename = "../sample_data/dtw_beat/vtach_min_gqrs_try2.json"
+    run(data_path, ann_path, "", write_filename, ecg_ann_type)
 
     matrix = read_json(write_filename)
     counts = get_counts(matrix)

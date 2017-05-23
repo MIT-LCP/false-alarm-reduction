@@ -120,7 +120,7 @@ def get_self_beats(
                     #     plt.plot(beat_sig)
                     #     plt.show()
 
-                    if len(peaks) < 3: 
+                    if len(peaks) < 2: 
                         self_beats.append((annotation[ann_index], beat_sig))
 
                 if len(self_beats) >= num_self_beats: 
@@ -379,6 +379,13 @@ def get_alarm_beats(channel_sig, annotation):
         if len(beat_sig) > MIN_PEAK_DIST and len(beat_sig) < MAX_PEAK_DIST: 
             beats.append(beat)
 
+    if DEBUG: 
+        plt.figure()
+        for i, beat in enumerate(beats):
+            plt.subplot(5, 4, i+1)
+            plt.plot(beat[1])
+        plt.show()
+
     return beats
 
 
@@ -457,7 +464,7 @@ def ventricular_beat_annotations_dtw(
         file_prefix="../sample_data/vtach_beat_ann/std/baseline_distances_",
         ann_fs=250.):
 
-    baseline_dist_filename = file_prefix + sample_name + ".json"
+    baseline_dist_filename = file_prefix + sample_name + "_1peak.json"
 
     dprint("Finding alarm beats...")
     annotation = get_annotation(ann_path + sample_name, ann_type, ann_fs, start_time, end_time).annsamp
@@ -492,9 +499,7 @@ def ventricular_beat_annotations_dtw(
 
     dprint("Classifying alarm beats...")
     ventricular_beats, nonventricular_beats = get_ventricular_beats(alarm_beats, self_beats, metric, metric_info)
-    print "ventricular: ", len(ventricular_beats), ventricular_beats
     vtach_beats = filter_out_nan(ventricular_beats)
-    print "filtered: ", len(vtach_beats), vtach_beats
 
     # Only find distances if ventricular beats were found
     if len(vtach_beats) > 1: 
@@ -533,12 +538,10 @@ def write_vtach_beats_files(
                 print "Lead II not found for sample: ", sample_name
                 continue
 
-            output_filename = output_path + sample_name + "_fp_" + metric + ".csv"
+            output_filename = output_path + sample_name + "_1peak_" + metric + ".csv"
 
             if os.path.isfile(output_filename): 
                 continue
-
-            print sample_name
 
             channel_index = fields['signame'].index("II")
             ann_type = ecg_ann_type + str(channel_index)
@@ -567,7 +570,7 @@ def run_one_sample():
     # sample_name = "v206s" # high baseline
     # sample_name = "v143l"
     # sample_name = "v696s"
-    sample_name = "v797l"
+    sample_name = "v837l"
     channel_index = 0
     ann_fs = 250.
     ann_type = 'gqrs' + str(channel_index)
@@ -575,7 +578,7 @@ def run_one_sample():
     sig, fields = wfdb.srdsamp(data_path + sample_name)
     channel_sig = sig[:,channel_index]
 
-    vtach_beats, nonvtach_beats = ventricular_beat_annotations_dtw(channel_sig, ann_path, sample_name, 'kl', start_time, end_time, ann_type)
+    vtach_beats, nonvtach_beats = ventricular_beat_annotations_dtw(channel_sig, ann_path, sample_name, 'min', start_time, end_time, ann_type)
 
     plt.figure(figsize=[8,5])
     plt.plot(channel_sig[int(start_time*250.):int(end_time*250.)],'b-')
@@ -588,7 +591,7 @@ data_path = "../sample_data/challenge_training_data/"
 ann_path = "../sample_data/challenge_training_multiann/"
 fp_path = "../sample_data/fplesinger_data/"
 output_path = "../sample_data/vtach_beat_ann/std/"
-start_time = 296
+start_time = 290
 end_time = 300
 ecg_ann_type = "gqrs"
 

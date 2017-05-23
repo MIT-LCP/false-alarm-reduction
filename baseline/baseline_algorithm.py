@@ -264,7 +264,7 @@ def get_annotation(sample, ann_type, ann_fs, start, end):
         annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
     except Exception as e: 
         annotation = wfdb.Annotation(sample, ann_type, [], [])
-        print("Error getting annotation for sample ", sample, e)
+        print("Error getting annotation for sample ", sample, ann_type, e)
     
     return annotation
 
@@ -428,19 +428,19 @@ def is_sample_regular(data_path,
     else: 
         alarm_duration = end - start
     
-    try: 
-        invalids = {}
-        for channel_index in nonresp_channels: 
-            channel = channels[channel_index]
+    # try: 
+    #     invalids = {}
+    #     for channel_index in nonresp_channels: 
+    #         channel = channels[channel_index]
 
-            with open(ann_path + sample_name + "-invalids.csv", "r") as f: 
-                reader = csv.reader(f)
-                channel_invalids = [ int(float(row[channel_index])) for row in reader]
-                invalids[channel] = channel_invalids[start*250:end*250]
+    #         with open(ann_path + sample_name + "-invalids.csv", "r") as f: 
+    #             reader = csv.reader(f)
+    #             channel_invalids = [ int(float(row[channel_index])) for row in reader]
+    #             invalids[channel] = channel_invalids[start*250:end*250]
                         
-    except Exception as e: 
-        print("Error finding invalids for sample " + sample_name, e)
-        invalids = calculate_invalids_sig(sig, fields, start, end)
+    # except Exception as e: 
+    #     print("Error finding invalids for sample " + sample_name, e)
+    #     invalids = calculate_invalids_sig(sig, fields, start, end)
 
     invalids = calculate_invalids_sig(sig, fields, start, end)
 
@@ -564,26 +564,26 @@ def test_ventricular_tachycardia(data_path,
     size = int((alarm_duration - window_size) / rolling_increment) + 1
     r_vector = [0.] * size
 
-    # index = int(channels.index("II"))
-    # ann_type = get_ann_type("II", index, ecg_ann_type)
-    # r_delta = get_ventricular_beats_scores(alarm_sig[:,int(index)], ann_path, sample_name, ann_type, start_time, end_time, "II")
-    # r_vector = r_vector + r_delta
+    index = int(channels.index("II"))
+    ann_type = get_ann_type("II", index, ecg_ann_type)
+    r_delta = get_ventricular_beats_scores(alarm_sig[:,int(index)], ann_path, sample_name, ann_type, start_time, end_time, "II")
+    r_vector = r_vector + r_delta
 
     # Adjust R vector based on ventricular beats in signal
-    for channel_index in ecg_channels:
-        index = int(channel_index)
-        channel_name = channels[index]
-        ann_type = get_ann_type(channel_name, index, ecg_ann_type)
+    # for channel_index in ecg_channels:
+    #     index = int(channel_index)
+    #     channel_name = channels[index]
+    #     ann_type = get_ann_type(channel_name, index, ecg_ann_type)
             
-        r_delta = get_ventricular_beats_scores(alarm_sig[:,int(index)], ann_path, sample_name, ann_type, start_time, end_time, channel_name)
-        r_vector = r_vector + r_delta
+    #     r_delta = get_ventricular_beats_scores(alarm_sig[:,int(index)], ann_path, sample_name, ann_type, start_time, end_time, channel_name)
+    #     r_vector = r_vector + r_delta
                 
-        if verbose: 
-            channel_sig = alarm_sig[:,index]
-            lf, sub = get_lf_sub(channel_sig, order)
-            ventricular_beats = ventricular_beat_annotations(lf, sub, ann_path + sample_name, ann_type, start_time, end_time, verbose)
-            max_hr = max_ventricular_hr(ventricular_beats, num_beats, fs)
-            print(str(sample_name) + " on channel "  + str(channels[int(channel_index)]) + " with max ventricular HR: ", str(max_hr))
+    #     if verbose: 
+    #         channel_sig = alarm_sig[:,index]
+    #         lf, sub = get_lf_sub(channel_sig, order)
+    #         ventricular_beats = ventricular_beat_annotations(lf, sub, ann_path + sample_name, ann_type, start_time, end_time, verbose)
+    #         max_hr = max_ventricular_hr(ventricular_beats, num_beats, fs)
+    #         print(str(sample_name) + " on channel "  + str(channels[int(channel_index)]) + " with max ventricular HR: ", str(max_hr))
           
     return any([ r_value > 0 for r_value in r_vector ])
 
@@ -909,21 +909,21 @@ def get_ventricular_beats_scores(channel_sig,
         start_time = initial_start_time + start/fs
         end_time = start_time + window_size
         
-        if channel_name == "II": 
+        try: 
             ventricular_beats, nonventricular_beats = read_ventricular_beat_annotations(sample_name, "min")
-
-        else: 
-            ventricular_beats = ventricular_beat_annotations(lf_subsig, sub_subsig, ann_path + sample_name, ann_type, start_time, end_time)
-
-        max_hr = max_ventricular_hr(ventricular_beats, num_beats, fs)
+            max_hr = max_ventricular_hr(ventricular_beats, num_beats, fs)
             
-        invalids = calculate_channel_invalids(channel_subsig, "ECG")
-        cval = calculate_cval_channel(invalids)
-                
-        if max_hr > max_hr_threshold: 
-            r_delta = np.append(r_delta, cval)
-        else: 
-            r_delta = np.append(r_delta, 0) #-cval)
+            invalids = calculate_channel_invalids(channel_subsig, "ECG")
+            cval = calculate_cval_channel(invalids)
+                    
+            if max_hr > max_hr_threshold: 
+                r_delta = np.append(r_delta, cval)
+            else: 
+                r_delta = np.append(r_delta, 0) #-cval)
+
+        except Exception as e: 
+            print sample_name, e
+            r_delta = np.append(r_delta, 1)
             
         end += (rolling_increment * fs)
             
@@ -1073,9 +1073,9 @@ def classify_alarm(data_path, ann_path, fp_ann_path, sample_name, ecg_ann_type, 
     sig, fields = wfdb.srdsamp(data_path + sample_name)
 
     # if ecg_ann_type == 'fp': 
-    ann_path = fp_ann_path
+    # ann_path = fp_ann_path
 
-    is_regular = is_sample_regular(data_path, ann_path, sample_name, 'fp')    
+    is_regular = is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type)    
     if is_regular:
         return False
 
@@ -1090,8 +1090,8 @@ def classify_alarm(data_path, ann_path, fp_ann_path, sample_name, ecg_ann_type, 
         arrhythmia_test = test_tachycardia
     
     elif alarm_type == "v": 
-        ann_path = fp_ann_path
-        ecg_ann_type = 'fp'
+        # ann_path = fp_ann_path
+        # ecg_ann_type = 'fp'
         arrhythmia_test = test_ventricular_tachycardia
     
     elif alarm_type == "f": 
