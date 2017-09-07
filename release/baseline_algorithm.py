@@ -660,7 +660,7 @@ def calc_summed_asystole_score(ann_path,
                                current_start, 
                                current_end,
                                verbose=False, 
-                               data_fs=parameters.DEFAULT_FS): 
+                               data_fs=parameters.DEFAULT_ECG_FS): 
     summed_score = 0
     
     for channel_index, channel in zip(range(len(channels)), channels): 
@@ -818,7 +818,7 @@ def get_lf_sub(channel_sig, order):
 # Return list of ventricular beats for ECG channels
 def ventricular_beat_annotations(lf_subsig, sub_subsig, sample, ann_type, start_time, end_time, 
                                  verbose=False,
-                                 fs=parameters.DEFAULT_FS,
+                                 fs=parameters.DEFAULT_ECG_FS,
                                  threshold_ratio=parameters.VENTRICULAR_BEAT_THRESHOLD_RATIO,
                                  ann_fs=parameters.DEFAULT_ECG_FS):    
     annotation = get_annotation(sample, ann_type, ann_fs, start_time, end_time)
@@ -888,7 +888,7 @@ def get_ventricular_beats_scores(channel_sig,
                                  initial_start_time, 
                                  initial_end_time,
                                  channel_name,
-                                 fs=parameters.DEFAULT_FS,
+                                 fs=parameters.DEFAULT_ECG_FS,
                                  order=parameters.ORDER, 
                                  max_hr_threshold=parameters.VTACH_MAX_HR,
                                  num_beats=parameters.VTACH_NUM_BEATS,
@@ -934,7 +934,7 @@ def get_abp_std_scores(channel_sig,
                        std_threshold,
                        window_size,
                        rolling_increment,
-                       fs=parameters.DEFAULT_FS):
+                       fs=parameters.DEFAULT_ECG_FS):
     r_delta = np.array([])
     end = window_size * fs
     
@@ -1107,10 +1107,10 @@ def classify_alarm(data_path, ann_path, fp_ann_path, sample_name, ecg_ann_type, 
     #     return True
 
 
-if __name__ == '__main__': 
-    data_path = '../sample_data/challenge_training_data/'
-    ann_path = '../sample_data/challenge_training_multiann/'
-    fp_ann_path = '../sample_data/fplesinger_data/'
-    ecg_ann_type = 'gqrs'
+# if __name__ == '__main__': 
+#     data_path = '../sample_data/challenge_training_data/'
+#     ann_path = '../sample_data/challenge_training_multiann/'
+#     fp_ann_path = '../sample_data/fplesinger_data/'
+#     ecg_ann_type = 'gqrs'
 
-    print(classify_alarm(data_path, ann_path, fp_ann_path, "v199l", ecg_ann_type))
+#     print(classify_alarm(data_path, ann_path, fp_ann_path, "v199l", ecg_ann_type))
