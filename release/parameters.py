@@ -19,7 +19,6 @@ training_filename = "vtach_beats.csv"                       # Filename of true v
 sigtypes_filename = "sigtypes"                              # Filename for channel types based on channel name
 
 
-
 ##### Filename extensions #####
 HEADER_EXTENSION = ".hea"
 JQRS_EXTENSION = ".jqrs"
