@@ -2,13 +2,22 @@ import numpy as np
 
 ##### Filepaths #####
 ecg_ann_type = "gqrs"
-data_path = '../sample_data/challenge_training_data/'  # Path for data 
+data_path = '../sample_data/challenge_training_data/'       # Path for data 
 ann_path = '../sample_data/challenge_training_multiann/'    # Path for annotations
-write_filename = "../sample_data/dtw_beat/vtach_min_gqrs_try2.json"    # Filename for results of baseline algorithm
-# fp_ann_path = '../sample_data/fplesinger_data/'
+write_filename = "test.json"                                # Filename for results of baseline algorithm
 
-matrix_filename = "../sample_data/dtw_full/dtw_radius0_try2.json"    # Filename of confusion matrix classifications
-distances_filename = "../sample_data/dtw_distances_radius0_try2.json"    # Filename of warped distances between files
+matrix_filename = "matrix.json"                             # Filename of confusion matrix classifications
+distances_filename = "distances.json"                       # Filename of warped distances between files
+
+output_path_bank = "../sample_data/vtach_beat_ann/bank"     # Path for generated vtach beat annotations (bank)
+output_path_std = "../sample_data/vtach_beat_ann/std/"      # Path for generated vtach beat annotations (std)
+output_path_std_distances = output_path_std + "baseline_distances_"
+
+
+# DON'T CHANGE THESE FILEPATHS
+training_filename = "vtach_beats.csv"                       # Filename of true vtach beat bank classifications
+sigtypes_filename = "sigtypes"                              # Filename for channel types based on channel name
+
 
 
 ##### Filename extensions #####

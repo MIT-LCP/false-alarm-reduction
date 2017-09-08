@@ -1,0 +1,647 @@
+BP	ABP
+BP	ABP 
+BP	ABP_1/2
+BP	ABP_2/2
+BP	ABPdias
+BP	ABPDias
+BP	ABPDiasTrend
+BP	ABPmean
+BP	ABPMean
+BP	ABPMeanTrend
+BP	ABPSQI
+BP	ABPsys
+BP	ABPSys
+BP	ABPSysTrend
+BP	AOBP_1/2
+BP	ART
+BP	ART 
+BP	ART 1
+BP	ART1 
+BP	ART_1/2
+BP	ART1dias
+BP	ART1mean
+BP	ART1sys
+BP	ART_2/2
+BP	ARTdias
+BP	ART^M                 
+BP	ARTmean
+BP	ARTsys
+BP	BP
+BP	 BP
+BP	CPP
+BP	CVP
+BP	CVP_1/2
+BP	CVP_1/3
+BP	CVP_2/2
+BP	CVP_2/3
+BP	CVP 3
+BP	CVP_3/3
+BP	FAP
+BP	FAP_1/3
+BP	FAP_2/3
+BP	FAP_3/3
+BP	IC1
+BP	IC1_1/3
+BP	IC1_2/3
+BP	IC1_3/3
+BP	IC2
+BP	IC2_1/3
+BP	IC2_2/3
+BP	IC2_3/3
+BP	ICP_1/3
+BP	ICP_2/3
+BP	ICP_3/3
+BP	LAP
+BP	LAP_1/3
+BP	LAP_2/3
+BP	LAP_3/3
+BP	LOC-ROC
+BP	NBP_1/2
+BP	NBP_2/2
+BP	NBPdias
+BP	NBPDias
+BP	NBPmean
+BP	NBPMean
+BP	NBPsys
+BP	NBPSys
+BP	P4dias
+BP	P4mean
+BP	P4sys
+BP	PA
+BP	PAP
+BP	PAP 
+BP	PAP_1/2
+BP	PAP 2
+BP	PAP_2/2
+BP	PAPdias
+BP	PAPDias
+BP	PAPmean
+BP	PAPMean
+BP	PAPsys
+BP	PAPSys
+BP	PAWP
+BP	PAWP_1/2
+BP	PAWP_1/3
+BP	PAWP_2/3
+BP	PAWP_3/3
+BP	Pressure
+BP	Pressure 
+BP	Pressure1
+BP	Pressure 1
+BP	Pressure 2
+BP	Pressure 3
+BP	Pressure 4
+BP	RAP_1/2
+BP	RAP_1/3
+BP	RAP_2/3
+BP	RAP_3/3
+BP	UAP
+BP	UAP_1/2
+BP	UAP_2/2
+BP	UAPdias
+BP	UAPmean
+BP	UAPsys
+CO2	C02
+CO2	Co2
+CO2	CO2
+CO2	CO2^M 
+CO2	CPCO2
+CO2	CPCO2_1/3
+CO2	CPCO2_2/3
+CO2	CPCO2_3/3
+CO	CI
+CO	CO
+CO	C.O.
+CO	CO_1/2
+CO	CO_1/3
+CO	CO_2/2
+CO	CO_2/3
+CO	CO_3/3
+ECG	Abdomen_1
+ECG	Abdomen_2
+ECG	Abdomen_3
+ECG	Abdomen_4
+ECG	A-I
+ECG	A-S
+ECG	avf
+ECG	aVF
+ECG	AVF
+ECG	AVF+
+ECG	avl
+ECG	aVL
+ECG	AVL
+ECG	avr
+ECG	aVR
+ECG	AVR
+ECG	CC5
+ECG	chan 1
+ECG	chan 2
+ECG	chan 3
+ECG	CM2
+ECG	CM4
+ECG	CM5
+ECG	CS12
+ECG	CS34
+ECG	CS56
+ECG	CS78
+ECG	CS90
+ECG	D3
+ECG	D4
+ECG	ECG
+ECG	 ECG
+ECG	ECG0
+ECG	ECG1
+ECG	ECG 1
+ECG	ECG 2
+ECG	ECG 3
+ECG	ECG 4
+ECG	ECG AVF
+ECG	ECG       [ECG1]
+ECG	ECG F
+ECG	ECG I
+ECG	ECG II
+ECG	ECG III
+ECG	ECG lead 1
+ECG	ECG lead 2
+ECG	ECG lead 3
+ECG	ECG Lead AVF
+ECG	ECG lead AVL
+ECG	ECG lead I
+ECG	ECG Lead I
+ECG	ECG lead II
+ECG	ECG lead II 
+ECG	ECG LeadII
+ECG	ECG Lead II
+ECG	ECG lead III
+ECG	ECG Lead III
+ECG	ECG lead V
+ECG	ECG Lead V
+ECG	ECG Lead V 
+ECG	ECG Lead V3
+ECG	ECG Lead V4
+ECG	ECG lead V5
+ECG	ECG Lead V5
+ECG	ECG lead V6
+ECG	ECG signal 0
+ECG	ECG signal 1
+ECG	ECG V
+ECG	ECG V3
+ECG	ECG V Lead
+ECG	EKG1-CHIN
+ECG	EKG1-EKG2
+ECG	E-S
+ECG	i
+ECG	I
+ECG	I 
+ECG	I+
+ECG	ii
+ECG	II
+ECG	II 
+ECG	II+
+ECG	iii
+ECG	III
+ECG	III 
+ECG	III+
+ECG	lead I
+ECG	lead II
+ECG	lead V
+ECG	MCL
+ECG	MCL1
+ECG	MCL1 
+ECG	MCL1+
+ECG	ML2
+ECG	ML5
+ECG	MLI
+ECG	MLII
+ECG	MLIII
+ECG	mod.V1
+ECG	MV2
+ECG	MV2   
+ECG	V
+ECG	V 
+ECG	V+
+ECG	v1
+ECG	V1
+ECG	V1-V2
+ECG	v2
+ECG	V2
+ECG	V2-V3
+ECG	v3
+ECG	V3
+ECG	v4
+ECG	V4
+ECG	V4-V5
+ECG	v5
+ECG	V5
+ECG	v6
+ECG	V6
+ECG	VCGMAG
+ECG	vx
+ECG	vy
+ECG	vz
+EEG	Af3.
+EEG	Af4.
+EEG	Af7.
+EEG	Af8.
+EEG	Afz.
+EEG	C1..
+EEG	C2
+EEG	C2..
+EEG	C2-CS2
+EEG	C3
+EEG	C3..
+EEG	C3A2
+EEG	C3-CS2
+EEG	C3-P3
+EEG	C4
+EEG	C4..
+EEG	C4A1
+EEG	C4-CS2
+EEG	C4-P4
+EEG	C5..
+EEG	C6
+EEG	C6..
+EEG	C6-CS2
+EEG	Cp1.
+EEG	CP1-Ref
+EEG	Cp2.
+EEG	CP2
+EEG	CP2-CS2
+EEG	CP2-Ref
+EEG	Cp3.
+EEG	Cp4.
+EEG	CP4
+EEG	CP4-CS2
+EEG	Cp5.
+EEG	CP5-Ref
+EEG	Cp6.
+EEG	CP6
+EEG	CP6-CS2
+EEG	CP6-Ref
+EEG	Cpz.
+EEG	Cz..
+EEG	CZ
+EEG	CZ-CS2
+EEG	CZ-PZ
+EEG	EEG
+EEG	EEG C3-A2 [C3A2]
+EEG	EEG (C3-O1)
+EEG	EEG (C4-A1)
+EEG	EEG C4-A1 [C4A1]
+EEG	EEG Fpz-Cz
+EEG	EEG (O2-A1)
+EEG	EEG Pz-Oz
+EEG	EEG(sec)
+EEG	F1..
+EEG	F2..
+EEG	F3
+EEG	F3..
+EEG	F3-C3
+EEG	F3-CS2
+EEG	F4
+EEG	F4..
+EEG	F4-C4
+EEG	F4-CS2
+EEG	F5..
+EEG	F6..
+EEG	F7
+EEG	F7..
+EEG	F7-CS2
+EEG	F7-T7
+EEG	F8
+EEG	F8..
+EEG	F8-CS2
+EEG	F8-T8
+EEG	Fc1.
+EEG	FC1-Ref
+EEG	Fc2.
+EEG	FC2-Ref
+EEG	Fc3.
+EEG	Fc4.
+EEG	Fc5.
+EEG	FC5-Ref
+EEG	Fc6.
+EEG	FC6-Ref
+EEG	Fcz.
+EEG	Fp1.
+EEG	FP1
+EEG	FP1-CS2
+EEG	FP1-F3
+EEG	FP1-F7
+EEG	Fp2.
+EEG	FP2
+EEG	FP2-CS2
+EEG	FP2-F4
+EEG	FP2-F8
+EEG	Fpz.
+EEG	FT10-T8
+EEG	Ft7.
+EEG	Ft8.
+EEG	FT9-FT10
+EEG	Fz..
+EEG	FZ
+EEG	FZ-CS2
+EEG	FZ-CZ
+EEG	Iz..
+EEG	LUE-RAE
+EEG	O1..
+EEG	O1-CS2
+EEG	O2
+EEG	O2..
+EEG	O2-CS2
+EEG	Oz..
+EEG	P1..
+EEG	P2..
+EEG	P3
+EEG	P3..
+EEG	P3-CS2
+EEG	P3-O1
+EEG	P4
+EEG	P4..
+EEG	P4-CS2
+EEG	P4-O2
+EEG	P5..
+EEG	P6..
+EEG	P7
+EEG	P7..
+EEG	P7-CS2
+EEG	P7-O1
+EEG	P7-T7
+EEG	P8
+EEG	P8..
+EEG	P8-CS2
+EEG	P8-O2
+EEG	Po3.
+EEG	Po4.
+EEG	Po7.
+EEG	Po8.
+EEG	Poz.
+EEG	Pz..
+EEG	PZ
+EEG	PZ-CS2
+EEG	PZ-OZ
+EEG	T10.
+EEG	T7
+EEG	T7..
+EEG	T7-CS2
+EEG	T7-FT9
+EEG	T7-P7
+EEG	T8
+EEG	T8..
+EEG	T8-CS2
+EEG	T8-P8
+EEG	T9..
+EEG	Tp7.
+EEG	Tp8.
+EMG	EHG1
+EMG	EHG2
+EMG	EHG3
+EMG	EHG4
+EMG	EHG5
+EMG	EHG6
+EMG	EHG7
+EMG	EHG8
+EMG	EHG9
+EMG	EHG10
+EMG	EHG11
+EMG	EHG12
+EMG	EHG13
+EMG	EHG14
+EMG	EHG15
+EMG	EHG16
+EMG	EMG
+EMG	EMG-Chin  [EMYG]
+EMG	EMG submental
+EMG	EMG Submental
+EMG	Left leg
+EMG	Right leg
+EMG	UC
+EOG	EOG
+EOG	EOG E1-A1 [EOGL]
+EOG	EOG E2-A1 [EOGR]
+EOG	EOG horizontal
+EOG	EOG(L)
+EOG	EOG(R)
+EOG	EOG (right)
+EOG	Lefteye
+EOG	RightEye
+EP	ABR
+HR	FHR
+Flow	Flow
+HR	Ectopic Count
+HR	HR
+HR	HR_1/2
+HR	HR_1/3
+HR	HR_2/2
+HR	HR_2/3
+HR	HR_3/3
+HR	HRABP
+HR	HRABPo
+HR	HRABPsh
+HR	HRABPSQI
+HR	HRECG
+HR	HRECGSQI
+HR	HRepltd
+HR	HRSH1
+HR	HRSH1SQI
+HR	HRSHm
+HR	HRSHmSQI
+HR	HRSQI
+HR	HRTrend
+HR	HRwqrs
+HR	PR
+HR	Pulse
+HR	PULSE
+HR	PULSE_1/2
+HR	PULSE_1/3
+HR	PULSE_2/2
+HR	PULSE_2/3
+HR	PULSE_3/3
+HR	PVC Rate per Minute
+HR	PVC Rate per Minute_1/2
+HR	PVC Rate per Minute_1/3
+HR	PVC Rate per Minute_2/2
+HR	PVC Rate per Minute_2/3
+HR	PVC Rate per Minute_3/3
+Noise	BW noise, signal 0
+Noise	BW noise, signal 1
+Noise	EM noise, signal 0
+Noise	EM noise, signal 1
+Noise	MA noise, signal 0
+Noise	MA noise, signal 1
+O2	CPO2
+O2	dSpO2
+O2	SaO2
+O2	SaO2      [OSAT]
+O2	SO2
+O2	SpO2
+O2	SpO2_1/2
+O2	SpO2_1/3
+O2	SpO2_2/2
+O2	SpO2_2/3
+O2	SpO2_3/3
+O2	SpO2_AP
+O2	SpO2 Aperiodic
+O2	SpO2 L
+O2	SpO2 R
+PLETH	PLETH
+PLETH	PLETH 
+PLETH	PLETH L
+PLETH	PLETH R
+Pos	BodyPos
+Pos	Position
+Resp	abdo
+Resp	Abdomen   [ABMV]
+Resp	ABDO RES
+Resp	AIRFLOW
+Resp	AWRR
+Resp	ETCO2
+Resp	Flow      [AFLO]
+Resp	IMCO2
+Resp	RESP
+Resp	 RESP
+Resp	RESP 
+Resp	RESP_1/2
+Resp	RESP_1/3
+Resp	RESP_2/2
+Resp	RESP_2/3
+Resp	RESP_3/3
+Resp	Resp A
+Resp	Resp (abdomen)
+Resp	Resp (abdominal)
+Resp	Resp C
+Resp	Resp (chest)
+Resp	Resp Imp
+Resp	Resp. Imp.
+Resp	Resp.Imp.
+Resp	RESP IMP
+Resp	Resp Inp.
+Resp	Resp N
+Resp	Resp (nasal)
+Resp	Resp oro-nasal
+Resp	Resp (sum)
+Resp	ribcage
+Resp	Sum
+Resp	Thorax_1
+Resp	Thorax_2
+Resp	Thorax    [CHMV]
+Resp	THOR RES
+SCG	SCG (seismocardiogram)
+Sound	OAE
+Sound	Soud
+Sound	Sound
+Status	CO2 off
+Status	CVP off
+Status	ECG No signal
+Status	Ectopic Status
+Status	Ectopic Status_1/2
+Status	Ectopic Status_1/3
+Status	Ectopic Status_2/2
+Status	Ectopic Status_2/3
+Status	Ectopic Status_3/3
+Status	EDF Annotations
+Status	Event marker
+Status	Hypnogram
+Status	ID+Sync+Error
+Status	No CO2
+Status	No ECG
+Status	No ECG 
+Status	No PAP
+Status	No Pressure
+Status	no signal
+Status	No signal
+Status	No signal 
+Status	No Signal
+Status	Nothing
+Status	OFF
+Status	OFF 
+Status	PAP off
+Status	Rhythm Status
+Status	Rhythm Status_1/2
+Status	Rhythm Status_1/3
+Status	Rhythm Status_2/2
+Status	Rhythm Status_2/3
+Status	Rhythm Status_3/3
+Stim	VNS
+ST	ST1
+ST	ST2
+ST	ST3
+ST	ST_I
+ST	ST_II
+ST	ST_III
+ST	ST_AVF
+ST	ST_AVL
+ST	ST_AVR
+ST	ST_V1
+ST	ST_V2
+ST	ST_V3
+ST	ST_V4
+ST	ST_V5
+ST	ST_V6
+ST	ST AVF
+ST	ST AVF_1/2
+ST	ST AVF_1/3
+ST	ST AVF_2/2
+ST	ST AVF_2/3
+ST	ST AVF_3/3
+ST	ST AVL
+ST	ST AVL_1/2
+ST	ST AVL_1/3
+ST	ST AVL_2/2
+ST	ST AVL_2/3
+ST	ST AVL_3/3
+ST	ST AVR
+ST	ST AVR_1/2
+ST	ST AVR_1/3
+ST	ST AVR_2/2
+ST	ST AVR_2/3
+ST	ST AVR_3/3
+ST	ST I
+ST	ST I_1/2
+ST	ST I_1/3
+ST	ST I_2/2
+ST	ST I_2/3
+ST	ST I_3/3
+ST	ST II
+ST	ST II_1/2
+ST	ST II_1/3
+ST	ST II_2/3
+ST	ST II_3/3
+ST	ST III
+ST	ST III_1/2
+ST	ST III_1/3
+ST	ST III_2/2
+ST	ST III_2/3
+ST	ST III_3/3
+ST	ST MCL
+ST	ST MCL_1/2
+ST	ST MCL_1/3
+ST	ST MCL_2/2
+ST	ST MCL_2/3
+ST	ST MCL_3/3
+ST	ST V
+ST	ST V_1/2
+ST	ST V_1/3
+ST	ST V_2/2
+ST	ST V_2/3
+ST	ST V_3/3
+ST	ST V2
+ST	ST V5
+SV	SV
+Temp	BLOODT
+Temp	BLOODT_1/2
+Temp	BLOODT_1/3
+Temp	BLOODT_2/2
+Temp	BLOODT_2/3
+Temp	BLOODT_3/3
+Temp	Tblood
+Temp	TEMP
+Temp	Temp Art
+Temp	Temp body
+Temp	Temp Core
+Temp	TEMPDIFF
+Temp	Temp Esoph
+Temp	Temp Nasal
+Temp	Temp Skin
+Temp	Temp Rect
+Temp	Temp Vent

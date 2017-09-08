@@ -12,6 +12,15 @@ def is_true_alarm(data_path, sample_name):
     sig, fields = wfdb.srdsamp(data_path + sample_name)
     return is_true_alarm_fields(fields)
 
+# start and end in seconds
+def get_annotation(sample, ann_type, ann_fs, start, end): 
+    try: 
+        annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
+    except Exception as e: 
+        annotation = []
+        print(e)
+    
+    return annotation
 
 ## Returns type of arrhythmia alarm
 # output types include: 'a', 'b', 't', 'v', 'f'

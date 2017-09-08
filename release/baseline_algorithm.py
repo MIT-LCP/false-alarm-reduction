@@ -84,10 +84,9 @@ def histogram_test(signal, histogram_cutoff):
     return not (diffs > histogram_cutoff).any()
 
 
-# TODO: fix path for sigtypes file
 def get_channel_type(channel_name): 
     channel_types_dict = {}
-    with open("../sample_data/sigtypes", "r") as f: 
+    with open(parameters.sigtypes_filename, "r") as f: 
         for line in f: 
             splitted_line = line.split("\t")
             channel = splitted_line[-1].rstrip()
@@ -846,7 +845,7 @@ def ventricular_beat_annotations(lf_subsig, sub_subsig, sample, ann_type, start_
         plt.plot(ventricular_beat_indices, [ lf_subsig[int(index)] for index in ventricular_beat_indices ], 'ro', markersize=8)
         plt.show()
     
-    return ventricular_beat_indices
+    return ventricular_beat_indices, nonventricular_beat_indices
 
 
 def max_ventricular_hr(ventricular_beats, num_beats, fs):     
@@ -865,18 +864,31 @@ def max_ventricular_hr(ventricular_beats, num_beats, fs):
         
     return max_hr
 
-def read_ventricular_beat_annotations(sample_name, metric, output_path="../sample_data/vtach_beat_ann/std/"): 
+
+##### Modify this method to run regular baseline algorithm, using std vs. bank ventricular beat annotations
+def read_ventricular_beat_annotations(sample_name, metric, output_path=parameters.output_path_bank): 
     ventricular_beats = []
     nonventricular_beats = []
 
-    with open(output_path + sample_name + "_" + metric + ".csv", 'r') as f: 
-        reader = csv.DictReader(f)
+    try: 
+        with open(output_path + sample_name + "_" + metric + ".csv", 'r') as f: 
+            reader = csv.DictReader(f)
 
-        for row in reader: 
-            if row['is_true_beat'] == '1': 
-                ventricular_beats.append(int(row['ann_index']))
-            else: 
-                nonventricular_beats.append(int(row['ann_index']))
+            for row in reader: 
+                if row['is_true_beat'] == '1': 
+                    ventricular_beats.append(int(row['ann_index']))
+                else: 
+                    nonventricular_beats.append(int(row['ann_index']))
+                    
+    except Exception: 
+        with open(output_path + sample_name + ".csv", 'r') as f: 
+            reader = csv.DictReader(f)
+
+            for row in reader: 
+                if row['is_true_beat'] == '1': 
+                    ventricular_beats.append(int(row['ann_index']))
+                else: 
+                    nonventricular_beats.append(int(row['ann_index']))
 
     return ventricular_beats, nonventricular_beats
 
@@ -910,7 +922,12 @@ def get_ventricular_beats_scores(channel_sig,
         end_time = start_time + window_size
         
         try: 
-            ventricular_beats, nonventricular_beats = read_ventricular_beat_annotations(sample_name, "min")
+
+            ##### Comment out the next line and uncomment the following line to use ventricular beat annotations generated beat-by-beat using DTW
+            ventricular_beats, nonventricular_beats = ventricular_beat_annotations(
+                lf_subsig, sub_subsig, ann_path + sample_name, ann_type, start_time, end_time)
+            # ventricular_beats, nonventricular_beats = read_ventricular_beat_annotations(sample_name, "min")
+
             max_hr = max_ventricular_hr(ventricular_beats, num_beats, fs)
             
             invalids = calculate_channel_invalids(channel_subsig, "ECG")
@@ -1069,11 +1086,8 @@ def adjust_dominant_freqs(dominant_freqs, regular_activity):
 
 # Returns true if alarm is classified as a true alarm
 # Uses fplesinger annotations for ventricular tachycardia test
-def classify_alarm(data_path, ann_path, fp_ann_path, sample_name, ecg_ann_type, verbose=False): 
+def classify_alarm(data_path, ann_path, sample_name, ecg_ann_type, verbose=False): 
     sig, fields = wfdb.srdsamp(data_path + sample_name)
-
-    # if ecg_ann_type == 'fp': 
-    # ann_path = fp_ann_path
 
     is_regular = is_sample_regular(data_path, ann_path, sample_name, ecg_ann_type)    
     if is_regular:
@@ -1090,8 +1104,6 @@ def classify_alarm(data_path, ann_path, fp_ann_path, sample_name, ecg_ann_type, 
         arrhythmia_test = test_tachycardia
     
     elif alarm_type == "v": 
-        # ann_path = fp_ann_path
-        # ecg_ann_type = 'fp'
         arrhythmia_test = test_ventricular_tachycardia
     
     elif alarm_type == "f": 
@@ -1106,11 +1118,10 @@ def classify_alarm(data_path, ann_path, fp_ann_path, sample_name, ecg_ann_type, 
     #     print("sample_name: ", sample_name, e)
     #     return True
 
-
 # if __name__ == '__main__': 
 #     data_path = '../sample_data/challenge_training_data/'
 #     ann_path = '../sample_data/challenge_training_multiann/'
-#     fp_ann_path = '../sample_data/fplesinger_data/'
 #     ecg_ann_type = 'gqrs'
 
-#     print(classify_alarm(data_path, ann_path, fp_ann_path, "v199l", ecg_ann_type))
+#     print(classify_alarm(data_path, ann_path, "v199l", ecg_ann_type))
+

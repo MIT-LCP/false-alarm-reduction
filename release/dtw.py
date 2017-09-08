@@ -14,9 +14,6 @@ import os
 import glob
 import csv
 
-data_path = "../sample_data/challenge_training_data/"
-ann_path = "../sample_data/challenge_training_multiann/"
-
 def read_signals(data_path):
     signals_dict = {}
     fields_dict = {}
@@ -134,8 +131,8 @@ def sig_distance(sig1, fields1, sig2, fields2, radius, new_fs, max_channels=1, n
     if len(common_channels) > max_channels:
         common_channels = common_channels[:max_channels]
 
-    start_index = int(FS * (ALARM_TIME-num_secs))
-    end_index = int(FS * ALARM_TIME)
+    start_index = int(DEFAULT_ECG_FS * (ALARM_TIME-num_secs))
+    end_index = int(DEFAULT_ECG_FS * ALARM_TIME)
 
     for channel in common_channels:
         if channel == "RESP":
@@ -180,8 +177,8 @@ def sig_distance_from_file(sig1, fields1, sig2, fields2, new_fs, num_secs=10):
     sample_name1 = fields1['filename'][0].strip('.mat')
     sample_name2 = fields2['filename'][0].strip('.mat')
 
-    start_index = int(FS * (ALARM_TIME-num_secs))
-    end_index = int(FS * ALARM_TIME)
+    start_index = int(DEFAULT_ECG_FS * (ALARM_TIME-num_secs))
+    end_index = int(DEFAULT_ECG_FS * ALARM_TIME)
 
     pathname = 'dtw_data/*_{}_to_{}.csv'.format(sample_name1, sample_name2)
     matched_filenames = glob.glob(pathname)
@@ -213,15 +210,6 @@ def sig_distance_from_file(sig1, fields1, sig2, fields2, new_fs, num_secs=10):
             channel1_normalized = normalize_sig(channel1_warped)
             channel2_normalized = normalize_sig(channel2_warped)
 
-            # if sample_name2 == "v692s": 
-            #     plt.figure()
-            #     plt.plot(channel1_normalized, 'r-')
-            #     plt.plot(channel2_normalized, 'b-')
-            #     plt.show()
-
-            #     print channel2_normalized
-            #     print "subtracted: ", len(channel1_normalized - channel2_normalized)
-
             distance = sum([val**2 for val in (channel1_normalized - channel2_normalized)])
 
             channels_dists[channel] = distance
@@ -229,14 +217,14 @@ def sig_distance_from_file(sig1, fields1, sig2, fields2, new_fs, num_secs=10):
     return channels_dists
 
 
-def normalize_distances(channels_dists, normalization='ecg_average', sigtypes_filename='../../sample_data/sigtypes'):
+def normalize_distances(channels_dists, normalization='ecg_average', sigtypes=sigtypes_filename):
     if len(channels_dists.keys()) == 0:
         return float('inf')
 
     if len(channels_dists.keys()) == 1:
         return channels_dists.values().pop()
 
-    ecg_channels = [ channel for channel in channels_dists if get_channel_type(channel, sigtypes_filename) == "ECG" ]
+    ecg_channels = [ channel for channel in channels_dists if get_channel_type(channel, sigtypes) == "ECG" ]
     ecg_dists = [ channels_dists[channel] for channel in ecg_channels ]
 
     if normalization == 'ecg_average':
@@ -305,8 +293,8 @@ def run_classification(sig_training_by_arrhythmia, fields_training_by_arrhythmia
 
         predicted, distance, sample = predict(test_sig, test_fields, sig_training_by_arrhythmia, fields_training_by_arrhythmia, radius, new_fs, weighting)
         actual = is_true_alarm_fields(test_fields)
-        print "sample:", sample_name, " predicted:", predicted, " actual:", actual
-        print "elapsed: ", datetime.now() - start
+        # print "sample:", sample_name, " predicted:", predicted, " actual:", actual
+        # print "elapsed: ", datetime.now() - start
 
         min_distances[sample_name] = (distance, sample, predicted == actual)
 
@@ -316,7 +304,7 @@ def run_classification(sig_training_by_arrhythmia, fields_training_by_arrhythmia
     return matrix, min_distances
 
 
-def run(data_path, num_training, arrhythmias, matrix_filename, distances_filename, radius=0, new_fs=FS, weighting=1):
+def run(data_path, num_training, arrhythmias, matrix_filename, distances_filename, radius=0, new_fs=DEFAULT_ECG_FS, weighting=1):
     print "Generating sig and fields dicts..."
     sig_dict, fields_dict = read_signals(data_path)
     sig_training, fields_training, sig_testing, fields_testing = \
