@@ -1,8 +1,8 @@
 # false-alarm-reduction
 Code for building a model to reduce false alarms in the intensive care unit. 
 
-1. Download and install the following packages: `wfdb`, `numpy`, `scipy`, `matplotlib`, `sklearn`, `fastdtw`, `json`, `datetime`, `spectrum`, `peakutils`.
-2. Download data and annotations (Challenge dataset used here: https://physionet.org/challenge/2015/training.zip) and modify the `data_path` and `ann_path` variables accordingly in `parameters.py` to point to the data files and annotation files, respectively. 
+1. Download and install the following packages: `wfdb`, `numpy`, `scipy`, `matplotlib`, `sklearn`, `fastdtw`, `spectrum`, `peakutils`.
+2. Download data and annotations (Challenge dataset used here: https://physionet.org/challenge/2015/training.zip TODO: where to download annotations???) and modify the `data_path` and `ann_path` variables accordingly in `parameters.py` to point to the data files and annotation files, respectively. 
 3. To run
   * baseline algorithm, update `write_filename` in `parameters.py` to be the filename to output the results of the baseline algorithm. Then run `pipeline.py`. 
   * DTW algorithm on the alarm signal, update the `matrix_filename` and `distances_filename` variables in `parameters.py` to be the filenames to output the final confusion matrix and corresponding distance results, respectively. Then, run `dtw.py`.
