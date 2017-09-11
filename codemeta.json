@@ -1,0 +1,37 @@
+{
+  "@context": "https://raw.githubusercontent.com/codemeta/codemeta/master/codemeta.jsonld",
+  "@type": "Code",
+  "author": [
+    {
+      "@id": "http://orcid.org/0000-0001-8419-5527",
+      "@type": "Person",
+      "email": "liandrea@mit.edu",
+      "name": "Andrea S. Li",
+      "affiliation": "Massachusetts Institute of Technology"
+    },
+    {
+      "@id": "http://orcid.org/0000-0002-8735-3014",
+      "@type": "Person",
+      "email": "aewj@mit.edu",
+      "name": "Alistair E. W. Johnson",
+      "affiliation": "Massachusetts Institute of Technology"
+    },
+    {
+      "@id": "http://orcid.org/0000-0002-6318-2978",
+      "@type": "Person",
+      "email": "rgmark@mit.edu",
+      "name": "Roger G. Mark",
+      "affiliation": "Massachusetts Institute of Technology"
+    }
+  ],
+  "identifier": "http://dx.doi.org/10.5281/zenodo.889036",
+  "codeRepository": "https://github.com/MIT-LCP/false-alarm-reduction",
+  "datePublished": "2017-09-11",
+  "dateModified": "2017-09-11",
+  "dateCreated": "2017-09-11",
+  "description": "This code provides tools to decrease the false alarm rate for cardiac arrhythmias in the intensive care unit. It explores a baseline algorithm based on an algorithm published by Plesinger, et al. (2016), as well as dynamic time warping as a technique to identify false alarms.",
+  "keywords": "false alarm reduction, signal processing, dynamic time warping, intensive care unit, arrhythmia",
+  "license": "MIT",
+  "title": "False alarm reduction in the intensive care unit",
+  "version": "v1.0.0"
+}
