@@ -4,6 +4,8 @@ tags:
   - false alarm reduction
   - signal processing
   - intensive care unit
+  - dynamic time warping
+  - arrhythmia
 authors:
  - name: Andrea S. Li
    orcid: 0000-0001-8419-5527
