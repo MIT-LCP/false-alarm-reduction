@@ -15,7 +15,7 @@ authors:
    orcid: 0000-0002-6318-2978
    affiliation: 1
 affiliations:
- - name: Institute of Medical Engineering & Science, Massachusetts Institute of Technology
+ - name: Massachusetts Institute of Technology
    index: 1
 date: 11 September 2017
 bibliography: paper.bib
