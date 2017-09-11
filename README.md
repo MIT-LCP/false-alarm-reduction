@@ -92,7 +92,7 @@ This will run through all the data files and associated annotation files to dete
 The output files are written at the end of the algorithm to the current directory.
 For the baseline algorithm, this is by default `results.json`.
 
-Note: To run using a different QRS detector (e.g. JQRS instead of GQRS), change `ecg_ann_type`, e.g. `ecg_ann_type = "jqrs"`.
+Note: To run using a different QRS detector (e.g. JQRS instead of GQRS), change `ecg_ann_type`, e.g. `ecg_ann_type = "jqrs"`. See the `matlab/` subfolder for code to generate JQRS (note this code is untested!).
 
 ## DTW time warping
 
