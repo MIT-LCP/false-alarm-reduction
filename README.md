@@ -1,4 +1,7 @@
 # false-alarm-reduction
+
+[![DOI](https://zenodo.org/badge/59120353.svg)](https://zenodo.org/badge/latestdoi/59120353)
+
 Code for building a model to reduce false alarms in the intensive care unit.
 
 
