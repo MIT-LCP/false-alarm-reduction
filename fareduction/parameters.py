@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 ##### Filepaths #####
 ecg_ann_type = "gqrs"
@@ -13,11 +14,10 @@ output_path_bank = "output/bank/"     # Path for generated vtach beat annotation
 output_path_std = "output/std/"      # Path for generated vtach beat annotations (std) (to write/read)
 output_path_std_distances = output_path_std + "baseline_distances_"
 
-
 # DON'T CHANGE THESE FILEPATHS
-training_filename = "vtach_beats.csv"                       # Filename of true vtach beat bank classifications
-sigtypes_filename = "sigtypes"                              # Filename for channel types based on channel name
-
+current_path = os.path.dirname(os.path.abspath(__file__))
+training_filename = os.path.join(current_path,"vtach_beats.csv")     # Filename of true vtach beat bank classifications
+sigtypes_filename = os.path.join(current_path,"sigtypes")            # Filename for channel types based on channel name
 
 ##### Filename extensions #####
 HEADER_EXTENSION = ".hea"
