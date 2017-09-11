@@ -2,8 +2,8 @@ import numpy as np
 
 ##### Filepaths #####
 ecg_ann_type = "gqrs"
-data_path = '../sample_data/challenge_training_data/'       # Path for data (to read)
-ann_path = '../sample_data/challenge_training_multiann/'    # Path for annotations (to read)
+data_path = 'data/training/'                                # Path for data (to read)
+ann_path = 'annotations/'                                   # Path for annotations (to read)
 write_filename = "test.json"                                # Filename for results of baseline algorithm (to write)
 
 matrix_filename = "matrix.json"                             # Filename of confusion matrix classifications (to write)
@@ -15,7 +15,7 @@ output_path_std_distances = output_path_std + "baseline_distances_"
 
 
 # DON'T CHANGE THESE FILEPATHS
-training_filename = "vtach_beats.csv"                       # Filename of true vtach beat bank classifications 
+training_filename = "vtach_beats.csv"                       # Filename of true vtach beat bank classifications
 sigtypes_filename = "sigtypes"                              # Filename for channel types based on channel name
 
 
@@ -28,7 +28,7 @@ JQRS_EXTENSION = ".jqrs"
 ALARM_TIME = 300 # in seconds
 NUM_SECS_IN_MIN = 60
 
-# Hard-coded colors 
+# Hard-coded colors
 COLORS = np.asarray(
     [[55,126,184],
     [228,26,28],
@@ -41,7 +41,7 @@ COLORS = np.asarray(
 
 # Plot marker types
 MARKER_TYPES = [
-    'o', 
+    'o',
     '^',
     's',
     '*',
@@ -61,19 +61,19 @@ AMPL_CUTOFF = 0.005
 STATS_CUTOFFS = {
     "ECG" : {
         "val_min" : -7,
-        "val_max" : 7, 
+        "val_max" : 7,
         "var_range_min" : 0.005,
         "var_range_max" : 8
-    }, 
+    },
     "BP" : {
         "val_min" : 0,
-        "val_max" : 300, 
+        "val_max" : 300,
         "var_range_min" : 0.0001,
         "var_range_max" : 250
-    }, 
+    },
     "PLETH" : {
         "val_min" : -6,
-        "val_max" : 6, 
+        "val_max" : 6,
         "var_range_min" : 0.005,
         "var_range_max" : 7
     }
@@ -124,17 +124,15 @@ VFIB_LOW_DOMINANCE_INDEX_THRESHOLD = 100 # in sample number
 VFIB_WINDOW_SIZE = 2 # in seconds
 VFIB_ROLLING_INCREMENT = 0.5 # in seconds
 VFIB_ABP_THRESHOLD = 6 # in mmHg
-VFIB_DOMINANT_FREQ_THRESHOLD = 2 # in Hz 
+VFIB_DOMINANT_FREQ_THRESHOLD = 2 # in Hz
 
 ##### Ventricular beat detection #####
 LF_LOW = 1
 LF_HIGH = 10
 MF_LOW = 5
 MF_HIGH = 25
-HF_LOW = 50 
+HF_LOW = 50
 HF_HIGH = 70
 
 VENTRICULAR_BEAT_THRESHOLD_RATIO = 0.5
 VENTRICULAR_BEAT_PERCENTILE = 98
-
-
