@@ -44,7 +44,7 @@ def get_data(sig_dict, fields_dict, num_training):
 
 def downsample_signal(sig, fields, Fnew=125):
     Fs = fields['fs']
-    
+
     # downsample if needed
     if Fnew<Fs:
         if int(Fs/Fnew)==(Fs/Fnew):
@@ -55,7 +55,7 @@ def downsample_signal(sig, fields, Fnew=125):
     return sig_new
 
 
-def alt_dtw(): 
+def alt_dtw():
     T_START=290
     T_END=300
     Fnew=125
@@ -67,58 +67,58 @@ def alt_dtw():
             if lead in ['I','II','III','V']:
                 # print('\t' + lead, end=' ')
                 sig1 = (np.copy(signals_dict[s][:,j])*fields_dict[s]['gain'][j]).astype(int)
-                
+
                 # downsample the signal
                 sig1 = downsample_signal(sig1, fields_dict[s], Fnew=Fnew)
 
                 # extract the 10 seconds of interest
                 sig1 = sig1[T_START*Fnew:T_END*Fnew]
-                        
+
                 # normalize
                 mu1 = np.mean(sig1)
                 sd1 = np.std(sig1)
-                
+
                 sig1 = (sig1 - mu1) / sd1
-                
+
                 # compare to all other signals with that lead
                 for s2 in fields_dict:
                     if s==s2:
                         continue
-                        
+
                     # print(s2, end=' ')
                     if lead in fields_dict[s2]['signame']:
                         # get index of lead in 2nd signal
                         m = [i for i, val in enumerate(fields_dict[s2]['signame']) if val==lead][0]
-                        
+
                         sig2 = (np.copy(signals_dict[s2][:,m])*fields_dict[s2]['gain'][m]).astype(int)
 
                         # downsample the signal
                         sig2 = downsample_signal(sig2, fields_dict[s2], Fnew=Fnew)
-                        
+
                         # extract the 10 seconds of interest
                         sig2 = sig2[T_START*Fnew:T_END*Fnew]
-                        
+
                         # normalize
                         sig2 = (sig2 - np.mean(sig2)) / np.std(sig2)
-                        
+
                         # run DTW
                         dist, cost, path = mlpy.dtw_std(sig1, sig2, dist_only=False, squared=False)
-                        
+
                         #path[0], sig2[path[1]]
                         #path[0], sig2[path[1]]
                         sig_out = np.array( [path[1], (sig1[path[0]]*sd1)+mu1] ).T
-                        
+
                         np.savetxt('dtw/' + lead + '_' + s + '_to_' + s2 + '.csv',
                                    sig_out, fmt=['%4d','%8.2f'], delimiter=',')
                     else:
                         # the comparison signal does not have the same lead
                         continue
                 print() # newline to go to a new signal
-                
+
             else:
                 continue
 
-def normalize_sig(sig): 
+def normalize_sig(sig):
     return (sig - np.mean(sig)) / np.std(sig)
 
 
@@ -158,9 +158,9 @@ def sig_distance(sig1, fields1, sig2, fields2, radius, new_fs, max_channels=1, n
         channel2_normalized = normalize_sig(channel2_sampled)
 
         try:
-            if radius > 0: 
+            if radius > 0:
                 distance, path = fastdtw.fastdtw(channel1_normalized, channel2_normalized, radius=radius, dist=euclidean)
-            else: 
+            else:
                 distance = sum([val**2 for val in (channel1_normalized - channel2_normalized)])
 
         except Exception as e:
@@ -183,10 +183,10 @@ def sig_distance_from_file(sig1, fields1, sig2, fields2, new_fs, num_secs=10):
     pathname = 'dtw_data/*_{}_to_{}.csv'.format(sample_name1, sample_name2)
     matched_filenames = glob.glob(pathname)
 
-    for filename in matched_filenames: 
+    for filename in matched_filenames:
         channel = filename.lstrip('dtw_data/')[:filename.index("_")-1]
         channel_index1 = fields1['signame'].index(channel)
-        channel_index2 = fields2['signame'].index(channel)    
+        channel_index2 = fields2['signame'].index(channel)
 
         channel1 = sig1[start_index:end_index,channel_index1]
         channel2 = sig2[start_index:end_index,channel_index2]
@@ -195,7 +195,7 @@ def sig_distance_from_file(sig1, fields1, sig2, fields2, new_fs, num_secs=10):
         channel1_sampled = resample(channel1, num_secs*new_fs)
         channel2_sampled = resample(channel2, num_secs*new_fs)
 
-        with open(filename, 'r') as f: 
+        with open(filename, 'r') as f:
             reader = csv.DictReader(f, fieldnames=['path0', 'path1'])
 
             indices = [ [int(row['path0']), int(row['path1'])] for row in reader ]
@@ -262,10 +262,10 @@ def predict(test_sig, test_fields, sig_training_by_arrhythmia, fields_training_b
 
         # channels_dists = sig_distance_from_file(test_sig, test_fields, train_sig, train_fields, new_fs)
         # print "sample_name: ", sample_name, "channels_dists: ", channels_dists
-        # if len(channels_dists.keys()) == 0: 
+        # if len(channels_dists.keys()) == 0:
         #     print "Processing sample {} from scratch".format(sample_name)
         channels_dists = sig_distance(test_sig, test_fields, train_sig, train_fields, radius, new_fs)
-        
+
         distance = normalize_distances(channels_dists)
 
         if distance < min_distance:
@@ -332,7 +332,7 @@ if __name__ == '__main__':
     new_fs = 125
     num_training = 500
     arrhythmias = ['a', 'b', 't', 'v', 'f']
-    
+
     run(data_path, num_training, arrhythmias, matrix_filename, distances_filename, radius=0, new_fs=new_fs)
 
     matrix = read_json(matrix_filename)

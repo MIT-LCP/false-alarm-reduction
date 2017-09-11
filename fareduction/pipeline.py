@@ -7,7 +7,7 @@
 
 from datetime                       import datetime
 import numpy                        as np
-from baseline_algorithm             import * 
+from baseline_algorithm             import *
 from parameters                     import *
 import os
 import csv

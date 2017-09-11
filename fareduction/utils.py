@@ -13,13 +13,13 @@ def is_true_alarm(data_path, sample_name):
     return is_true_alarm_fields(fields)
 
 # start and end in seconds
-def get_annotation(sample, ann_type, ann_fs, start, end): 
-    try: 
+def get_annotation(sample, ann_type, ann_fs, start, end):
+    try:
         annotation = wfdb.rdann(sample, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)
-    except Exception as e: 
+    except Exception as e:
         annotation = []
         print(e)
-    
+
     return annotation
 
 ## Returns type of arrhythmia alarm
@@ -129,46 +129,46 @@ def get_classification_accuracy(matrix):
     return float(num_correct) / num_total
 
 
-def calc_sensitivity(counts): 
+def calc_sensitivity(counts):
     tp = counts["TP"]
     fn = counts["FN"]
     return tp / float(tp + fn)
-    
 
-def calc_specificity(counts): 
+
+def calc_specificity(counts):
     tn = counts["TN"]
     fp = counts["FP"]
-    
+
     return tn / float(tn + fp)
 
 
-def calc_ppv(counts): 
+def calc_ppv(counts):
     tp = counts["TP"]
     fp = counts["FP"]
     return tp / float(tp + fp)
 
 
-def calc_npv(counts): 
+def calc_npv(counts):
     tn = counts["TN"]
     fn = counts["FN"]
     return tn / float(tn + fn)
 
 
-def calc_f1(counts): 
+def calc_f1(counts):
     sensitivity = calc_sensitivity(counts)
     ppv = calc_ppv(counts)
-    
-    return 2 * sensitivity * ppv / float(sensitivity + ppv)    
+
+    return 2 * sensitivity * ppv / float(sensitivity + ppv)
 
 
-def print_stats(counts): 
-    try: 
+def print_stats(counts):
+    try:
         sensitivity = calc_sensitivity(counts)
         specificity = calc_specificity(counts)
         ppv = calc_ppv(counts)
         npv = calc_npv(counts)
         f1 = calc_f1(counts)
-    except Exception as e: 
+    except Exception as e:
         print(e)
 
     print("counts: ", counts)
@@ -179,12 +179,12 @@ def print_stats(counts):
     print("f1: ", f1)
 
 
-def get_matrix_classification(actual, predicted): 
-    if actual and predicted: 
+def get_matrix_classification(actual, predicted):
+    if actual and predicted:
         return "TP"
-    elif actual and not predicted: 
+    elif actual and not predicted:
         return "FN"
-    elif not actual and predicted: 
+    elif not actual and predicted:
         return "FP"
     return "TN"
 
@@ -196,10 +196,10 @@ def get_score(matrix):
     return float(numerator) / denominator
 
 
-def get_by_arrhythmia(confusion_matrix, arrhythmia_prefix): 
+def get_by_arrhythmia(confusion_matrix, arrhythmia_prefix):
     counts_by_arrhythmia = {}
     matrix_by_arrhythmia = {}
-    for classification_type in confusion_matrix.keys(): 
+    for classification_type in confusion_matrix.keys():
         sample_list = [ sample for sample in confusion_matrix[classification_type] if sample[0] == arrhythmia_prefix]
         counts_by_arrhythmia[classification_type] = len(sample_list)
         matrix_by_arrhythmia[classification_type] = sample_list
