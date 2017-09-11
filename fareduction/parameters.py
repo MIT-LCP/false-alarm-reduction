@@ -4,13 +4,13 @@ import numpy as np
 ecg_ann_type = "gqrs"
 data_path = 'data/training/'                                # Path for data (to read)
 ann_path = 'annotations/'                                   # Path for annotations (to read)
-write_filename = "test.json"                                # Filename for results of baseline algorithm (to write)
+write_filename = "results.json"                             # Filename for results of baseline algorithm (to write)
 
-matrix_filename = "matrix.json"                             # Filename of confusion matrix classifications (to write)
+matrix_filename = "confusion-matrix.json"                   # Filename of confusion matrix classifications (to write)
 distances_filename = "distances.json"                       # Filename of warped distances between files (to write)
 
-output_path_bank = "../sample_data/vtach_beat_ann/bank"     # Path for generated vtach beat annotations (bank) (to write/read)
-output_path_std = "../sample_data/vtach_beat_ann/std/"      # Path for generated vtach beat annotations (std) (to write/read)
+output_path_bank = "output/bank/"     # Path for generated vtach beat annotations (bank) (to write/read)
+output_path_std = "output/std/"      # Path for generated vtach beat annotations (std) (to write/read)
 output_path_std_distances = output_path_std + "baseline_distances_"
 
 
