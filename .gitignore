@@ -1,3 +1,10 @@
+# Ignore virtual env files
+include/
+bin/
+local/
+
+
+# Mac OS-X
 .DS_Store
 
 # Byte-compiled / optimized / DLL files
