@@ -7,7 +7,7 @@ Code for building a model to reduce false alarms in the intensive care unit.
 
 ## Detailed Installation (Ubuntu 16.04)
 
-### Install Virtual Environment (Python 2.7)
+### Create a Virtual Environment (Python 2.7)
 
 We recommend installing the package in a virtual environment. If not using a virtual environment, skip ahead to the `pip install pip --upgrade` step.
 
@@ -43,9 +43,15 @@ Upgrade pip.
 (false-alarm-reduction)$ pip install pip --upgrade
 ```
 
+### Downloading
+``` shell
+git clone https://github.com/MIT-LCP/false-alarm-reduction.git
+```
+
 Now install all the necessary packages using the requirements file (for reference, these are: `wfdb`, `numpy`, `scipy`, `matplotlib`, `sklearn`, `fastdtw`, `spectrum`, `peakutils`).
 
 ```
+cd false-alarm-reduction
 pip install -r requirements.txt
 ```
 
