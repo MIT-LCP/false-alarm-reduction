@@ -1,10 +1,3 @@
-
-# coding: utf-8
-
-# # Overall pipeline
-
-# In[27]:
-
 from datetime                       import datetime
 import numpy                        as np
 from baseline_algorithm             import *
@@ -22,9 +15,6 @@ def is_true_alarm(data_path, sample_name):
     sig, fields = wfdb.srdsamp(data_path + sample_name)
     true_alarm = fields['comments'][1] == 'True alarm'
     return true_alarm
-
-
-# In[37]:
 
 # Generate confusion matrix for all samples given sample name/directory
 def generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type):
