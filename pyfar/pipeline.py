@@ -9,7 +9,7 @@ import csv
 import json
 import wfdb
 
-# ## Classifying arrhythmia alarms
+## Classifying arrhythmia alarms
 
 # Returns true if alarm is a true alarm
 # Only for samples with known classification
@@ -67,7 +67,7 @@ def get_confusion_matrix_classification(true_alarm, classified_true_alarm):
     return matrix_classification
 
 
-# ## Printing and calculating counts
+## Printing and calculating counts
 
 def print_by_type(false_negatives):
     counts_by_type = {}
@@ -129,7 +129,7 @@ def print_stats(counts):
     print("score:  {}".format(score))
 
 
-# ## Run pipeline
+## Run pipeline
 
 def run(data_path, ann_path, filename, ecg_ann_type):
     print("ecg_ann_type:  {}".format(ecg_ann_type))
@@ -205,7 +205,7 @@ if __name__ == '__main__':
 #     print("missed true negatives:  {}".format(get_missed(gqrs_matrix, fplesinger_confusion_matrix, "TN")))
 
 
-# ## Comparing classification with other algorithms
+## Comparing classification with other algorithms
 
 # In[21]:
 
@@ -231,21 +231,21 @@ if __name__ == '__main__':
 #     return others_confusion_matrices
 
 
-# # filename = "sample_data/answers.csv"
-# # others_confusion_matrices = generate_others_confusion_matrices(filename, data_path)
+# filename = "sample_data/answers.csv"
+# others_confusion_matrices = generate_others_confusion_matrices(filename, data_path)
 
 
-# # In[7]:
+# In[7]:
 
-# # for author in others_confusion_matrices.keys():
-# #     other_confusion_matrix = others_confusion_matrices[author]
-# #     print(author)
-# #     counts = get_counts(other_confusion_matrix)
-# #     evaluate.print_stats(counts)
-# #     print_by_type(other_confusion_matrix['FN'])
+# for author in others_confusion_matrices.keys():
+#     other_confusion_matrix = others_confusion_matrices[author]
+#     print(author)
+#     counts = get_counts(other_confusion_matrix)
+#     evaluate.print_stats(counts)
+#     print_by_type(other_confusion_matrix['FN'])
 
 
-# # In[23]:
+# In[23]:
 
 # def get_missed(confusion_matrix, other_confusion_matrix, classification):
 #     missed = []

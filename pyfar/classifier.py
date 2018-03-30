@@ -237,7 +237,7 @@ def get_score(prediction, true):
 if __name__ == '__main__':
     print("Nothing to do!")
     # print("Generating datasets...")
-    # # generate_features(features_filename)
+    # generate_features(features_filename)
     # training_x, training_y, testing_x, testing_y = generate_datasets(features_filename)
 
     # print("{} {}".format(len(training_y), len(testing_y)))
@@ -252,7 +252,7 @@ if __name__ == '__main__':
 
     # print("Running classifier...")
     # classifier = LogisticRegression(penalty='l1')
-    # # lasso = LassoCV()
+    # lasso = LassoCV()
     # classifier.fit(training_x, training_y)
 
     #     # probability of class 1 (versus 0)
@@ -267,14 +267,14 @@ if __name__ == '__main__':
     #     # print("fpr: {}".format(fpr), end=" "))
     #     # print("tpr: {}".format(tpr)
 
-    #     # # plt.figure()
-    #     # # plt.title("ROC curve for DTW-only classiifer")
-    #     # # plt.xlabel("False positive rate")
-    #     # # plt.ylabel("True positive rate")
-    #     # # plt.plot(fpr, tpr)
-    #     # # plt.show()
-    # # lasso.fit(training_x, training_y)
-    # # predictions_y = lasso.predict(testing_x)
+    #     # plt.figure()
+    #     # plt.title("ROC curve for DTW-only classiifer")
+    #     # plt.xlabel("False positive rate")
+    #     # plt.ylabel("True positive rate")
+    #     # plt.plot(fpr, tpr)
+    #     # plt.show()
+    # lasso.fit(training_x, training_y)
+    # predictions_y = lasso.predict(testing_x)
 
     # fpr, tpr, thresholds = roc_curve(testing_y, predictions_y)
 

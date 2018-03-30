@@ -240,7 +240,7 @@ def write_vtach_beats_files(data_path, ann_path, output_path, ecg_ann_type, star
 
 
 if __name__ == '__main__':
-    # # sample_name = "v127l"
+    # sample_name = "v127l"
     # sample_name = "v141l"
     # ecg_ann_type = 'gqrs'
     # start_time = 296
