@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from datetime                       import datetime
 import numpy                        as np
 from baseline_algorithm             import *
@@ -32,7 +34,7 @@ def generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type):
             if sample_name[0] != 'v':
                 continue
 
-            print "sample name: ", sample_name
+            print("sample name:  {}".format(sample_name))
 
             # sig, fields = wfdb.srdsamp(data_path + sample_name)
             # if "II" not in fields['signame']:
@@ -44,7 +46,7 @@ def generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type):
             matrix_classification = get_confusion_matrix_classification(true_alarm, classified_true_alarm)
             confusion_matrix[matrix_classification].append(sample_name)
             if matrix_classification == "FN":
-                print "FALSE NEGATIVE: ", filename
+                print("FALSE NEGATIVE:  {}".format(filename))
 
     return confusion_matrix
 
@@ -75,7 +77,7 @@ def print_by_type(false_negatives):
             counts_by_type[first] = 0
         counts_by_type[first] += 1
 
-    print counts_by_type
+    print(counts_by_type)
 
 
 def print_by_arrhythmia(confusion_matrix, arrhythmia_prefix):
@@ -84,7 +86,7 @@ def print_by_arrhythmia(confusion_matrix, arrhythmia_prefix):
         sample_list = [ sample for sample in confusion_matrix[classification_type] if sample[0] == arrhythmia_prefix]
         counts_by_arrhythmia[classification_type] = (len(sample_list), sample_list)
 
-    print counts_by_arrhythmia
+    print(counts_by_arrhythmia)
 
 def get_counts(confusion_matrix):
     return { key : len(confusion_matrix[key]) for key in confusion_matrix.keys() }
@@ -119,23 +121,24 @@ def print_stats(counts):
     f1 = calc_f1(counts)
     score = float(counts["TP"] + counts["TN"])/(counts["TP"] + counts["FP"] + counts["TN"] + counts["FN"] * 5)
 
-    print "counts: ", counts
-    print "sensitivity: ", sensitivity
-    print "specificity: ", specificity
-    print "ppv: ", ppv
-    print "f1: ", f1
-    print "score: ", score
+    print("counts:  {}".format(counts))
+    print("sensitivity:  {}".format(sensitivity))
+    print("specificity:  {}".format(specificity))
+    print("ppv:  {}".format(ppv))
+    print("f1:  {}".format(f1))
+    print("score:  {}".format(score))
 
 
 # ## Run pipeline
 
 def run(data_path, ann_path, filename, ecg_ann_type):
-    print "ecg_ann_type: ", ecg_ann_type, " ann_path: ", ann_path
+    print("ecg_ann_type:  {}".format(ecg_ann_type))
+    print(" ann_path:  {}".format(ann_path))
 
     start = datetime.now()
     matrix = generate_confusion_matrix_dir(data_path, ann_path, ecg_ann_type)
-    print "confusion matrix: ", matrix
-    print "total time: ", datetime.now() - start
+    print("confusion matrix:  {}".format(matrix))
+    print("total time:  {}".format(datetime.now() - start))
 
     with open(filename, "w") as f:
         json.dump(matrix, f)
@@ -146,7 +149,7 @@ def read_json(filename):
 
     return dictionary
 
-# print datetime.now()
+# print(datetime.now())
 # write_filename = "sample_data/pipeline_fpinvalids_vtachfpann_nancheck.json"
 # ecg_ann_type = "gqrs"
 # run(data_path, ann_path, write_filename, ecg_ann_type)
@@ -164,31 +167,31 @@ if __name__ == '__main__':
     # print_stats(counts)
 
     # fplesinger_confusion_matrix = others_confusion_matrices['fplesinger-210']
-    # print "missed true positives: ", get_missed(gqrs_matrix, fplesinger_confusion_matrix, "TP")
-    # print "missed true negatives: ", get_missed(gqrs_matrix, fplesinger_confusion_matrix, "TN")
+    # print("missed true positives:  {}".format(get_missed(gqrs_matrix, fplesinger_confusion_matrix, "TP")))
+    # print("missed true negatives:  {}".format(get_missed(gqrs_matrix, fplesinger_confusion_matrix, "TN")))
 
 
-    # print "\nFP"
+    # print("\nFP")
     # fp_matrix = read_json("sample_data/pipeline_fp.json")
     # counts_fp = get_counts(fp_matrix)
     # evaluate.print_stats(counts_fp)
     # print_by_type(fp_matrix['FN'])
 
 
-    # print "\nFP invalids with GQRS"
+    # print("\nFP invalids with GQRS")
     # fpinvalids_matrix = read_json("sample_data/pipeline_fpinvalids.json")
     # counts_fpinvalids = get_counts(fpinvalids_matrix)
     # evaluate.print_stats(counts_fpinvalids)
     # print_by_type(fpinvalids_matrix['FN'])
 
     # missed_true_negatives = get_missed(fpinvalids_matrix, fplesinger_confusion_matrix, "TN")
-    # print "missed true positives: ", get_missed(fpinvalids_matrix, fplesinger_confusion_matrix, "TP")
-    # print "missed true negatives: ", missed_true_negatives
+    # print("missed true positives:  {}".format(get_missed(fpinvalids_matrix, fplesinger_confusion_matrix, "TP")))
+    # print("missed true negatives:  {}".format(missed_true_negatives))
     # print_by_type(missed_true_negatives)
-    # print len(missed_true_negatives)
+    # print(len(missed_true_negatives))
 
 
-    # print "\nFP invalids with GQRS without abp test in vtach"
+    # print("\nFP invalids with GQRS without abp test in vtach")
     # fpinvalids_without_vtach_abp = read_json("sample_data/pipeline_fpinvalids_novtachabp.json")
     # counts_fpinvalids_without_vtach_abp = get_counts(fpinvalids_without_vtach_abp)
     # evaluate.print_stats(counts_fpinvalids_without_vtach_abp)
@@ -198,8 +201,8 @@ if __name__ == '__main__':
 #     print_by_arrhythmia(confusion_matrix_gqrs, 'v')
 
 #     fplesinger_confusion_matrix = others_confusion_matrices['fplesinger-210']
-#     print "missed true positives: ", get_missed(gqrs_matrix, fplesinger_confusion_matrix, "TP")
-#     print "missed true negatives: ", get_missed(gqrs_matrix, fplesinger_confusion_matrix, "TN")
+#     print("missed true positives:  {}".format(get_missed(gqrs_matrix, fplesinger_confusion_matrix, "TP")))
+#     print("missed true negatives:  {}".format(get_missed(gqrs_matrix, fplesinger_confusion_matrix, "TN")))
 
 
 # ## Comparing classification with other algorithms
@@ -236,7 +239,7 @@ if __name__ == '__main__':
 
 # # for author in others_confusion_matrices.keys():
 # #     other_confusion_matrix = others_confusion_matrices[author]
-# #     print author
+# #     print(author)
 # #     counts = get_counts(other_confusion_matrix)
 # #     evaluate.print_stats(counts)
 # #     print_by_type(other_confusion_matrix['FN'])
@@ -254,8 +257,8 @@ if __name__ == '__main__':
 #     return missed
 
 # fplesinger_confusion_matrix = others_confusion_matrices['fplesinger-210']
-# print "missed true positives: ", get_missed(confusion_matrix_gqrs, fplesinger_confusion_matrix, "TP")
-# print "missed true negatives: ", get_missed(confusion_matrix_gqrs, fplesinger_confusion_matrix, "TN")
+# print("missed true positives:  {}".format(get_missed(confusion_matrix_gqrs, fplesinger_confusion_matrix, "TP")))
+# print("missed true negatives:  {}".format(get_missed(confusion_matrix_gqrs, fplesinger_confusion_matrix, "TN")))
 
 
 # In[ ]:

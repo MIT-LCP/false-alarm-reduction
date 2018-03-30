@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from classifier             import get_baseline, get_power, get_ksqi, get_pursqi
 from fastdtw                import fastdtw
 from scipy.spatial.distance import euclidean
@@ -24,11 +26,11 @@ MAX_PEAK_DIST = 60. / 30 * 250
 
 DEBUG = False
 
-def dprint(*args): 
-    if DEBUG: 
-        for arg in args: 
-            print arg,
-        print ""
+def dprint(*args):
+    if DEBUG:
+        for arg in args:
+            print(arg)
+        print("")
 
 
 def is_noisy(
@@ -38,7 +40,7 @@ def is_noisy(
         power_threshold=0.9,
         ksqi_threshold=4,
         pursqi_threshold=5
-    ): 
+    ):
 
     checks = []
     dprint(get_baseline(channel_subsig), get_power(channel_subsig), get_ksqi(channel_subsig))
@@ -49,21 +51,21 @@ def is_noisy(
     ksqi_check = get_ksqi(channel_subsig) > ksqi_threshold
     # pursqi_check = get_pursqi(channel_subsig) > pursqi_threshold
     # checks = [baseline_check, power_check, ksqi_check, pursqi_check]
-    
+
     # TODO: maybe high pass filter instead of using baseline check as a check
-    if 'baseline' in checks_to_use: 
+    if 'baseline' in checks_to_use:
         checks.append(baseline_check)
 
-    if 'power' in checks_to_use: 
+    if 'power' in checks_to_use:
         checks.append(power_check)
 
-    if 'ksqi' in checks_to_use: 
+    if 'ksqi' in checks_to_use:
         checks.append(ksqi_check)
 
     return not all(checks)
 
 
-def get_adjusted_ann_indices(annotation, ann_index, start_ratio=1/3.): 
+def get_adjusted_ann_indices(annotation, ann_index, start_ratio=1/3.):
     a = annotation[ann_index-1]
     b = annotation[ann_index]
     c = annotation[ann_index+1]
@@ -76,58 +78,58 @@ def get_adjusted_ann_indices(annotation, ann_index, start_ratio=1/3.):
     return ann_start_index, ann_end_index
 
 
-## 
-#  Returns self_beats, a list of: 
+##
+#  Returns self_beats, a list of:
 #       annotation index
 #       beat_sig
 #  for regular beats detected in own patient's signal
 ##
 def get_self_beats(
-        channel_sig, 
-        annotation, 
-        sample_name, 
+        channel_sig,
+        annotation,
+        sample_name,
         checks_to_use=['baseline', 'power', 'ksqi'],
         num_self_beats=20,
-        window_increment=10, 
-        fs=250.): 
+        window_increment=10,
+        fs=250.):
 
     self_beats = []
 
     # Get self beats in first 2 min
-    for start_time in range(0, 120-window_increment+1, window_increment): 
+    for start_time in range(0, 120-window_increment+1, window_increment):
         end_time = start_time + window_increment
         start_index = int(start_time * fs)
         end_index = int(end_time * fs)
 
         channel_subsig = channel_sig[start_index:end_index]
-        # print start_index, end_index,
+        # print(start_index, end_index,)
 
-        if not is_noisy(channel_subsig, checks_to_use): 
+        if not is_noisy(channel_subsig, checks_to_use):
             for ann_index in range(1, len(annotation)-1):
                 # TODO: update to have the start and end index be smoothed over past values
                 ann_start_index, ann_end_index = get_adjusted_ann_indices(annotation, ann_index)
 
                 # If beat annotation in clean (not noisy) data range
-                if ann_start_index > start_index and ann_end_index < end_index: 
+                if ann_start_index > start_index and ann_end_index < end_index:
                     beat_sig = channel_sig[int(ann_start_index):int(ann_end_index)]
 
                     peaks = peakutils.indexes(beat_sig, thres=0.75*max(beat_sig), min_dist=MIN_PEAK_DIST)
 
-                    # if DEBUG: 
+                    # if DEBUG:
                     #     plt.figure()
                     #     plt.plot(peaks, [beat_sig[index] for index in peaks], 'ro')
                     #     plt.plot(beat_sig)
                     #     plt.show()
 
-                    if len(peaks) < 2: 
+                    if len(peaks) < 2:
                         self_beats.append((annotation[ann_index], beat_sig))
 
-                if len(self_beats) >= num_self_beats: 
+                if len(self_beats) >= num_self_beats:
                     break
 
     dprint("Found", len(self_beats), "self beats.")
 
-    if DEBUG: 
+    if DEBUG:
         plt.figure()
         for i, beat in enumerate(self_beats):
             plt.subplot(5, 4, i+1)
@@ -137,31 +139,31 @@ def get_self_beats(
     return self_beats
 
 
-def get_best_self_beats(channel_sig, full_annotation, sample_name): 
+def get_best_self_beats(channel_sig, full_annotation, sample_name):
     self_beats = get_self_beats(channel_sig, full_annotation, sample_name)
 
-    if len(self_beats) == 0: 
+    if len(self_beats) == 0:
         self_beats = get_self_beats(channel_sig, full_annotation, sample_name, ['power', 'ksqi'])
 
-    if len(self_beats) == 0: 
+    if len(self_beats) == 0:
         self_beats = get_self_beats(channel_sig, full_annotation, sample_name, ['power'])
 
-    if len(self_beats) == 0: 
+    if len(self_beats) == 0:
         dprint("No self beats found for", sample_name)
 
     return self_beats
 
 
-def normalize_sig(sig): 
+def normalize_sig(sig):
     return (sig - np.mean(sig)) / np.std(sig)
 
 
 ##
 #  Returns mean and stdev comparing against every other self beat in bank
 ##
-def get_baseline_distances(self_beats, radius=250): 
+def get_baseline_distances(self_beats, radius=250):
 
-    # if DEBUG: 
+    # if DEBUG:
     #     plt.figure()
     #     for i, beat in enumerate(self_beats):
     #         plt.subplot(5, 4, i+1)
@@ -169,12 +171,12 @@ def get_baseline_distances(self_beats, radius=250):
     #     plt.show()
 
     # Pairwise compare with every other self beat
-    all_distances = [] 
+    all_distances = []
 
-    for i in range(len(self_beats)): 
+    for i in range(len(self_beats)):
         distances = []
 
-        for j in range(len(self_beats)): 
+        for j in range(len(self_beats)):
             if i != j:
                 i_beat = self_beats[i][1]
                 j_beat = self_beats[j][1]
@@ -186,48 +188,48 @@ def get_baseline_distances(self_beats, radius=250):
 
     return all_distances
 
-def get_kl_dist(distances): 
+def get_kl_dist(distances):
     return [ val if val > 0 else 0.000001 for val in np.histogram(distances, bins=2000)[0] ]
 
 
-def get_baseline_metrics(metric, baseline_distances): 
+def get_baseline_metrics(metric, baseline_distances):
     top_level_distances = []
 
-    if metric == 'kl': 
+    if metric == 'kl':
         flat_distances = [ item for sublist in baseline_distances for item in sublist ]
         flat_hist = get_kl_dist(flat_distances)
 
-        for sublist in baseline_distances: 
+        for sublist in baseline_distances:
             sublist_hist = get_kl_dist(sublist)
             kl_distance = entropy(sublist_hist, flat_hist)
             top_level_distances.append(kl_distance)
 
-    elif metric == 'min': 
+    elif metric == 'min':
         top_level_distances = [ min(sublist) for sublist in baseline_distances ]
 
-    elif metric == 'mean': 
+    elif metric == 'mean':
         top_level_distances = [ np.mean(sublist) for sublist in baseline_distances ]
 
-    else: 
+    else:
         raise Exception("Unrecognized metric: ", metric)
 
     metric_info = [ np.mean(top_level_distances), np.std(top_level_distances) ]
-    if metric == 'kl': 
+    if metric == 'kl':
         metric_info.append(deepcopy(baseline_distances))
 
     return metric_info
 
 
-def get_dtw_distances(beat_sig, self_beats, radius=250): 
+def get_dtw_distances(beat_sig, self_beats, radius=250):
     distances = []
     beat_sig_normalized = normalize_sig(beat_sig)
 
     # figure_num = 1
 
-    for self_beat in self_beats: 
+    for self_beat in self_beats:
         self_beat_normalized = normalize_sig(self_beat[1])
 
-        try: 
+        try:
             distance, path = fastdtw(beat_sig_normalized, self_beat_normalized, radius=radius, dist=euclidean)
             distances.append(distance)
 
@@ -238,8 +240,8 @@ def get_dtw_distances(beat_sig, self_beats, radius=250):
             # plt.axis('off')
             # figure_num += 1
 
-        except Exception as e: 
-            print e
+        except Exception as e:
+            print(e)
 
     # plt.show()
     return distances
@@ -252,42 +254,42 @@ def get_dtw_distances(beat_sig, self_beats, radius=250):
 #           if 'kl': [ mean, std, baseline_distances ]
 #           else: [ mean, std ]
 ##
-def is_ventricular_beat_stdev(beat_sig, self_beats, metric, metric_info, threshold): 
+def is_ventricular_beat_stdev(beat_sig, self_beats, metric, metric_info, threshold):
     plt.figure(figsize=[12, 8])
     plt.title(str(metric_info[0]) + " " + str(metric_info[1]))
     beat_distances = get_dtw_distances(beat_sig, self_beats)
 
-    if len(beat_distances) == 0: 
+    if len(beat_distances) == 0:
         # TODO: maybe return false because probably contains inf/nan which is invalid data
         return True
 
-    if metric == 'kl': 
+    if metric == 'kl':
         baseline_distances = metric_info[2]
         flat_distances = [ item for sublist in baseline_distances for item in sublist ]
         flat_hist = get_kl_dist(flat_distances)
         beat_hist = get_kl_dist(beat_distances)
 
         metric_distance = entropy(beat_hist, flat_hist)
-        
-    elif metric == "min": 
+
+    elif metric == "min":
         metric_distance = min(beat_distances)
 
-    elif metric == 'mean': 
+    elif metric == 'mean':
         metric_distance = np.mean(beat_distances)
 
-    else: 
+    else:
         raise Exception("Unrecognized metric type: ", metric)
 
     dprint("distance: ", metric_distance, metric_distance > threshold)
 
-    if metric_distance > threshold: 
+    if metric_distance > threshold:
         return True
 
     return False
 
 
 ##
-# beats is a list of tuples containing: 
+# beats is a list of tuples containing:
 #       annotation of beat QRS
 #       start and end indices
 #       sig of beat
@@ -303,27 +305,27 @@ def get_ventricular_beats(beats, self_beats, metric, metric_info):
     threshold = max(mean + std * STD_MULTIPLIER, mean + MIN_DISTANCE_DIFF)
     dprint("mean: ", metric_info[0], "std: ", metric_info[1], "threshold: ", threshold)
 
-    for beat in beats: 
+    for beat in beats:
         beat_sig = beat[1]
 
-        if is_ventricular_beat_stdev(beat_sig, self_beats, metric, metric_info, threshold): 
+        if is_ventricular_beat_stdev(beat_sig, self_beats, metric, metric_info, threshold):
             ventricular_beats.append(beat)
-        else: 
+        else:
             nonventricular_beats.append(beat)
 
     return ventricular_beats, nonventricular_beats
 
 
 ##
-# Returns beats (list of tuples): 
+# Returns beats (list of tuples):
 #       annotation of beat QRS
 #       start and end indices
 #       sig of beat
 ##
-def get_alarm_beats(channel_sig, annotation): 
+def get_alarm_beats(channel_sig, annotation):
     beats = []
     for ann_index in range(1, len(annotation)-1):
-        # Assumes a beat starts start_ratio (default 1/3) before the annotation 
+        # Assumes a beat starts start_ratio (default 1/3) before the annotation
         # and ends end_ratio (default 2/3) after annotation
         # TODO: update this to update dynamically based on past values
         start_index, end_index = get_adjusted_ann_indices(annotation, ann_index)
@@ -332,10 +334,10 @@ def get_alarm_beats(channel_sig, annotation):
         beat_sig = channel_sig[int(indices[0]):int(indices[1])]
         beat = (annotation[ann_index], beat_sig)
 
-        if len(beat_sig) > MIN_PEAK_DIST and len(beat_sig) < MAX_PEAK_DIST: 
+        if len(beat_sig) > MIN_PEAK_DIST and len(beat_sig) < MAX_PEAK_DIST:
             beats.append(beat)
 
-    if DEBUG: 
+    if DEBUG:
         plt.figure()
         for i, beat in enumerate(beats):
             plt.subplot(5, 4, i+1)
@@ -348,7 +350,7 @@ def get_alarm_beats(channel_sig, annotation):
 ##
 #   Plot histogram of all pairwise distances between self beatst
 ##
-def plot_metrics(baseline_distances, metric, metric_info): 
+def plot_metrics(baseline_distances, metric, metric_info):
     flat_distances = [ item for sublist in baseline_distances for item in sublist ]
     mean = metric_info[0]
     std = metric_info[1]
@@ -358,7 +360,7 @@ def plot_metrics(baseline_distances, metric, metric_info):
     plt.figure()
     plt.hist(flat_distances, edgecolor='black')
     plt.axvline(mean, color='r')
-    for multiplier in multipliers: 
+    for multiplier in multipliers:
         plt.axvline(x=mean + std*multiplier, color='g')
 
     plt.show()
@@ -366,24 +368,24 @@ def plot_metrics(baseline_distances, metric, metric_info):
 
     # Plot individual distance distributions against flat distances
     plt.figure(figsize=[12, 8])
-    for index, distances in enumerate(baseline_distances): 
+    for index, distances in enumerate(baseline_distances):
         plt.subplot(5, 4, index+1)
         plt.hist(flat_distances, color='blue', edgecolor='black')
         plt.hist(distances, color='red', edgecolor='black')
-        if metric == 'min': 
+        if metric == 'min':
             plt.axvline(x=min(distances), color='r')
-        elif metric == 'mean': 
+        elif metric == 'mean':
             plt.axvline(x=np.mean(distances), color='r')
 
     plt.show()
 
 
-def plot_self_beat_comparison(self_beats): 
-    for i in range(len(self_beats)): 
+def plot_self_beat_comparison(self_beats):
+    for i in range(len(self_beats)):
         plt.figure(figsize=[12, 8])
         figure_num = 1
 
-        for j in range(len(self_beats)): 
+        for j in range(len(self_beats)):
             if i != j:
                 i_beat = self_beats[i][1]
                 j_beat = self_beats[j][1]
@@ -397,23 +399,23 @@ def plot_self_beat_comparison(self_beats):
     plt.show()
 
 
-def filter_out_nan(beats): 
+def filter_out_nan(beats):
     filtered = []
 
-    for beat in beats: 
+    for beat in beats:
         beat_sig = beat[1]
-        if not np.isnan(np.sum(beat_sig)): 
+        if not np.isnan(np.sum(beat_sig)):
             filtered.append(beat)
 
     return filtered
 
 
 def ventricular_beat_annotations_dtw(
-        channel_sig, 
-        ann_path, 
-        sample_name,    
+        channel_sig,
+        ann_path,
+        sample_name,
         metric,
-        start_time, 
+        start_time,
         end_time,
         ann_type,
         force=False,
@@ -433,21 +435,22 @@ def ventricular_beat_annotations_dtw(
 
     if os.path.isfile(baseline_dist_filename) and not force:
         dprint("Loading baseline distances from file...")
-        with open(baseline_dist_filename, 'r') as f: 
+        with open(baseline_dist_filename, 'r') as f:
             baseline_distances = json.load(f)
-    else:  
+    else:
         dprint("Calculating baseline distances...")
         baseline_distances = get_baseline_distances(self_beats)
-        
+
         dprint("Writing baseline distances to file...")
-        with open(baseline_dist_filename, 'w') as f: 
+        with open(baseline_dist_filename, 'w') as f:
             json.dump(baseline_distances, f)
 
-    try: 
+    try:
         dprint("Calculating baseline metrics...")
         metric_info = get_baseline_metrics(metric, baseline_distances)
-    except Exception as e: 
-        print "sample_name: ", sample_name, e
+    except Exception as e:
+        print("sample_name:  {}".format(sample_name))
+        print(e)
         return [], []
 
     # plot_metrics(baseline_distances, metric, metric_info)
@@ -458,12 +461,12 @@ def ventricular_beat_annotations_dtw(
     vtach_beats = filter_out_nan(ventricular_beats)
 
     # Only find distances if ventricular beats were found
-    if len(vtach_beats) > 1: 
+    if len(vtach_beats) > 1:
         ventricular_distances = get_baseline_distances(vtach_beats)
         ventricular_mean, ventricular_std = get_baseline_metrics('min', ventricular_distances)
 
         # If ventricular beats don't look very similar, mark as noise instead
-        if ventricular_mean > 20 and ventricular_std > 15 and ventricular_mean > ventricular_std: 
+        if ventricular_mean > 20 and ventricular_std > 15 and ventricular_mean > ventricular_std:
             vtach_beats = []
 
     ventricular_beat_anns = [ beat[0] for beat in vtach_beats ]
@@ -474,13 +477,13 @@ def ventricular_beat_annotations_dtw(
 
 
 def write_vtach_beats_files(
-        data_path, 
-        ann_path, 
-        output_path, 
-        ecg_ann_type, 
-        start_time, 
-        end_time, 
-        metric): 
+        data_path,
+        ann_path,
+        output_path,
+        ecg_ann_type,
+        start_time,
+        end_time,
+        metric):
 
     for filename in os.listdir(data_path):
         if filename.endswith(HEADER_EXTENSION):
@@ -490,13 +493,13 @@ def write_vtach_beats_files(
                 continue
 
             sig, fields = wfdb.srdsamp(data_path + sample_name)
-            if "II" not in fields['signame']: 
-                print "Lead II not found for sample: ", sample_name
+            if "II" not in fields['signame']:
+                print("Lead II not found for sample:  {}".format(sample_name))
                 continue
 
             output_filename = output_path + sample_name + "_1peak_" + metric + ".csv"
 
-            if os.path.isfile(output_filename): 
+            if os.path.isfile(output_filename):
                 continue
 
             channel_index = fields['signame'].index("II")
@@ -512,12 +515,13 @@ def write_vtach_beats_files(
                 writer = csv.writer(f)
                 writer.writerow(['ann_index', 'is_true_beat'])
 
-                for beat in vtach: 
+                for beat in vtach:
                     writer.writerow([beat, 1])
-                for beat in nonvtach: 
+                for beat in nonvtach:
                     writer.writerow([beat, 0])
 
-            print "sample_name: ", sample_name, " elapsed: ", datetime.now() - start
+            print("sample_name:  {}".format(sample_name), end=" ")
+            print(" elapsed:  {}".format(datetime.now() - start))
 
 def run_one_sample():
     # sample_name = "v100s" # false alarm
@@ -544,38 +548,40 @@ def run_one_sample():
     plt.show()
 
 
-start_time = 290
-end_time = 300
-metric = 'min'
-write_vtach_beats_files(data_path, ann_path, output_path_std, ecg_ann_type, start_time, end_time, metric)
+
+if __name__ == '__main__':
+    start_time = 290
+    end_time = 300
+    metric = 'min'
+    write_vtach_beats_files(data_path, ann_path, output_path_std, ecg_ann_type, start_time, end_time, metric)
 
 
-# sig, fields = wfdb.rdsamp(data_path + sample_name)
-# channel_sig = sig[:,channel_index]
+    # sig, fields = wfdb.rdsamp(data_path + sample_name)
+    # channel_sig = sig[:,channel_index]
 
-# annotation = wfdb.rdann(ann_path + sample_name, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs).annsamp
-# print annotation
+    # annotation = wfdb.rdann(ann_path + sample_name, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs).annsamp
+    # print(annotation)
 
-# beats = get_beats(channel_sig, annotation)
-
-
-# for beat in beats: 
-#   indices = beat[0]
-#   beat_sig = beat[1]
-#   time_vector = np.linspace(indices[0], indices[1], len(beat_sig))
-
-#   whole_sig = channel_sig[250*start:250*end]
-#   sig_time_vector = np.linspace(250*start, 250*end, len(whole_sig))
-
-#   annotation_y = [ channel_sig[ann_t] for ann_t in annotation ]
-
-#   plt.figure()
-#   plt.plot(sig_time_vector, whole_sig, 'b')
-#   plt.plot(time_vector, beat_sig, 'r')
-#   plt.plot(annotation, annotation_y, 'go')
-#   plt.show()
+    # beats = get_beats(channel_sig, annotation)
 
 
+    # for beat in beats:
+    #   indices = beat[0]
+    #   beat_sig = beat[1]
+    #   time_vector = np.linspace(indices[0], indices[1], len(beat_sig))
 
-# print ""
-# print annotation[0] / float(250.)
+    #   whole_sig = channel_sig[250*start:250*end]
+    #   sig_time_vector = np.linspace(250*start, 250*end, len(whole_sig))
+
+    #   annotation_y = [ channel_sig[ann_t] for ann_t in annotation ]
+
+    #   plt.figure()
+    #   plt.plot(sig_time_vector, whole_sig, 'b')
+    #   plt.plot(time_vector, beat_sig, 'r')
+    #   plt.plot(annotation, annotation_y, 'go')
+    #   plt.show()
+
+
+
+    # print("")
+    # print(annotation[0] / float(250.))

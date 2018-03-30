@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from fastdtw                import fastdtw
 from scipy.spatial.distance import euclidean
 from datetime               import datetime
@@ -101,9 +103,10 @@ def is_ventricular_beat(beat_sig, training_beats):
             distance, path = fastdtw(beat_sig_normalized, training_beat_normalized, radius=250, dist=euclidean)
         except Exception as e:
             distance = float('inf')
-            print "Error with training sample: ", sample_name, e
+            print("Error with training sample:  {}".format(sample_name))
+            print(e)
 
-        # print sample_name, distance, is_true_beat
+        # print(sample_name, distance, is_true_beat)
         # plt.subplot(9, 5, figure_num)
         # plt.title(str(int(distance)) + " " + str(is_true_beat))
         # plt.plot(training_beat_normalized, 'b-')
@@ -206,7 +209,7 @@ def write_vtach_beats_files(data_path, ann_path, output_path, ecg_ann_type, star
 
             sig, fields = wfdb.srdsamp(data_path + sample_name)
             if "II" not in fields['signame']:
-                print "Lead II not found for sample: ", sample_name
+                print("Lead II not found for sample:  {}".format(sample_name))
                 continue
 
             output_filename = output_path + sample_name + ".csv"
@@ -232,62 +235,64 @@ def write_vtach_beats_files(data_path, ann_path, output_path, ecg_ann_type, star
                 for beat in nonvtach_beats:
                     writer.writerow([beat, 0])
 
-            print "sample_name: ", sample_name, " elapsed: ", datetime.now() - start
+            print("sample_name:  {}".format(sample_name))
+            print(" elapsed:  {}".format(datetime.now() - start))
 
 
-# # sample_name = "v127l"
-# sample_name = "v141l"
-# ecg_ann_type = 'gqrs'
-# start_time = 296
-# end_time = 300
-# channel_index = 0
-# ann_fs = 250.
-# ann_type = 'gqrs' + str(channel_index)
+if __name__ == '__main__':
+    # # sample_name = "v127l"
+    # sample_name = "v141l"
+    # ecg_ann_type = 'gqrs'
+    # start_time = 296
+    # end_time = 300
+    # channel_index = 0
+    # ann_fs = 250.
+    # ann_type = 'gqrs' + str(channel_index)
 
-# sig, fields = wfdb.srdsamp(data_path + sample_name)
-# channel_sig = sig[:,channel_index]
+    # sig, fields = wfdb.srdsamp(data_path + sample_name)
+    # channel_sig = sig[:,channel_index]
 
-# vtach_beats, nonvtach_beats = ventricular_beat_annotations_dtw(channel_sig, ann_path, sample_name, start_time, end_time, ann_type)
-# vtach_indices = [ ann - start_time * 250. for ann in vtach_beats ]
-# nonvtach_indices = [ ann - start_time * 250. for ann in nonvtach_beats ]
+    # vtach_beats, nonvtach_beats = ventricular_beat_annotations_dtw(channel_sig, ann_path, sample_name, start_time, end_time, ann_type)
+    # vtach_indices = [ ann - start_time * 250. for ann in vtach_beats ]
+    # nonvtach_indices = [ ann - start_time * 250. for ann in nonvtach_beats ]
 
-# plt.figure(figsize=[8,5])
-# plt.plot(channel_sig[int(start_time*250.):int(end_time*250.)],'b-')
-# plt.plot(nonvtach_indices, [channel_sig[int(index)] for index in nonvtach_indices], 'bo', markersize=8)
-# plt.plot(vtach_indices, [ channel_sig[int(index)] for index in vtach_indices ], 'ro', markersize=8)
-# plt.show()
+    # plt.figure(figsize=[8,5])
+    # plt.plot(channel_sig[int(start_time*250.):int(end_time*250.)],'b-')
+    # plt.plot(nonvtach_indices, [channel_sig[int(index)] for index in nonvtach_indices], 'bo', markersize=8)
+    # plt.plot(vtach_indices, [ channel_sig[int(index)] for index in vtach_indices ], 'ro', markersize=8)
+    # plt.show()
 
-start_time = 290
-end_time = 300
-write_vtach_beats_files(data_path, ann_path, output_path_bank, ecg_ann_type, start_time, end_time)
-
-
-# sig, fields = wfdb.srdsamp(data_path + sample_name)
-# channel_sig = sig[:,channel_index]
-
-# annotation = wfdb.rdann(ann_path + sample_name, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)[0]
-# print annotation
-
-# beats = get_beats(channel_sig, annotation)
+    start_time = 290
+    end_time = 300
+    write_vtach_beats_files(data_path, ann_path, output_path_bank, ecg_ann_type, start_time, end_time)
 
 
-# for beat in beats:
-#   indices = beat[0]
-#   beat_sig = beat[1]
-#   time_vector = np.linspace(indices[0], indices[1], len(beat_sig))
+    # sig, fields = wfdb.srdsamp(data_path + sample_name)
+    # channel_sig = sig[:,channel_index]
 
-#   whole_sig = channel_sig[250*start:250*end]
-#   sig_time_vector = np.linspace(250*start, 250*end, len(whole_sig))
+    # annotation = wfdb.rdann(ann_path + sample_name, ann_type, sampfrom=start*ann_fs, sampto=end*ann_fs)[0]
+    # print(annotation)
 
-#   annotation_y = [ channel_sig[ann_t] for ann_t in annotation ]
-
-#   plt.figure()
-#   plt.plot(sig_time_vector, whole_sig, 'b')
-#   plt.plot(time_vector, beat_sig, 'r')
-#   plt.plot(annotation, annotation_y, 'go')
-#   plt.show()
+    # beats = get_beats(channel_sig, annotation)
 
 
+    # for beat in beats:
+    #   indices = beat[0]
+    #   beat_sig = beat[1]
+    #   time_vector = np.linspace(indices[0], indices[1], len(beat_sig))
 
-# print ""
-# print annotation[0] / float(250.)
+    #   whole_sig = channel_sig[250*start:250*end]
+    #   sig_time_vector = np.linspace(250*start, 250*end, len(whole_sig))
+
+    #   annotation_y = [ channel_sig[ann_t] for ann_t in annotation ]
+
+    #   plt.figure()
+    #   plt.plot(sig_time_vector, whole_sig, 'b')
+    #   plt.plot(time_vector, beat_sig, 'r')
+    #   plt.plot(annotation, annotation_y, 'go')
+    #   plt.show()
+
+
+
+    # print("")
+    # print(annotation[0] / float(250.))

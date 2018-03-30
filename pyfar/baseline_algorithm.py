@@ -1,4 +1,6 @@
 # from ventricular_beat_detection import ventricular_beat_annotations_dtw
+from __future__ import print_function
+
 import scipy.signal         as scipy_signal
 import scipy.fftpack        as scipy_fftpack
 import matplotlib.pyplot    as plt
@@ -86,7 +88,7 @@ def histogram_test(signal, histogram_cutoff):
 
 def get_channel_type(channel_name):
     channel_types_dict = {}
-    with open(parameters.sigtypes_filename, "r") as f: 
+    with open(parameters.sigtypes_filename, "r") as f:
         for line in f:
             splitted_line = line.split("\t")
             channel = splitted_line[-1].rstrip()
@@ -939,7 +941,8 @@ def get_ventricular_beats_scores(channel_sig,
                 r_delta = np.append(r_delta, 0) #-cval)
 
         except Exception as e:
-            print sample_name, e
+            print(sample_name)
+            print(e)
             r_delta = np.append(r_delta, 1)
 
         end += (rolling_increment * fs)

@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from utils                  import *
 from parameters             import *
 from datetime               import datetime
@@ -143,7 +145,10 @@ def sig_distance(sig1, fields1, sig2, fields2, radius, new_fs, max_channels=1, n
             channel_index2 = channels2.index(channel)
 
         except Exception as e:
-            print "channels1:", channels1, " channels2:", channels2, " common_channels:", common_channels, "\n", e
+            print(" channels1: {}".format(channels1), end=" ")
+            print(" channels2: {}".format(channels2), end=" ")
+            print(" common_channels:{}".format(common_channels), end=" ")
+            print(e)
             continue
 
         channel1 = sig1[start_index:end_index,channel_index1]
@@ -261,9 +266,10 @@ def predict(test_sig, test_fields, sig_training_by_arrhythmia, fields_training_b
         train_fields = fields_training[sample_name]
 
         # channels_dists = sig_distance_from_file(test_sig, test_fields, train_sig, train_fields, new_fs)
-        # print "sample_name: ", sample_name, "channels_dists: ", channels_dists
+        # print("sample_name: {}".format(sample_name))
+        # print("channels_dists: {}".format(channels_dists))
         # if len(channels_dists.keys()) == 0:
-        #     print "Processing sample {} from scratch".format(sample_name)
+        #     print("Processing sample {} from scratch".format(sample_name))
         channels_dists = sig_distance(test_sig, test_fields, train_sig, train_fields, radius, new_fs)
 
         distance = normalize_distances(channels_dists)
@@ -293,8 +299,10 @@ def run_classification(sig_training_by_arrhythmia, fields_training_by_arrhythmia
 
         predicted, distance, sample = predict(test_sig, test_fields, sig_training_by_arrhythmia, fields_training_by_arrhythmia, radius, new_fs, weighting)
         actual = is_true_alarm_fields(test_fields)
-        # print "sample:", sample_name, " predicted:", predicted, " actual:", actual
-        # print "elapsed: ", datetime.now() - start
+        # print("sample: {}".format(sample_name))
+        # print(" predicted: {}".format(predicted))
+        # print(" actual: {}".format(actual))
+        # print("elapsed: {}".format(datetime.now() - start))
 
         min_distances[sample_name] = (distance, sample, predicted == actual)
 
@@ -305,7 +313,7 @@ def run_classification(sig_training_by_arrhythmia, fields_training_by_arrhythmia
 
 
 def run(data_path, num_training, arrhythmias, matrix_filename, distances_filename, radius=0, new_fs=DEFAULT_ECG_FS, weighting=1):
-    print "Generating sig and fields dicts..."
+    print("Generating sig and fields dicts...")
     sig_dict, fields_dict = read_signals(data_path)
     sig_training, fields_training, sig_testing, fields_testing = \
         get_data(sig_dict, fields_dict, num_training)
@@ -317,7 +325,7 @@ def run(data_path, num_training, arrhythmias, matrix_filename, distances_filenam
     sig_testing_temp = { sample_name : sig_testing[sample_name] for sample_name in sig_testing.keys() if sample_name[0] == 'v' }
     fields_testing_temp = { sample_name : fields_testing[sample_name] for sample_name in fields_testing.keys() if sample_name[0] == 'v' }
 
-    print "Calculating classification accuracy..."
+    print("Calculating classification accuracy...")
     matrix, min_distances = run_classification( \
         sig_training_by_arrhythmia, fields_training_by_arrhythmia, sig_testing_temp, fields_testing_temp, radius, new_fs, weighting)
 
@@ -341,19 +349,19 @@ if __name__ == '__main__':
     counts = { key : len(matrix[key]) for key in matrix.keys() }
     # vtach_counts, vtach_matrix = get_by_arrhythmia(matrix, 'v')
 
-    print "accuracy:", get_classification_accuracy(matrix)
-    print "score:", get_score(matrix)
+    print("accuracy: {}".format(get_classification_accuracy(matrix)))
+    print("score: {}".format(get_score(matrix)))
     print_stats(counts)
 
-    # print "accuracy:", get_classification_accuracy(vtach_matrix)
-    # print "score:", get_score(vtach_matrix)
+    # print("accuracy: {}".format(get_classification_accuracy(vtach_matrix)))
+    # print("score: {}".format(get_score(vtach_matrix)))
     # print_stats(vtach_counts)
 
 
-    # print "\nVTACH STATS"
+    # print("\nVTACH STATS")
     # arrhythmia_dict = get_counts_by_arrhythmia(matrix, "v")
     # arrhythmia_counts = { key : arrhythmia_dict[key][0] for key in arrhythmia_dict.keys() }
     # arrhythmia_matrix = { key : arrhythmia_dict[key][1] for key in arrhythmia_dict.keys() }
-    # print "accuracy:", get_classification_accuracy(arrhythmia_matrix)
-    # print "score:", get_score(arrhythmia_matrix)
+    # print("accuracy: {}".format(get_classification_accuracy(arrhythmia_matrix)))
+    # print("score: {}".format(get_score(arrhythmia_matrix)))
     # print_stats(arrhythmia_counts)

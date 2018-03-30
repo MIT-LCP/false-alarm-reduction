@@ -1,10 +1,12 @@
+from __future__ import print_function
+
 from spectrum                   import *
 from scipy.stats                import kurtosis
 from sklearn.linear_model       import LogisticRegression, LassoCV
 from sklearn.metrics            import auc, roc_curve
 from datetime                   import datetime
 import numpy                    as np
-import matplotlib.pyplot  		as plt
+import matplotlib.pyplot          as plt
 import csv
 import wfdb
 
@@ -32,7 +34,7 @@ def get_psd(channel_subsig, order, nfft):
     # plt.xlabel('Normalized Frequency')
     # plt.show()
 
-    # print len(psd)
+    # print(len(psd))
 
     return psd
 
@@ -106,7 +108,7 @@ def get_channel_type(channel_name):
             channel_type = splitted_line[0]
 
             if channel_name == channel:
-            	return channel_type
+                return channel_type
 
     raise Exception("Unknown channel name")
 
@@ -149,8 +151,8 @@ def generate_features(features_filename):
                 ecg_channels = get_channels_of_type(fields['signame'], "ECG")
 
                 if len(ecg_channels) == 0:
-    		    	print "NO ECG CHANNELS FOR SAMPLE: ", sample_name
-    		    	continue
+                    print("NO ECG CHANNELS FOR SAMPLE: {}".format(sample_name))
+                    continue
 
                 channel_subsig = subsig[:,int(ecg_channels[0])]
 
@@ -161,11 +163,11 @@ def generate_features(features_filename):
                     pursqi = get_pursqi(channel_subsig)
 
                 except Exception as e:
-                    print "sample_name:", sample_name, e
+                    print("sample_name: {}\n{}".format(sample_name, e))
                     continue
 
                 if np.isnan([baseline, power, ksqi, pursqi]).any():
-                    print "sample containing nan:", sample_name, [baseline, power, ksqi, pursqi]
+                    print("sample containing nan: {}\n{}".format(sample_name, [baseline, power, ksqi, pursqi]))
                     continue
 
                 if int(sample_number) < TRAINING_THRESHOLD:
@@ -223,7 +225,7 @@ def get_score(prediction, true):
     FP = np.sum([(prediction[i] == 1) and (true[i] == 0) for i in range(len(prediction))])
     FN = np.sum([(prediction[i] == 0) and (true[i] == 1) for i in range(len(prediction))])
 
-    # print TP, TN, FP, FN
+    # print('{} {} {} {}'.format(TP, TN, FP, FN))
 
     numerator =  TP + TN
     denominator = FP + 5*FN + numerator
@@ -231,76 +233,81 @@ def get_score(prediction, true):
     return float(numerator) / denominator
 
 
-# print "Generating datasets..."
-# # generate_features(features_filename)
-# training_x, training_y, testing_x, testing_y = generate_datasets(features_filename)
 
-# print len(training_y), len(testing_y)
+if __name__ == '__main__':
+    print("Nothing to do!")
+    # print("Generating datasets...")
+    # # generate_features(features_filename)
+    # training_x, training_y, testing_x, testing_y = generate_datasets(features_filename)
 
-
-#     # start = datetime.now()
-#     # print "Starting at", start
-#     # print "Generating datasets..."
-#     # training_x, training_y, testing_x, testing_y = generate_training_testing()
+    # print("{} {}".format(len(training_y), len(testing_y)))
 
 
-
-# print "Running classifier..."
-# classifier = LogisticRegression(penalty='l1')
-# # lasso = LassoCV()
-# classifier.fit(training_x, training_y)
-
-#     # probability of class 1 (versus 0)
-#     # predictions_y = classifier.predict_proba(testing_x)[:,1]
-#     # score = classifier.score(testing_x, testing_y)
-
-#     # fpr, tpr, thresholds = roc_curve(testing_y, predictions_y)
-#     # auc = auc(fpr, tpr)
-
-#     # print "auc: ", auc
-#     # print "score: ", score
-#     # print "fpr: ", fpr, "tpr: ", tpr
-
-#     # # plt.figure()
-#     # # plt.title("ROC curve for DTW-only classiifer")
-#     # # plt.xlabel("False positive rate")
-#     # # plt.ylabel("True positive rate")
-#     # # plt.plot(fpr, tpr)
-#     # # plt.show()
-# # lasso.fit(training_x, training_y)
-# # predictions_y = lasso.predict(testing_x)
-
-# fpr, tpr, thresholds = roc_curve(testing_y, predictions_y)
-
-# chall_score = list()
-# for th in thresholds:
-#     chall_score.append(get_score([x >= th for x in predictions_y], testing_y))
+    #     # start = datetime.now()
+    #     # print("Starting at".format(start))
+    #     # print("Generating datasets...")
+    #     # training_x, training_y, testing_x, testing_y = generate_training_testing()
 
 
-# auc = auc(fpr, tpr)
 
-# print classifier.coef_
-# print "auc: ", auc
-# print "score: ", score
-# print "fpr: ", fpr, "tpr: ", tpr
+    # print("Running classifier...")
+    # classifier = LogisticRegression(penalty='l1')
+    # # lasso = LassoCV()
+    # classifier.fit(training_x, training_y)
+
+    #     # probability of class 1 (versus 0)
+    #     # predictions_y = classifier.predict_proba(testing_x)[:,1]
+    #     # score = classifier.score(testing_x, testing_y)
+
+    #     # fpr, tpr, thresholds = roc_curve(testing_y, predictions_y)
+    #     # auc = auc(fpr, tpr)
+
+    #     # print("auc: {}".format(auc))
+    #     # print("score: {}".format(score)
+    #     # print("fpr: {}".format(fpr), end=" "))
+    #     # print("tpr: {}".format(tpr)
+
+    #     # # plt.figure()
+    #     # # plt.title("ROC curve for DTW-only classiifer")
+    #     # # plt.xlabel("False positive rate")
+    #     # # plt.ylabel("True positive rate")
+    #     # # plt.plot(fpr, tpr)
+    #     # # plt.show()
+    # # lasso.fit(training_x, training_y)
+    # # predictions_y = lasso.predict(testing_x)
+
+    # fpr, tpr, thresholds = roc_curve(testing_y, predictions_y)
+
+    # chall_score = list()
+    # for th in thresholds:
+    #     chall_score.append(get_score([x >= th for x in predictions_y], testing_y))
 
 
-# plt.figure()
-# plt.title("ROC curve for top-level classifier with challenge scores")
-# plt.xlabel("False positive rate")
-# plt.ylabel("True positive rate")
-# plt.plot(fpr, tpr, label='ROC Curve')
-# plt.plot(fpr, chall_score, label='Challenge score')
-# plt.show()
+    # auc = auc(fpr, tpr)
 
-#     # DTW only
-#     # auc:  0.461675144589
-#     # score:  0.529166666667
+    # print(classifier.coef_)
+    # print("auc: {}".format(auc))
+    # print("score: {}".format(score))
+    # print("fpr: {}".format(fpr))
+    # print("tpr: {}".format(tpr))
 
-#     # Baseline only
-#     # auc:  0.877012054909
-#     # score:  0.875
 
-#     # Combined
-#     # auc:  0.910041112118
-#     # score:  0.841666666667
+    # plt.figure()
+    # plt.title("ROC curve for top-level classifier with challenge scores")
+    # plt.xlabel("False positive rate")
+    # plt.ylabel("True positive rate")
+    # plt.plot(fpr, tpr, label='ROC Curve')
+    # plt.plot(fpr, chall_score, label='Challenge score')
+    # plt.show()
+
+    #     # DTW only
+    #     # auc:  0.461675144589
+    #     # score:  0.529166666667
+
+    #     # Baseline only
+    #     # auc:  0.877012054909
+    #     # score:  0.875
+
+    #     # Combined
+    #     # auc:  0.910041112118
+    #     # score:  0.841666666667
